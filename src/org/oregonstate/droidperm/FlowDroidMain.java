@@ -10,6 +10,8 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
+import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
+import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -93,7 +95,9 @@ public class FlowDroidMain {
 					}
 				}
 			}
-			
+
+			new MethodPermDetector().analyzeAndPrint();
+			CallGraphUtil.printTestInflow();
 		}
 
 		private void print(String string) {
@@ -226,8 +230,6 @@ public class FlowDroidMain {
 			}
 			
 			System.gc();
-
-			CallGraphUtil.printTestInflow();
 		}
 	}
 
@@ -585,7 +587,7 @@ public class FlowDroidMain {
 				app.printSinks();
 				app.printSources();
 			}
-			
+
 			System.out.println("Running data flow analysis...");
 			final InfoflowResults res = app.runInfoflow(new MyResultsAvailableHandler());
 			System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");

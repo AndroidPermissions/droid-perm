@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm;
+package org.oregonstate.droidperm.util;
 
 import soot.MethodOrMethodContext;
 import soot.Unit;
