@@ -4,14 +4,13 @@
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * 
+ *
  * Contributors: Christian Fritz, Steven Arzt, Siegfried Rasthofer, Eric
  * Bodden, and others.
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
-import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -46,7 +45,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 public class FlowDroidMain {
-	
+
 	private static final class MyResultsAvailableHandler implements
 			ResultsAvailableHandler {
 		private final BufferedWriter wr;
@@ -77,7 +76,7 @@ public class FlowDroidMain {
 							print("\t\ton Path " + Arrays.toString(source.getPath()));
 					}
 				}
-				
+
 				// Serialize the results if requested
 				// Write the results into a file if requested
 				if (resultFilePath != null && !resultFilePath.isEmpty()) {
@@ -96,7 +95,7 @@ public class FlowDroidMain {
 				}
 			}
 
-			MethodPermDetector.getInstance().printResults();
+			new MethodPermDetector().analyzeAndPrint();
 		}
 
 		private void print(String string) {
@@ -110,18 +109,18 @@ public class FlowDroidMain {
 			}
 		}
 	}
-	
+
 	private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
-	
+
 	private static int repeatCount = 1;
 	private static int timeout = -1;
 	private static int sysTimeout = -1;
-	
+
 	private static boolean aggressiveTaintWrapper = false;
 	private static boolean noTaintWrapper = false;
 	private static String summaryPath = "";
 	private static String resultFilePath = "";
-	
+
 	private static boolean DEBUG = true;
 
 	private static IIPCManager ipcManager = null;
@@ -133,14 +132,14 @@ public class FlowDroidMain {
 	{
 		return FlowDroidMain.ipcManager;
 	}
-	
+
 	/**
 	 * @param args Program arguments. args[0] = path to apk-file,
 	 * args[1] = path to android-dir (path/android-platforms/)
 	 */
 	public static void main(final String[] args) throws IOException, InterruptedException {
 		if (args.length < 2) {
-			printUsage();	
+			printUsage();
 			return;
 		}
 		//start with cleanup:
@@ -155,7 +154,7 @@ public class FlowDroidMain {
 			}
 			outputDir.delete();
 		}
-		
+
 		// Parse additional command-line arguments
 		if (!parseAdditionalOptions(args))
 			return;
@@ -163,17 +162,17 @@ public class FlowDroidMain {
 			return;
 		if (repeatCount <= 0)
 			return;
-		
+
 		List<String> apkFiles = new ArrayList<String>();
 		File apkFile = new File(args[0]);
 		if (apkFile.isDirectory()) {
 			String[] dirFiles = apkFile.list(new FilenameFilter() {
-			
+
 				@Override
 				public boolean accept(File dir, String name) {
 					return (name.endsWith(".apk"));
 				}
-			
+
 			});
 			for (String s : dirFiles)
 				apkFiles.add(s);
@@ -194,13 +193,13 @@ public class FlowDroidMain {
 				return;
 			}
 		}
-		
+
 		int oldRepeatCount = repeatCount;
 		for (final String fileName : apkFiles) {
 			repeatCount = oldRepeatCount;
 			final String fullFilePath;
 			System.gc();
-			
+
 			// Directory handling
 			if (apkFiles.size() > 1) {
 				if (apkFile.isDirectory())
@@ -227,7 +226,7 @@ public class FlowDroidMain {
 					runAnalysis(fullFilePath, args[1]);
 				repeatCount--;
 			}
-			
+
 			System.gc();
 		}
 	}
@@ -380,7 +379,7 @@ public class FlowDroidMain {
 		}
 		return true;
 	}
-	
+
 	private static boolean validateAdditionalOptions() {
 		if (timeout > 0 && sysTimeout > 0) {
 			return false;
@@ -394,20 +393,20 @@ public class FlowDroidMain {
 		}
 		return true;
 	}
-	
+
 	private static void runAnalysisTimeout(final String fileName, final String androidJar) {
 		FutureTask<InfoflowResults> task = new FutureTask<InfoflowResults>(new Callable<InfoflowResults>() {
 
 			@Override
 			public InfoflowResults call() throws Exception {
-				
+
 				final BufferedWriter wr = new BufferedWriter(new FileWriter("_out_" + new File(fileName).getName() + ".txt"));
 				try {
 					final long beforeRun = System.nanoTime();
 					wr.write("Running data flow analysis...\n");
 					final InfoflowResults res = runAnalysis(fileName, androidJar);
 					wr.write("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds\n");
-					
+
 					wr.flush();
 					return res;
 				}
@@ -416,11 +415,11 @@ public class FlowDroidMain {
 						wr.close();
 				}
 			}
-			
+
 		});
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		executor.execute(task);
-		
+
 		try {
 			System.out.println("Running infoflow task...");
 			task.get(timeout, TimeUnit.MINUTES);
@@ -434,9 +433,9 @@ public class FlowDroidMain {
 			System.err.println("Infoflow computation interrupted: " + e.getMessage());
 			e.printStackTrace();
 		}
-		
+
 		// Make sure to remove leftovers
-		executor.shutdown();		
+		executor.shutdown();
 	}
 
 	private static void runAnalysisSysTimeout(final String fileName, final String androidJar) {
@@ -453,7 +452,7 @@ public class FlowDroidMain {
 				androidJar,
 				config.getStopAfterFirstFlow() ? "--singleflow" : "--nosingleflow",
 				config.getEnableImplicitFlows() ? "--implicit" : "--noimplicit",
-				config.getEnableStaticFieldTracking() ? "--static" : "--nostatic", 
+				config.getEnableStaticFieldTracking() ? "--static" : "--nostatic",
 				"--aplength", Integer.toString(InfoflowAndroidConfiguration.getAccessPathLength()),
 				"--cgalgo", callgraphAlgorithmToString(config.getCallgraphAlgorithm()),
 				config.getEnableCallbacks() ? "--callbacks" : "--nocallbacks",
@@ -488,7 +487,7 @@ public class FlowDroidMain {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	private static String callgraphAlgorithmToString(CallgraphAlgorithm algorihm) {
 		switch (algorihm) {
 			case AutomaticSelection:
@@ -518,7 +517,7 @@ public class FlowDroidMain {
 				return "unknown";
 		}
 	}
-	
+
 	private static String pathAlgorithmToString(PathBuilder pathBuilder) {
 		switch (pathBuilder) {
 			case ContextSensitive:
@@ -531,7 +530,7 @@ public class FlowDroidMain {
 				return "UNKNOWN";
 		}
 	}
-	
+
 	private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
 		try {
 			final long beforeRun = System.nanoTime();
@@ -545,19 +544,19 @@ public class FlowDroidMain {
 			{
 				app = new SetupApplication(androidJar, fileName, ipcManager);
 			}
-			
+
 			// Set configuration object
 			app.setConfig(config);
 			if (noTaintWrapper)
 				app.setSootConfig(new IInfoflowConfig() {
-					
+
 					@Override
 					public void setSootOptions(Options options) {
 						options.set_include_all(true);
 					}
-					
+
 				});
-			
+
 			final ITaintPropagationWrapper taintWrapper;
 			if (noTaintWrapper)
 				taintWrapper = null;
@@ -580,7 +579,7 @@ public class FlowDroidMain {
 			}
 			app.setTaintWrapper(taintWrapper);
 			app.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
-			
+
 			if (DEBUG) {
 				app.printEntrypoints();
 				app.printSinks();
@@ -590,7 +589,7 @@ public class FlowDroidMain {
 			System.out.println("Running data flow analysis...");
 			final InfoflowResults res = app.runInfoflow(new MyResultsAvailableHandler());
 			System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
-			
+
 			if (config.getLogSourcesAndSinks()) {
 				if (!app.getCollectedSources().isEmpty()) {
 					System.out.println("Collected sources:");
@@ -603,7 +602,7 @@ public class FlowDroidMain {
 						System.out.println("\t" + s);
 				}
 			}
-			
+
 			return res;
 		} catch (IOException ex) {
 			System.err.println("Could not read file: " + ex.getMessage());
@@ -615,7 +614,7 @@ public class FlowDroidMain {
 			throw new RuntimeException(ex);
 		}
 	}
-	
+
 	/**
 	 * Creates the taint wrapper for using library summaries
 	 * @return The taint wrapper for using library summaries
@@ -626,55 +625,55 @@ public class FlowDroidMain {
 			throws IOException {
 		try {
 			Class clzLazySummary = Class.forName("soot.jimple.infoflow.methodSummary.data.summary.LazySummary");
-			
+
 			Object lazySummary = clzLazySummary.getConstructor(File.class).newInstance(new File(summaryPath));
-			
+
 			ITaintPropagationWrapper summaryWrapper = (ITaintPropagationWrapper) Class.forName
 					("soot.jimple.infoflow.methodSummary.taintWrappers.SummaryTaintWrapper").getConstructor
 					(clzLazySummary).newInstance(lazySummary);
-			
+
 			ITaintPropagationWrapper systemClassWrapper = new ITaintPropagationWrapper() {
-				
+
 				private ITaintPropagationWrapper wrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
-				
+
 				private boolean isSystemClass(Stmt stmt) {
 					if (stmt.containsInvokeExpr())
 						return SystemClassHandler.isClassInSystemPackage(
 								stmt.getInvokeExpr().getMethod().getDeclaringClass().getName());
 					return false;
 				}
-				
+
 				@Override
 				public boolean supportsCallee(Stmt callSite) {
 					return isSystemClass(callSite) && wrapper.supportsCallee(callSite);
 				}
-				
+
 				@Override
 				public boolean supportsCallee(SootMethod method) {
 					return SystemClassHandler.isClassInSystemPackage(method.getDeclaringClass().getName())
 							&& wrapper.supportsCallee(method);
 				}
-				
+
 				@Override
 				public boolean isExclusive(Stmt stmt, Abstraction taintedPath) {
 					return isSystemClass(stmt) && wrapper.isExclusive(stmt, taintedPath);
 				}
-				
+
 				@Override
 				public void initialize(InfoflowManager manager) {
 					wrapper.initialize(manager);
 				}
-				
+
 				@Override
 				public int getWrapperMisses() {
 					return 0;
 				}
-				
+
 				@Override
 				public int getWrapperHits() {
 					return 0;
 				}
-				
+
 				@Override
 				public Set<Abstraction> getTaintsForMethod(Stmt stmt, Abstraction d1,
 						Abstraction taintedPath) {
@@ -682,7 +681,7 @@ public class FlowDroidMain {
 						return null;
 					return wrapper.getTaintsForMethod(stmt, d1, taintedPath);
 				}
-				
+
 				@Override
 				public Set<Abstraction> getAliasesForMethod(Stmt stmt, Abstraction d1,
 						Abstraction taintedPath) {
@@ -690,13 +689,13 @@ public class FlowDroidMain {
 						return null;
 					return wrapper.getAliasesForMethod(stmt, d1, taintedPath);
 				}
-				
+
 			};
-			
+
 			Method setFallbackMethod = summaryWrapper.getClass().getMethod("setFallbackTaintWrapper",
 					ITaintPropagationWrapper.class);
 			setFallbackMethod.invoke(summaryWrapper, systemClassWrapper);
-			
+
 			return summaryWrapper;
 		}
 		catch (ClassNotFoundException | NoSuchMethodException ex) {

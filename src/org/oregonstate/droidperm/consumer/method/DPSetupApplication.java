@@ -25,6 +25,11 @@ import javax.activation.UnsupportedDataTypeException;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Adapted from SetupApplication.
+ *
+ * @see soot.jimple.infoflow.android.SetupApplication
+ */
 public class DPSetupApplication {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

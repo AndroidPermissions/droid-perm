@@ -27,19 +27,12 @@ public class MethodPermDetector {
     private Set<MethodOrMethodContext> producers;
     private Set<MethodOrMethodContext> consumers;
 
-    private List<Edge> producerInflow;
-    private Map<MethodOrMethodContext, List<Edge>> consumerInflows;
+    private List<Edge> producerInflow;//could be local
+    private Map<MethodOrMethodContext, List<Edge>> consumerInflows;//could be local
+    private Set<MethodOrMethodContext> producerCallbacks;
+    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
+
     MethodOrMethodContext dummyMainMethod;
-
-    private static MethodPermDetector instance;
-
-    public static MethodPermDetector getInstance() {
-        if (instance == null) {
-            instance = new MethodPermDetector();
-            instance.init();
-        }
-        return instance;
-    }
 
     public Set<SootMethodAndClass> getProducerDefs() {
         return setupApp.getProducers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
@@ -57,7 +50,22 @@ public class MethodPermDetector {
         return consumers;
     }
 
-    private void init() {
+    public void analyzeAndPrint() {
+        long startTime = System.currentTimeMillis();
+
+        analyze();
+        setupApp.printProducerDefs();
+        setupApp.printConsumerDefs();
+        printProducers();
+        printConsumers();
+        printProducerInflow();
+        printConsumerInflows();
+        printCoveredCallbacks();
+
+        System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
+    }
+
+    private void analyze() {
         setupApp = new DPSetupApplication();
         try {
             setupApp.calculateSourcesSinksEntrypoints("producersConsumers.txt");
@@ -74,7 +82,17 @@ public class MethodPermDetector {
         for (MethodOrMethodContext consumer : consumers) {
             consumerInflows.put(consumer, CallGraphUtil.getInflowCallGraph(consumer));
         }
+
         dummyMainMethod = getDummyMain();
+        producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
+                .collect(Collectors.toSet());
+
+        consumerCallbacks = new HashMap<>(consumers.size());
+        for (MethodOrMethodContext consumer : consumers) {
+            consumerCallbacks.put(consumer,
+                    consumerInflows.get(consumer).stream().filter(e -> e.getSrc().equals(dummyMainMethod))
+                            .map(Edge::getTgt).collect(Collectors.toSet()));
+        }
     }
 
     public static MethodOrMethodContext getDummyMain() {
@@ -89,30 +107,24 @@ public class MethodPermDetector {
         return methIt.next();
     }
 
-    public void printResults() {
-        setupApp.printProducerDefs();
-        setupApp.printConsumerDefs();
-        printProducers();
-        printConsumers();
-        printProducerInflow();
-        printConsumerInflows();
-        computeIntersections();
-    }
-
-    private void computeIntersections() {
+    private void printCoveredCallbacks() {
         System.out.println("\n\nCovered callbacks for each consumer \n====================================");
 
         for (MethodOrMethodContext consumer : consumers) {
-            System.out.println("\nCovered callbacks for: " + consumer + ":");
-            Set<Edge> coveredInflow = new HashSet<>(consumerInflows.get(consumer));
-            coveredInflow.retainAll(producerInflow);
-            Set<MethodOrMethodContext> coveredCallbacks =
-                    coveredInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
-                            .collect(Collectors.toSet());
-            if (coveredCallbacks.isEmpty()) {
-                System.out.println("None!");
-            } else {
-                System.out.println(coveredCallbacks);
+            System.out.println("\nCallbacks for: " + consumer);
+
+            Set<MethodOrMethodContext> coveredCallbacks = new HashSet<>(consumerCallbacks.get(consumer));
+            coveredCallbacks.retainAll(producerCallbacks);
+            if (!coveredCallbacks.isEmpty()) {
+                System.out.println("Permission check detected:");
+                coveredCallbacks.stream().forEach(cb -> System.out.println("    " + cb));
+            }
+
+            Set<MethodOrMethodContext> notCoveredCallbacks = new HashSet<>(consumerCallbacks.get(consumer));
+            notCoveredCallbacks.removeAll(producerCallbacks);
+            if (!notCoveredCallbacks.isEmpty()) {
+                System.out.println("Permission check NOT detected:");
+                notCoveredCallbacks.stream().forEach(cb -> System.out.println("    " + cb));
             }
         }
         System.out.println();
