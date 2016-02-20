@@ -96,8 +96,7 @@ public class FlowDroidMain {
 				}
 			}
 
-			new MethodPermDetector().analyzeAndPrint();
-			CallGraphUtil.printTestInflow();
+			MethodPermDetector.getInstance().printResults();
 		}
 
 		private void print(String string) {

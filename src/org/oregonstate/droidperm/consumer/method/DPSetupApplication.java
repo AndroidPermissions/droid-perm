@@ -61,7 +61,7 @@ public class DPSetupApplication {
             System.err.println("Producers not calculated yet");
             return;
         }
-        logger.info("\n\nMethod based permission producers: \n====================================");
+        logger.info("\n\nMethod based permission producer definitions: \n====================================");
         for (SourceSinkDefinition am : getProducers()) {
             logger.info(am.toString());
         }
@@ -76,7 +76,7 @@ public class DPSetupApplication {
             System.err.println("Consumers not calculated yet");
             return;
         }
-        logger.info("\n\nMethod based permission consumers: \n====================================");
+        logger.info("\n\nMethod based permission consumer definitions: \n====================================");
         for (SourceSinkDefinition am : getConsumers()) {
             logger.info(am.toString());
         }
