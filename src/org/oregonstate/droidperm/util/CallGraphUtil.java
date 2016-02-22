@@ -5,10 +5,12 @@ import soot.Scene;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.callgraph.Filter;
-import soot.jimple.toolkits.callgraph.Targets;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
@@ -17,35 +19,29 @@ import java.util.*;
 public class CallGraphUtil {
 
     /**
-     * @return an getInflow over all methods in the graph that have the given signature.
+     * Get actual methods in the given call graph corresponding to the given definitions.
      */
-    public static Set<MethodOrMethodContext> iterateMethods(CallGraph cg, Collection<SootMethodAndClass> methodDefs) {
-        return toSet(new Targets(new Filter(new MultiTargetPredicate(methodDefs)).wrap(cg.iterator())));
-    }
-
-    public static <T> Set<T> toSet(Iterator<T> iterator) {
-        Set<T> copy = new HashSet<>();
-        while (iterator.hasNext())
-            copy.add(iterator.next());
-        return copy;
+    public static Set<MethodOrMethodContext> getActualMethods(CallGraph cg, Collection<SootMethodAndClass> methodDefs) {
+        return StreamUtils.asStream(cg)
+                .filter(new MultiTargetPredicate(methodDefs)).map(Edge::getTgt).collect(Collectors.toSet());
     }
 
     /**
-     * Get actual methods in the call graph corresponding to the given definitions.
+     * Get actual methods in the default call graph corresponding to the given definitions.
      */
     public static Set<MethodOrMethodContext> getActualMethods(Collection<SootMethodAndClass> methodDefs) {
-        return iterateMethods(Scene.v().getCallGraph(), methodDefs);
+        return getActualMethods(Scene.v().getCallGraph(), methodDefs);
     }
 
     public static List<MethodOrMethodContext> getInflow(Set<MethodOrMethodContext> methods) {
-        return new TransitiveSources(Scene.v().getCallGraph()).getInflow(methods.iterator());
+        return new TransitiveSources(Scene.v().getCallGraph()).getInflow(methods);
     }
 
     public static List<Edge> getInflowCallGraph(MethodOrMethodContext method) {
-        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(Collections.singletonList(method).iterator());
+        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(Collections.singletonList(method));
     }
 
     public static List<Edge> getInflowCallGraph(Set<MethodOrMethodContext> methods) {
-        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(methods.iterator());
+        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(methods);
     }
 }

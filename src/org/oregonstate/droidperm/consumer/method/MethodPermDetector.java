@@ -1,7 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.util.CallGraphUtil;
-import org.oregonstate.droidperm.util.FixedSourcePredicate;
+import org.oregonstate.droidperm.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
@@ -9,8 +9,6 @@ import soot.Scene;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.infoflow.source.data.SourceSinkDefinition;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.callgraph.Filter;
-import soot.jimple.toolkits.callgraph.Sources;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,8 +25,8 @@ public class MethodPermDetector {
     private Set<MethodOrMethodContext> producers;
     private Set<MethodOrMethodContext> consumers;
 
-    private List<Edge> producerInflow;//could be local
-    private Map<MethodOrMethodContext, List<Edge>> consumerInflows;//could be local
+    private List<Edge> producerInflow;//could be local except debugging
+    private Map<MethodOrMethodContext, List<Edge>> consumerInflows;//could be local except debugging
     private Set<MethodOrMethodContext> producerCallbacks;
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
@@ -78,33 +76,35 @@ public class MethodPermDetector {
 
         producerInflow = CallGraphUtil.getInflowCallGraph(producers);
 
-        consumerInflows = new HashMap<>();
-        for (MethodOrMethodContext consumer : consumers) {
-            consumerInflows.put(consumer, CallGraphUtil.getInflowCallGraph(consumer));
-        }
+        consumerInflows = consumers.stream().collect(Collectors.toMap(
+                consumer -> consumer,
+                CallGraphUtil::getInflowCallGraph
+        ));
 
         dummyMainMethod = getDummyMain();
         producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
                 .collect(Collectors.toSet());
 
-        consumerCallbacks = new HashMap<>(consumers.size());
-        for (MethodOrMethodContext consumer : consumers) {
-            consumerCallbacks.put(consumer,
-                    consumerInflows.get(consumer).stream().filter(e -> e.getSrc().equals(dummyMainMethod))
-                            .map(Edge::getTgt).collect(Collectors.toSet()));
-        }
+        consumerCallbacks = consumers.stream().collect(Collectors.toMap(
+                consumer -> consumer,
+                consumer -> consumerInflows.get(consumer).stream()
+                        .filter(e -> e.getSrc().equals(dummyMainMethod))
+                        .map(Edge::getTgt).collect(Collectors.toSet())
+        ));
     }
 
     public static MethodOrMethodContext getDummyMain() {
         SootMethodAndClass dummyMainDef = new SootMethodAndClass("dummyMainMethod", "dummyMainClass", "void",
                 Collections.singletonList("java.lang.String[]"));
-        Iterator<MethodOrMethodContext> methIt =
-                new Sources(new Filter(new FixedSourcePredicate(dummyMainDef.getSignature()))
-                        .wrap(Scene.v().getCallGraph().iterator()));
-        if (!methIt.hasNext()) {
+        final String dummyMainSig = dummyMainDef.getSignature();
+        Optional<MethodOrMethodContext> optionalMeth = StreamUtils.asStream(Scene.v().getCallGraph())
+                .map(Edge::getSrc)
+                .filter(srcMeth -> srcMeth != null && srcMeth.method().getSignature().equals(dummyMainSig))
+                .findAny();
+        if (!optionalMeth.isPresent()) {
             throw new RuntimeException("No dummy main method found");
         }
-        return methIt.next();
+        return optionalMeth.get();
     }
 
     private void printCoveredCallbacks() {
@@ -113,18 +113,21 @@ public class MethodPermDetector {
         for (MethodOrMethodContext consumer : consumers) {
             System.out.println("\nCallbacks for: " + consumer);
 
-            Set<MethodOrMethodContext> coveredCallbacks = new HashSet<>(consumerCallbacks.get(consumer));
-            coveredCallbacks.retainAll(producerCallbacks);
-            if (!coveredCallbacks.isEmpty()) {
+            //true for covered callbacks, false for not covered
+            Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
+                    consumerCallbacks.get(consumer).stream()
+                            .collect(Collectors.partitioningBy(producerCallbacks::contains));
+
+            if (!partitionedCallbacks.get(true).isEmpty()) {
                 System.out.println("Permission check detected:");
-                coveredCallbacks.stream().forEach(cb -> System.out.println("    " + cb));
+                partitionedCallbacks.get(true).stream()
+                        .forEach((MethodOrMethodContext cb) -> System.out.println("    " + cb));
             }
 
-            Set<MethodOrMethodContext> notCoveredCallbacks = new HashSet<>(consumerCallbacks.get(consumer));
-            notCoveredCallbacks.removeAll(producerCallbacks);
-            if (!notCoveredCallbacks.isEmpty()) {
+            if (!partitionedCallbacks.get(false).isEmpty()) {
                 System.out.println("Permission check NOT detected:");
-                notCoveredCallbacks.stream().forEach(cb -> System.out.println("    " + cb));
+                partitionedCallbacks.get(false).stream()
+                        .forEach(cb -> System.out.println("    " + cb));
             }
         }
         System.out.println();
@@ -144,7 +147,7 @@ public class MethodPermDetector {
         System.out.println("\n============================================");
         System.out.println("Inflow call graph for producers:\n");
 
-        new LinkedHashSet<>(producerInflow.stream().map(Edge::getSrc).collect(Collectors.toList()))
+        producerInflow.stream().map(Edge::getSrc).distinct()
                 .forEach(System.out::println);
     }
 
@@ -154,7 +157,7 @@ public class MethodPermDetector {
 
         for (MethodOrMethodContext meth : consumers) {
             System.out.println("\nConsumer " + meth + " :\n");
-            new LinkedHashSet<>(consumerInflows.get(meth).stream().map(Edge::getSrc).collect(Collectors.toList()))
+            consumerInflows.get(meth).stream().map(Edge::getSrc).distinct()
                     .forEach(System.out::println);
         }
     }

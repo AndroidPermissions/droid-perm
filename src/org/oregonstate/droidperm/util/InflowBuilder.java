@@ -5,6 +5,7 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
@@ -17,33 +18,32 @@ public class InflowBuilder {
         this.parentGraph = parentGraph;
     }
 
-    public List<Edge> getInflow(Iterator<MethodOrMethodContext> methods) {
-        ArrayList<Edge> edges = new ArrayList<>();
-        while (methods.hasNext()) {
-            Iterator<Edge> it = parentGraph.edgesInto(methods.next());
-            while (it.hasNext()) {
-                edges.add(it.next());
-            }
-        }
-        return getInflowForEdges(edges.iterator());
+    /**
+     * @return the inflow graph (as collection of edges) for the given starting methods
+     */
+    public List<Edge> getInflow(Collection<MethodOrMethodContext> methods) {
+        // Probably could be merged into next method, unless next one is valuable separately
+        //concatenate streams of "edges into" for each method in the input
+        List<Edge> edges = methods.stream().map(meth -> StreamUtils.asStream(parentGraph.edgesInto(meth)))
+                .collect(StreamUtils.concatReducer()).collect(Collectors.toList());
+        return getInflowForEdges(edges);
     }
 
-    public List<Edge> getInflowForEdges(Iterator<Edge> edges) {
-        Set<Edge> s = new HashSet<>();
-        ArrayList<Edge> worklist = new ArrayList<>();
-        while (edges.hasNext()) {
-            Edge edge = edges.next();
-            if (s.add(edge)) {
-                worklist.add(edge);
-            }
-        }
+    /**
+     * @return the inflow graph (as collection of edges) for the given starting edges
+     */
+    public List<Edge> getInflowForEdges(Collection<Edge> edges) {
+        Set<Edge> set = new HashSet<>();
+        List<Edge> worklist = edges.stream()
+                .filter(set::add) //stateful lambda, ensures unicity
+                .collect(Collectors.toList());
 
         for (int i = 0; i < worklist.size(); i++) {
             Edge edge = worklist.get(i);
             Iterator<Edge> it = parentGraph.edgesInto(edge.getSrc());
             while (it.hasNext()) {
-                Edge e = it.next();
-                if (s.add(e)) worklist.add(e);
+                Edge newEdge = it.next();
+                if (set.add(newEdge)) worklist.add(newEdge);
             }
         }
 

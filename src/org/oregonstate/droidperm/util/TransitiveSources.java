@@ -6,6 +6,7 @@ import soot.jimple.toolkits.callgraph.Edge;
 import soot.jimple.toolkits.callgraph.Filter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Allows transitively navigating over source methods of a particular method.
@@ -34,21 +35,19 @@ public class TransitiveSources {
             Edge e = it.next();
             methods.add(e.getSrc());
         }
-        return getInflow(methods.iterator());
+        return getInflow(methods);
     }
 
-    public List<MethodOrMethodContext> getInflow(Iterator<MethodOrMethodContext> methods) {
-        Set<MethodOrMethodContext> s = new HashSet<>();
-        List<MethodOrMethodContext> worklist = new ArrayList<>();
-        while (methods.hasNext()) {
-            MethodOrMethodContext method = methods.next();
-            if (s.add(method))
-                worklist.add(method);
-        }
-        return getInflow(s, worklist);
+    public List<MethodOrMethodContext> getInflow(Collection<MethodOrMethodContext> methods) {
+        Set<MethodOrMethodContext> set = new HashSet<>();
+        List<MethodOrMethodContext> worklist =
+                methods.stream()
+                        .filter(set::add) ///stateful lambda, ensures unicity
+                        .collect(Collectors.toList());
+        return getInflow(set, worklist);
     }
 
-    private List<MethodOrMethodContext> getInflow(Set<MethodOrMethodContext> s,
+    private List<MethodOrMethodContext> getInflow(Set<MethodOrMethodContext> set,
                                                   List<MethodOrMethodContext> worklist) {
         for (int i = 0; i < worklist.size(); i++) {
             MethodOrMethodContext method = worklist.get(i);
@@ -56,7 +55,7 @@ public class TransitiveSources {
             if (filter != null) it = filter.wrap(it);
             while (it.hasNext()) {
                 Edge e = it.next();
-                if (s.add(e.getSrc())) worklist.add(e.getSrc());
+                if (set.add(e.getSrc())) worklist.add(e.getSrc());
             }
         }
         return worklist;

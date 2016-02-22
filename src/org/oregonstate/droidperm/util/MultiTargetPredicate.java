@@ -2,10 +2,10 @@ package org.oregonstate.droidperm.util;
 
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.callgraph.EdgePredicate;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
  *         Created on 2/19/2016.
  */
-public class MultiTargetPredicate implements EdgePredicate {
+public class MultiTargetPredicate implements Predicate<Edge> {
 
     private Set<String> methodSignatures;
 
@@ -23,10 +23,10 @@ public class MultiTargetPredicate implements EdgePredicate {
     }
 
     @Override
-    public boolean want(Edge e) {
+    public boolean test(Edge edge) {
         //toperf: getSignature() is an expensive operation, should be replaced with something else.
         // Maybe an implementation of equals() on SootMethod? Or a comparator?
         // SootMethodAndClass has a fast equals().
-        return methodSignatures.contains(e.tgt().getSignature());
+        return methodSignatures.contains(edge.tgt().getSignature());
     }
 }
