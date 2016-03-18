@@ -121,6 +121,8 @@ public class FlowDroidMain {
 	private static String summaryPath = "";
 	private static String resultFilePath = "";
 
+	private static String additionalClasspath = "";
+
 	private static boolean DEBUG = true;
 
 	private static IIPCManager ipcManager = null;
@@ -374,8 +376,15 @@ public class FlowDroidMain {
 				config.setLogSourcesAndSinks(true);
 				i++;
 			}
+
+			//new in DroidPerm - additional classpath for analysis
+			else if (args[i].equalsIgnoreCase("--additionalCP")) {
+				additionalClasspath = args[i + 1];
+				i += 2;
+			}
+
 			else
-				i++;
+				throw new RuntimeException("Invalid option: " + args[i]);
 		}
 		return true;
 	}
@@ -538,11 +547,11 @@ public class FlowDroidMain {
 			final SetupApplication app;
 			if (null == ipcManager)
 			{
-				app = new SetupApplication(androidJar, fileName);
+				app = new SetupApplication(androidJar, fileName, additionalClasspath, null);
 			}
 			else
 			{
-				app = new SetupApplication(androidJar, fileName, ipcManager);
+				app = new SetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
 			}
 
 			// Set configuration object
@@ -740,6 +749,7 @@ public class FlowDroidMain {
 		System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
 		System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
 		System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
+		System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
 		System.out.println();
 		System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK");
 		System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");

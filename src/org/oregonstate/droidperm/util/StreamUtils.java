@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.util;
 
 import java.util.Iterator;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,5 +32,11 @@ public class StreamUtils {
      */
     public static <T> Collector<Stream<T>, ?, Stream<T>> concatReducer() {
         return Collectors.reducing(Stream.empty(), Stream::concat);
+    }
+
+    public static <T> BinaryOperator<T> throwingMerger() {
+        return (u, v) -> {
+            throw new IllegalStateException(String.format("Duplicate key %s", u));
+        };
     }
 }

@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import soot.jimple.infoflow.source.data.SourceSinkDefinition;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -26,11 +28,17 @@ public class MethodPermDetector {
     private Set<MethodOrMethodContext> consumers;
 
     private List<Edge> producerInflow;//could be local except debugging
-    private Map<MethodOrMethodContext, List<Edge>> consumerInflows;//could be local except debugging
+
+    /**
+     * 1st level map: key = consumer, value = inflow graph as 2nd lvl map.
+     * <br/>
+     * 2nd level map: key = source node, value = list of edges having that source node.
+     */
+    private Map<MethodOrMethodContext, Map<MethodOrMethodContext, List<Edge>>> consumerToInflowGraphMap;
     private Set<MethodOrMethodContext> producerCallbacks;
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
-    MethodOrMethodContext dummyMainMethod;
+    private MethodOrMethodContext dummyMainMethod;
 
     public Set<SootMethodAndClass> getProducerDefs() {
         return setupApp.getProducers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
@@ -58,6 +66,8 @@ public class MethodPermDetector {
         printConsumers();
         printProducerInflow();
         printConsumerInflows();
+        //DebugUtil.printTransitiveTargets(consumers);
+        printPathsFromCallbackToConsumer();
         printCoveredCallbacks();
 
         System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
@@ -74,21 +84,25 @@ public class MethodPermDetector {
         producers = CallGraphUtil.getActualMethods(getProducerDefs());
         consumers = CallGraphUtil.getActualMethods(getConsumerDefs());
 
+        dummyMainMethod = getDummyMain();
+
         producerInflow = CallGraphUtil.getInflowCallGraph(producers);
 
-        consumerInflows = consumers.stream().collect(Collectors.toMap(
+        consumerToInflowGraphMap = consumers.stream().collect(Collectors.toMap(
                 consumer -> consumer,
-                CallGraphUtil::getInflowCallGraph
+                consumer -> CallGraphUtil.getInflowCallGraph(consumer).stream()
+                        .filter(edge -> edge.getSrc() != null) //basically elliminates the main method.
+                        .collect(Collectors.groupingBy(Edge::getSrc))
         ));
 
-        dummyMainMethod = getDummyMain();
+        DebugUtil.printTargets(consumers);
+
         producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
                 .collect(Collectors.toSet());
 
         consumerCallbacks = consumers.stream().collect(Collectors.toMap(
                 consumer -> consumer,
-                consumer -> consumerInflows.get(consumer).stream()
-                        .filter(e -> e.getSrc().equals(dummyMainMethod))
+                consumer -> consumerToInflowGraphMap.get(consumer).get(dummyMainMethod).stream()
                         .map(Edge::getTgt).collect(Collectors.toSet())
         ));
     }
@@ -110,7 +124,13 @@ public class MethodPermDetector {
     private void printCoveredCallbacks() {
         System.out.println("\n\nCovered callbacks for each consumer \n====================================");
 
-        for (MethodOrMethodContext consumer : consumers) {
+        //sorting methods by toString() efficiently, without computing toString() each time.
+        Collection<MethodOrMethodContext> sortedConsumers =
+                consumers.stream().collect(Collectors
+                        .toMap(Object::toString, Function.identity(), StreamUtils.throwingMerger(), TreeMap::new))
+                        .values();
+
+        for (MethodOrMethodContext consumer : sortedConsumers) {
             System.out.println("\nCallbacks for: " + consumer);
 
             //true for covered callbacks, false for not covered
@@ -157,8 +177,46 @@ public class MethodPermDetector {
 
         for (MethodOrMethodContext meth : consumers) {
             System.out.println("\nConsumer " + meth + " :\n");
-            consumerInflows.get(meth).stream().map(Edge::getSrc).distinct()
-                    .forEach(System.out::println);
+            consumerToInflowGraphMap.get(meth).forEach(
+                    (src, edges) -> {
+                        System.out.println("From " + src + " to:");
+                        edges.stream().forEach(edge -> System.out.println("    " + edge.getTgt()));
+                    });
+        }
+    }
+
+    private void printPathsFromCallbackToConsumer() {
+        System.out.println("\nPaths from each callback to each consumer");
+        System.out.println("============================================\n");
+
+        for (MethodOrMethodContext cons : consumers) {
+            Map<MethodOrMethodContext, List<Edge>> inflow = consumerToInflowGraphMap.get(cons);
+            for (MethodOrMethodContext callback : consumerCallbacks.get(cons)) {
+                System.out.println("From " + callback + "\n  to " + cons);
+                System.out.println("--------------------------------------------");
+
+                MethodOrMethodContext node = callback;
+
+                //required to prevent infinite loops in case inflow contains recursion
+                Set<Edge> traversed = new HashSet<>();
+                while (node != null & node != cons) {
+                    System.out.println(node);
+                    Edge nextEdge =
+                            inflow.get(node).stream().filter(edge -> !traversed.contains(edge)).findAny().orElse(null);
+                    if (nextEdge != null) {
+                        traversed.add(nextEdge);
+                        node = nextEdge.getTgt();
+                    } else {
+                        node = null;
+                    }
+                }
+                if (node != null) {
+                    System.out.println(node);
+                } else {
+                    System.out.println("Error: consumer not reached but inflow has no more nodes!");
+                }
+                System.out.println();
+            }
         }
     }
 }
