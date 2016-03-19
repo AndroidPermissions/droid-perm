@@ -26,7 +26,7 @@ Setup instructions
 
 <https://github.com/denis-bogdanas/soot-infoflow-android-iccta>
 
- 
+ 
 
 3. Create a new Intellij project inside DroidPerm.
 
@@ -36,19 +36,13 @@ soot-infoflow-android. The last one is not used at this point.
 -   For soot project follow this guide:
     https://github.com/Sable/soot/wiki/Building-Soot-with-IntelliJ-IDEA
 
-5. Put the following files into soot/libs\_intellij if they are not there
-already:
+5. Put the following files into soot/libs\_intellij if they are not there already:
 
--   ant-1.9.6.jar
-
+    -   ant-1.9.6.jar
     -   heros-trunk.jar
-
     -   jasmin-2.2.1.jar
-
     -   slf4j-api-1.7.5.jar
-
     -   slf4j-api-1.7.5-sources.jar
-
     -   slf4j-simple-1.7.5.jar
 
 6. Open module settings -\> soot -\> dependencies. Add all the files above as
@@ -56,15 +50,11 @@ JARs, if not there yet.
 
 7. Check the following files under column “Export”:
 
-AXMLPrinter2.jar
-
-jasmin-2.2.1.jar
-
-slf4j-api-1.7.5.jar
-
-slf4j-api-1.7.5-sources.jar
-
-slf4j-simple-1.7.5.jar
+    -   AXMLPrinter2.jar
+    -   jasmin-2.2.1.jar
+    -   slf4j-api-1.7.5.jar
+    -   slf4j-api-1.7.5-sources.jar
+    -   slf4j-simple-1.7.5.jar
 
 8. Mark soot-infoflow dependent on soot, soot-infoflow-android dependent on soot
 and soot-infoflow.
@@ -80,7 +70,7 @@ library, remove them.
 12. Optional. Open heros-trunk.jar and remove anything related to slf4j. This
 will eliminate slf4j - related warnings when running.
 
- 
+ 
 
 ### Optional steps
 
@@ -91,7 +81,7 @@ will eliminate slf4j - related warnings when running.
 These steps should not be necessary, as you can build and run DroidPerm from
 Intellij without using ant scripts.
 
- 
+ 
 
 Running DroidPerm
 =================
@@ -102,19 +92,15 @@ Running DroidPerm
 
 -   Copy inside the following files:
 
-    SourcesAndSinks.txt
-
-    producersConsumers.txt
-
-    EasyTaintWrapperSource.txt
-
-    AndroidCallbacks.txt
-
-     
+    -   SourcesAndSinks.txt
+    -   producersConsumers.txt
+    -   EasyTaintWrapperSource.txt
+    -   AndroidCallbacks.txt
+     
 
 All files are inside misc project modules.
 
- 
+ 
 
 ### Test app
 
@@ -122,7 +108,7 @@ All files are inside misc project modules.
 
 -   current test application
 
- 
+ 
 
 To build apk file:
 
@@ -130,7 +116,7 @@ To build apk file:
 
 -   execute “gradle assemble”
 
- 
+ 
 
 ### Displaying help
 
@@ -144,21 +130,20 @@ Create a new run configuration with the following settings:
 
 -   classpath of module: droid-perm
 
- 
+ 
 
 This execution will display all DroidPerm command line options
 
- 
+ 
 
 ### Executing DroidPerm with default settings
 
 Add the following program arguments:
 
-\<path to the apk file to analyze\>
+    <path to the apk file to analyze>
+    <path to android-sdk\platforms dir>
 
-\<path to android-sdk\\platforms dir\>
-
- 
+ 
 
 ### Executing DroidPerm with current analysis settings
 
@@ -170,12 +155,9 @@ Add the following program arguments:
 
 -   Use the following program arguments:
 
-    \<path to the apk file to analyze\>
 
-    \<path to crafted android.jar\>
-
-    \--pathalgo
-
+    <path to the apk file to analyze>
+    <path to crafted android.jar>
+    --pathalgo
     CONTEXTSENSITIVE
-
-    \--notaintwrapper
+    --notaintwrapper
