@@ -1,0 +1,21 @@
+<android.support.v4.content.ContextCompat: int checkSelfPermission(android.content.Context,java.lang.String )> -> _SOURCE_
+
+<edu.oregonstate.ex.flowdroidtest.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SINK_
+<edu.oregonstate.ex.flowdroidtest.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_
+
+% Intermediate methods on the path to createFileOutputStream through Executorservice, for debug:
+% ==================================
+
+% 3 levels inside AsyncHttpClient lib, nothing complex. Last method in call graph.
+%       detected
+% <com.loopj.android.http.AsyncHttpClient: com.loopj.android.http.RequestHandle sendRequest(cz.msebera.android.httpclient.impl.client.DefaultHttpClient,cz.msebera.android.httpclient.protocol.HttpContext,cz.msebera.android.httpclient.client.methods.HttpUriRequest,java.lang.String,com.loopj.android.http.ResponseHandlerInterface,android.content.Context)> -> _SINK_
+
+% Many levels inside, last relatively straightforward part
+%       not detected
+% <java.util.concurrent.ExecutorService: java.util.concurrent.Future submit(java.lang.Runnable)> -> _SINK_
+
+% even deeper, after ExecutorService.submit(), the last part of the callback implemented in FlowDroidTest
+% <com.loopj.android.http.ResponseHandlerInterface: void sendResponseMessage(cz.msebera.android.httpclient.HttpResponse)> -> _SINK_
+
+% Called from the constructor of AsyncHttpClient, result initializes AsyncHttpClient.threadPool
+% <java.util.concurrent.Executors: java.util.concurrent.ExecutorService newCachedThreadPool()> -> _SINK_
