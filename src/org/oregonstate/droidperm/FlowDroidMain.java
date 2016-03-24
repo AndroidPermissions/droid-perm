@@ -604,7 +604,6 @@ public class FlowDroidMain {
 
 			System.out.println("Running data flow analysis...");
 			final InfoflowResults res = app.runInfoflow(new MyResultsAvailableHandler());
-			System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
 
 			if (config.getLogSourcesAndSinks()) {
 				if (!app.getCollectedSources().isEmpty()) {
@@ -623,6 +622,8 @@ public class FlowDroidMain {
 			if (!config.isTaintAnalysisEnabled()) {
 				new MethodPermDetector().analyzeAndPrint();
 			}
+
+			System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
 
 			return res;
 		} catch (IOException ex) {
