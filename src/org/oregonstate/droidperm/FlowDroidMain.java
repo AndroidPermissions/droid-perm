@@ -382,6 +382,10 @@ public class FlowDroidMain {
 				additionalClasspath = args[i + 1];
 				i += 2;
 			}
+			else if (args[i].equalsIgnoreCase("--taint-analysis-enabled")) {
+				config.setTaintAnalysisEnabled(Boolean.parseBoolean(args[i + 1]));
+				i += 2;
+			}
 
 			else
 				throw new RuntimeException("Invalid option: " + args[i]);
@@ -447,6 +451,9 @@ public class FlowDroidMain {
 		executor.shutdown();
 	}
 
+	/**
+	 * Duplication: Should reuse code from runAnalysis(). Not used in DroidPerm.
+     */
 	private static void runAnalysisSysTimeout(final String fileName, final String androidJar) {
 		String classpath = System.getProperty("java.class.path");
 		String javaHome = System.getProperty("java.home");
@@ -610,6 +617,11 @@ public class FlowDroidMain {
 					for (Stmt s : app.getCollectedSinks())
 						System.out.println("\t" + s);
 				}
+			}
+
+			//DroidPerm insertion
+			if (!config.isTaintAnalysisEnabled()) {
+				new MethodPermDetector().analyzeAndPrint();
 			}
 
 			return res;
