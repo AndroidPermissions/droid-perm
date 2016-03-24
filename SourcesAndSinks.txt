@@ -1,0 +1,12 @@
+% xabber scenario, just for test
+
+<com.xabber.android.data.extension.file.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SOURCE_
+
+<com.xabber.android.data.extension.file.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_
+
+
+% FlowDroidTest
+
+<edu.oregonstate.ex.flowdroidtest.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SOURCE_
+
+<edu.oregonstate.ex.flowdroidtest.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_

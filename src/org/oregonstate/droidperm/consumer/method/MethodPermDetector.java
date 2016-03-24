@@ -60,12 +60,12 @@ public class MethodPermDetector {
         long startTime = System.currentTimeMillis();
 
         analyze();
-        setupApp.printProducerDefs();
-        setupApp.printConsumerDefs();
+        //setupApp.printProducerDefs();
+        //setupApp.printConsumerDefs();
         printProducers();
         printConsumers();
-        printProducerInflow();
-        printConsumerInflows();
+        //printProducerInflow();
+        //printConsumerInflows();
         //DebugUtil.printTransitiveTargets(consumers);
         printPathsFromCallbackToConsumer();
         printCoveredCallbacks();
@@ -95,7 +95,7 @@ public class MethodPermDetector {
                         .collect(Collectors.groupingBy(Edge::getSrc))
         ));
 
-        DebugUtil.printTargets(consumers);
+        //DebugUtil.printTargets(consumers);
 
         producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
                 .collect(Collectors.toSet());
