@@ -86,21 +86,6 @@ Intellij without using ant scripts.
 Running DroidPerm
 =================
 
-### Setup
-
--   Create a directory run-dir for as working directory
-
--   Copy inside the following files:
-
-    -   SourcesAndSinks.txt
-    -   producersConsumers.txt
-    -   EasyTaintWrapperSource.txt
-    -   AndroidCallbacks.txt
-     
-
-All files are inside misc project modules.
-
- 
 
 ### Test app
 
@@ -126,7 +111,7 @@ Create a new run configuration with the following settings:
 
 -   VM options: -Xmx8g
 
--   working directory: run-dir from above
+-   working directory: droid-perm
 
 -   classpath of module: droid-perm
 
