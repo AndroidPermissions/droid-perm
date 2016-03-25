@@ -2,10 +2,6 @@
 % ==================================
 
 <android.content.Context: int checkSelfPermission(java.lang.String )> -> _SOURCE_
-
-% workaround, the above should be sufficient
-<android.content.ContextWrapper: int checkSelfPermission(java.lang.String )> -> _SOURCE_
-
 <android.support.v4.content.ContextCompat: int checkSelfPermission(android.content.Context,java.lang.String )> -> _SOURCE_
 
 % perm-test app

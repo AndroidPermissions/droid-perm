@@ -2,7 +2,7 @@ package org.oregonstate.droidperm.util;
 
 import soot.MethodOrMethodContext;
 import soot.Scene;
-import soot.jimple.infoflow.data.SootMethodAndClass;
+import soot.SootMethod;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
@@ -19,18 +19,16 @@ import java.util.stream.Collectors;
 public class CallGraphUtil {
 
     /**
-     * Get actual methods in the given call graph corresponding to the given definitions.
+     * Return the subset of methods contained in the call graph, out of the input collection.
+     *
+     * @param methods - input collection
      */
-    public static Set<MethodOrMethodContext> getActualMethods(CallGraph cg, Collection<SootMethodAndClass> methodDefs) {
-        return StreamUtils.asStream(cg)
-                .filter(new MultiTargetPredicate(methodDefs)).map(Edge::getTgt).collect(Collectors.toSet());
-    }
-
-    /**
-     * Get actual methods in the default call graph corresponding to the given definitions.
-     */
-    public static Set<MethodOrMethodContext> getActualMethods(Collection<SootMethodAndClass> methodDefs) {
-        return getActualMethods(Scene.v().getCallGraph(), methodDefs);
+    public static Set<MethodOrMethodContext> getContainedMethods(Collection<SootMethod> methods) {
+        CallGraph callGraph = Scene.v().getCallGraph();
+        return methods.stream()
+                // only keep methods that have an edge into, e.g. are in the call graph
+                .filter(meth -> callGraph.edgesInto(meth).hasNext())
+                .collect(Collectors.toSet());
     }
 
     public static List<MethodOrMethodContext> getInflow(Set<MethodOrMethodContext> methods) {

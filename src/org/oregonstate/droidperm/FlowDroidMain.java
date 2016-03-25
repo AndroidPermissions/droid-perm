@@ -14,6 +14,7 @@ import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootMethod;
 import soot.jimple.Stmt;
+import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
@@ -384,6 +385,10 @@ public class FlowDroidMain {
 			}
 			else if (args[i].equalsIgnoreCase("--taint-analysis-enabled")) {
 				config.setTaintAnalysisEnabled(Boolean.parseBoolean(args[i + 1]));
+				i += 2;
+			}
+			else if (args[i].equalsIgnoreCase("--code-elimination-mode")) {
+				config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.valueOf(args[i+1]));
 				i += 2;
 			}
 
@@ -762,11 +767,23 @@ public class FlowDroidMain {
 		System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
 		System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
 		System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
+		System.out.println();
+		System.out.println("New in DroidPerm:");
 		System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
+		System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
+		System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
 		System.out.println();
 		System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK");
 		System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
 		System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
+		System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
+				"RemoveSideEffectFreeCode");
+		System.out.println();
+		System.out.println("Options relevant for DroidPerm:");
+		System.out.println("\t--NOTAINTWRAPPER - required to enable the analysis of framework classes");
+		System.out.println("\t--ADDITIONALCP - doesn't work for now, " +
+				"current workaround is to instrument android.jar and put all the classpath inside");
+
 	}
 
 }

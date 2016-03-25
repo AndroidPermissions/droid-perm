@@ -1,7 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.util.CallGraphUtil;
-import org.oregonstate.droidperm.util.DebugUtil;
+import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +81,8 @@ public class MethodPermDetector {
             throw new RuntimeException(e);
         }
 
-        producers = CallGraphUtil.getActualMethods(getProducerDefs());
-        consumers = CallGraphUtil.getActualMethods(getConsumerDefs());
+        producers = CallGraphUtil.getContainedMethods(HierarchyUtil.resolveAbstractDispatches(getProducerDefs()));
+        consumers = CallGraphUtil.getContainedMethods(HierarchyUtil.resolveAbstractDispatches(getConsumerDefs()));
 
         dummyMainMethod = getDummyMain();
 
