@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtils;
 import org.slf4j.Logger;
@@ -69,6 +70,7 @@ public class MethodPermDetector {
         //DebugUtil.printTransitiveTargets(consumers);
         printPathsFromCallbackToConsumer();
         printCoveredCallbacks();
+        //DebugUtil.pointsToTest();
 
         System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
@@ -103,7 +105,8 @@ public class MethodPermDetector {
         consumerCallbacks = consumers.stream().collect(Collectors.toMap(
                 consumer -> consumer,
                 consumer -> consumerToInflowGraphMap.get(consumer).get(dummyMainMethod).stream()
-                        .map(Edge::getTgt).collect(Collectors.toSet())
+                        .map(Edge::getTgt) //all targets of main method inside this inflow
+                        .collect(Collectors.toSet())
         ));
     }
 
@@ -192,31 +195,54 @@ public class MethodPermDetector {
         for (MethodOrMethodContext cons : consumers) {
             Map<MethodOrMethodContext, List<Edge>> inflow = consumerToInflowGraphMap.get(cons);
             for (MethodOrMethodContext callback : consumerCallbacks.get(cons)) {
-                System.out.println("From " + callback + "\n  to " + cons);
-                System.out.println("--------------------------------------------");
-
-                MethodOrMethodContext node = callback;
-
-                //required to prevent infinite loops in case inflow contains recursion
-                Set<Edge> traversed = new HashSet<>();
-                while (node != null & node != cons) {
-                    System.out.println(node);
-                    Edge nextEdge =
-                            inflow.get(node).stream().filter(edge -> !traversed.contains(edge)).findAny().orElse(null);
-                    if (nextEdge != null) {
-                        traversed.add(nextEdge);
-                        node = nextEdge.getTgt();
-                    } else {
-                        node = null;
-                    }
-                }
-                if (node != null) {
-                    System.out.println(node);
-                } else {
-                    System.out.println("Error: consumer not reached but inflow has no more nodes!");
-                }
-                System.out.println();
+                printPath(callback, cons, inflow);
             }
         }
+    }
+
+    private void printPath(MethodOrMethodContext src, MethodOrMethodContext dest,
+                           Map<MethodOrMethodContext, List<Edge>> inflow) {
+        List<MethodOrMethodContext> path = computePath(src, dest, inflow);
+
+        System.out.println("From " + src + "\n  to " + dest);
+        System.out.println("--------------------------------------------");
+        if (path != null) {
+            path.forEach(System.out::println);
+        } else {
+            System.out.println("Not found!");
+        }
+        System.out.println();
+    }
+
+    /**
+     * Compute the path forward from src node to dest node through the given inflow.
+     *
+     * @param inflow - a map from nodes to lists of edges starting from that node.
+     * @return the path.
+     */
+    private List<MethodOrMethodContext> computePath(MethodOrMethodContext src, MethodOrMethodContext dest,
+                                                    Map<MethodOrMethodContext, List<Edge>> inflow) {
+        MethodOrMethodContext node = src;
+
+        //required to prevent infinite loops in case inflow contains recursion
+        Set<Edge> traversed = new HashSet<>();
+        List<MethodOrMethodContext> path = new ArrayList<>();
+        while (node != null & node != dest) {
+            path.add(node);
+            Edge nextEdge =
+                    inflow.get(node).stream().filter(edge -> !traversed.contains(edge)).findAny().orElse(null);
+            if (nextEdge != null) {
+                traversed.add(nextEdge);
+                node = nextEdge.getTgt();
+            } else {
+                node = null;
+            }
+        }
+        if (node != null) {
+            path.add(node);
+        } else {
+            return null;
+        }
+        return path;
     }
 }

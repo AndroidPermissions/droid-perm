@@ -1,12 +1,9 @@
-% xabber scenario, just for test
-
-<com.xabber.android.data.extension.file.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SOURCE_
-
-<com.xabber.android.data.extension.file.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_
-
-
-% FlowDroidTest
+% perm-test
 
 <edu.oregonstate.ex.flowdroidtest.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SOURCE_
-
 <edu.oregonstate.ex.flowdroidtest.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_
+
+% taint-test-to-runnable
+
+<edu.oregonstate.ex.ttest.MainActivity: java.lang.String source()> -> _SOURCE_
+<edu.oregonstate.ex.ttest.MainActivity: void sink(java.lang.String)> -> _SINK_
