@@ -39,22 +39,8 @@ public class MethodPermDetector {
     //todo build them through the same algorithm as consumers
     private Set<MethodOrMethodContext> producerCallbacks;
 
-    /**
-     * Map from consumers to sets of callbacks.
-     */
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
-
-    /**
-     * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
-     * <br/>
-     * 1-st level map: key = callback, value = outflow of that callback.
-     * <br/>
-     * 2-nd level map: key = node in the outflow, value = edge to its parent. Entries are of the form:
-     * (N, Edge(src = P, dest = N))
-     */
-    private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> callbackToOutflowMap;
-
     private MethodOrMethodContext dummyMainMethod;
+    private OutflowHolder outflowHolder;
 
     public Set<SootMethodAndClass> getProducerDefs() {
         return setupApp.getProducers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
@@ -72,6 +58,10 @@ public class MethodPermDetector {
         return consumers;
     }
 
+    public MethodOrMethodContext getDummyMainMethod() {
+        return dummyMainMethod;
+    }
+
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
 
@@ -84,7 +74,7 @@ public class MethodPermDetector {
         //printConsumerInflows();
         //DebugUtil.printTransitiveTargets(consumers);
         //printPathsFromCallbackToConsumerThroughInflows();
-        printPathsFromCallbackToConsumerThroughOutflows();
+        outflowHolder.printPathsFromCallbackToConsumerThroughOutflows();
         printCoveredCallbacks();
         //DebugUtil.pointsToTest();
 
@@ -113,20 +103,12 @@ public class MethodPermDetector {
                         .collect(Collectors.groupingBy(Edge::getSrc))
         ));
 
-        callbackToOutflowMap = new HashMap<>();
-        for (MethodOrMethodContext callback : getUICallbacks()) {
-            Map<MethodOrMethodContext, Edge> outflow = CallGraphUtil.getBreadthFirstOutflow(callback);
-            if (!Collections.disjoint(outflow.keySet(), consumers)) {
-                callbackToOutflowMap.put(callback, outflow);
-            }
-        }
+        outflowHolder = new OutflowHolder(dummyMainMethod, consumers);
 
         //DebugUtil.printTargets(consumers);
 
         producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
                 .collect(Collectors.toSet());
-
-        consumerCallbacks = buildConsumerCallbacksFromOutflows();
     }
 
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromInflows() {
@@ -136,20 +118,6 @@ public class MethodPermDetector {
                         .map(Edge::getTgt) //all targets of main method inside this inflow
                         .collect(Collectors.toSet())
         ));
-    }
-
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
-        return consumers.stream().collect(Collectors.toMap(
-                consumer -> consumer,
-                consumer -> callbackToOutflowMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().containsKey(consumer)).map(Map.Entry::getKey).
-                                collect(Collectors.toSet())
-        ));
-    }
-
-    private Set<MethodOrMethodContext> getUICallbacks() {
-        return StreamUtil.asStream(Scene.v().getCallGraph().edgesOutOf(dummyMainMethod))
-                .map(Edge::getTgt).collect(Collectors.toSet());
     }
 
     public static MethodOrMethodContext getDummyMain() {
@@ -180,7 +148,7 @@ public class MethodPermDetector {
 
             //true for covered callbacks, false for not covered
             Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
-                    consumerCallbacks.get(consumer).stream()
+                    outflowHolder.getConsumerCallbacks().get(consumer).stream()
                             .collect(Collectors.partitioningBy(producerCallbacks::contains));
 
             if (!partitionedCallbacks.get(true).isEmpty()) {
@@ -236,7 +204,7 @@ public class MethodPermDetector {
 
         for (MethodOrMethodContext cons : consumers) {
             Map<MethodOrMethodContext, List<Edge>> inflow = consumerToInflowGraphMap.get(cons);
-            for (MethodOrMethodContext callback : consumerCallbacks.get(cons)) {
+            for (MethodOrMethodContext callback : outflowHolder.getConsumerCallbacks().get(cons)) {
                 printPath(callback, cons, inflow, false);
             }
         }
@@ -288,45 +256,4 @@ public class MethodPermDetector {
         return path;
     }
 
-    private void printPathsFromCallbackToConsumerThroughOutflows() {
-        System.out.println("\nPaths from each callback to each consumer");
-        System.out.println("============================================\n");
-
-
-        for (Map.Entry<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> entry : callbackToOutflowMap
-                .entrySet()) {
-            for (MethodOrMethodContext consumer : getConsumers()) {
-                if (entry.getValue().containsKey(consumer)) {
-                    printPath(entry.getKey(), consumer, entry.getValue());
-                }
-            }
-        }
-    }
-
-    private void printPath(MethodOrMethodContext src, MethodOrMethodContext dest,
-                           Map<MethodOrMethodContext, Edge> outflow) {
-        List<MethodOrMethodContext> path = computePathFromOutflow(src, dest, outflow);
-
-        System.out.println("From " + src + "\n  to " + dest);
-        System.out.println("--------------------------------------------");
-        if (path != null) {
-            path.forEach(System.out::println);
-        } else {
-            System.out.println("Not found!");
-        }
-        System.out.println();
-    }
-
-    private List<MethodOrMethodContext> computePathFromOutflow(MethodOrMethodContext src, MethodOrMethodContext dest,
-                                                               Map<MethodOrMethodContext, Edge> outflow) {
-        List<MethodOrMethodContext> path = new ArrayList<>();
-        MethodOrMethodContext node = dest;
-        while (node != src) {
-            path.add(node);
-            node = outflow.get(node).getSrc();
-        }
-        path.add(node);
-        Collections.reverse(path);
-        return path;
-    }
 }

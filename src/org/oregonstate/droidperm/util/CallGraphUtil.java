@@ -40,33 +40,4 @@ public class CallGraphUtil {
         return new InflowBuilder(Scene.v().getCallGraph()).getInflow(methods);
     }
 
-    /**
-     * Produces the outflow tree starting from the root method, by breadth-first traversal.
-     *
-     * @return A map from nodes in the outflow to the edge leading to its parent. Elements are of the form
-     * (N, Edge(src = P, dest = N))
-     */
-    public static Map<MethodOrMethodContext, Edge> getBreadthFirstOutflow(MethodOrMethodContext root) {
-        CallGraph cg = Scene.v().getCallGraph();
-        Queue<MethodOrMethodContext> queue = new ArrayDeque<>();
-        Set<MethodOrMethodContext> traversed = new HashSet<>();
-        Map<MethodOrMethodContext, Edge> outflow = new HashMap<>();
-        queue.add(root);
-        traversed.add(root);
-
-        for (MethodOrMethodContext node = queue.poll(); node != null; node = queue.poll()) {
-            Iterator<Edge> it = cg.edgesOutOf(node);
-            while (it.hasNext()) {
-                Edge edge = it.next();
-                MethodOrMethodContext tgt = edge.getTgt();
-
-                if (!traversed.contains(tgt)) {
-                    traversed.add(tgt);
-                    queue.add(tgt);
-                    outflow.put(tgt, edge);
-                }
-            }
-        }
-        return outflow;
-    }
 }
