@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
  *         Created on 2/20/2016.
  */
-public class StreamUtils {
+public class StreamUtil {
 
     public static <T> Stream<T> asStream(Iterator<T> iterator) {
         return asStream(() -> iterator, false);

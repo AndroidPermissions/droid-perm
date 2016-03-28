@@ -24,8 +24,8 @@ public class InflowBuilder {
     public List<Edge> getInflow(Collection<MethodOrMethodContext> methods) {
         // Probably could be merged into next method, unless next one is valuable separately
         //concatenate streams of "edges into" for each method in the input
-        List<Edge> edges = methods.stream().map(meth -> StreamUtils.asStream(parentGraph.edgesInto(meth)))
-                .collect(StreamUtils.concatReducer()).collect(Collectors.toList());
+        List<Edge> edges = methods.stream().map(meth -> StreamUtil.asStream(parentGraph.edgesInto(meth)))
+                .collect(StreamUtil.concatReducer()).collect(Collectors.toList());
         return getInflowForEdges(edges);
     }
 

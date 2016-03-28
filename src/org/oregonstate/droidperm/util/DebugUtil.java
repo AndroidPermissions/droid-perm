@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class DebugUtil {
     public static void printTransitiveTargets(MethodOrMethodContext meth) {
         System.out.println("\nTransitive targets for " + meth);
-        StreamUtils.asStream(new TransitiveTargets(Scene.v().getCallGraph()).iterator(meth))
+        StreamUtil.asStream(new TransitiveTargets(Scene.v().getCallGraph()).iterator(meth))
                 .forEach(tgt -> System.out.println("  " + tgt));
     }
 
@@ -30,7 +30,7 @@ public class DebugUtil {
 
     public static void printTargets(MethodOrMethodContext meth) {
         System.out.println("\nDirect targets for " + meth);
-        StreamUtils.asStream(new Targets(Scene.v().getCallGraph().edgesOutOf(meth)))
+        StreamUtil.asStream(new Targets(Scene.v().getCallGraph().edgesOutOf(meth)))
                 .forEach(tgt -> System.out.println("  " + tgt));
     }
 
@@ -45,7 +45,7 @@ public class DebugUtil {
         SootField threadTarget = threadClass.getFieldByName("target0"); // this is the actual field name in patched code by Steven.
         CallGraph cg = Scene.v().getCallGraph();
         PointsToAnalysis pointsTo = Scene.v().getPointsToAnalysis();
-        List<Edge> edges = StreamUtils.asStream(cg.edgesInto(threadStart)).collect(Collectors.toList());
+        List<Edge> edges = StreamUtil.asStream(cg.edgesInto(threadStart)).collect(Collectors.toList());
         for (Edge edge : edges) {
             MethodOrMethodContext context = edge.getSrc();
             JInvokeStmt srcStmt = (JInvokeStmt) edge.srcStmt();
