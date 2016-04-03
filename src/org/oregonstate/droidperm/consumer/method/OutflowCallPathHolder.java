@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
  *         Created on 3/28/2016.
  */
-public class OutflowHolder {
+public class OutflowCallPathHolder implements CallPathHolder {
 
     //todo any of the methods can be null if no Thread is encountered in the call graph.
     //For some soot-related reason expression Thread.start() actually invokes Thread.run().
@@ -41,15 +41,11 @@ public class OutflowHolder {
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
-    public OutflowHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
+    public OutflowCallPathHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
         this.dummyMainMethod = dummyMainMethod;
         this.consumers = consumers;
         callbackToOutflowMap = buildCallbackToOutflowMap();
         consumerCallbacks = buildConsumerCallbacksFromOutflows();
-    }
-
-    public Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getConsumerCallbacks() {
-        return consumerCallbacks;
     }
 
     private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> buildCallbackToOutflowMap() {
@@ -62,6 +58,15 @@ public class OutflowHolder {
             }
         }
         return map;
+    }
+
+    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
+        return consumers.stream().collect(Collectors.toMap(
+                consumer -> consumer,
+                consumer -> callbackToOutflowMap.entrySet().stream()
+                        .filter(entry -> entry.getValue().containsKey(consumer)).map(Map.Entry::getKey).
+                                collect(Collectors.toSet())
+        ));
     }
 
     /**
@@ -106,7 +111,7 @@ public class OutflowHolder {
         return list;
     }
 
-    public void printPathsFromCallbackToConsumerThroughOutflows() {
+    public void printPathsFromCallbackToConsumer() {
         System.out.println("\nPaths from each callback to each consumer");
         System.out.println("============================================\n");
 
@@ -148,13 +153,9 @@ public class OutflowHolder {
         return path;
     }
 
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
-        return consumers.stream().collect(Collectors.toMap(
-                consumer -> consumer,
-                consumer -> callbackToOutflowMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().containsKey(consumer)).map(Map.Entry::getKey).
-                                collect(Collectors.toSet())
-        ));
+    @Override
+    public Set<MethodOrMethodContext> getCallbacks(MethodOrMethodContext consumer) {
+        return consumerCallbacks.get(consumer);
     }
 
     /**
