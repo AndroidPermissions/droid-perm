@@ -279,6 +279,8 @@ public class FlowDroidMain {
 					config.setCallgraphAlgorithm(CallgraphAlgorithm.RTA);
 				else if (algo.equalsIgnoreCase("SPARK"))
 					config.setCallgraphAlgorithm(CallgraphAlgorithm.SPARK);
+				else if (algo.equalsIgnoreCase("GEOM"))
+					config.setCallgraphAlgorithm(CallgraphAlgorithm.GEOM);
 				else {
 					System.err.println("Invalid callgraph algorithm");
 					return false;
@@ -521,6 +523,8 @@ public class FlowDroidMain {
 				return "RTA";
 			case SPARK:
 				return "SPARK";
+			case GEOM:
+				return "GEOM";
 			default:
 				return "unknown";
 		}
@@ -773,7 +777,7 @@ public class FlowDroidMain {
 		System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
 		System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
 		System.out.println();
-		System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK");
+		System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
 		System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
 		System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
 		System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
