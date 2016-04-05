@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
  *         Created on 4/3/2016.
  */
-public class InflowCallPathHolder implements CallPathHolder {
+public class InflowCPHolder implements CallPathHolder {
 
     private MethodOrMethodContext dummyMainMethod;
     private Set<MethodOrMethodContext> consumers;
@@ -28,7 +28,7 @@ public class InflowCallPathHolder implements CallPathHolder {
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
-    public InflowCallPathHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
+    public InflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
         this.dummyMainMethod = dummyMainMethod;
         this.consumers = consumers;
 

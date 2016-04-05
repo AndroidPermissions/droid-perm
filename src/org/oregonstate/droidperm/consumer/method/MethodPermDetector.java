@@ -58,9 +58,10 @@ public class MethodPermDetector {
         producerCallbacks = producerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
                 .collect(Collectors.toSet());
 
-        //select one of the 2 call path algorithms.
-        //callPathHolder = new OutflowCallPathHolder(dummyMainMethod, consumers);
-        callPathHolder = new InflowCallPathHolder(dummyMainMethod, consumers);
+        //select one of the call path algorithms.
+        //callPathHolder = new OutflowCPHolder(dummyMainMethod, consumers);
+        //callPathHolder = new ContextSensOutflowCPHolder(dummyMainMethod, consumers);
+        callPathHolder = new InflowCPHolder(dummyMainMethod, consumers);
 
         //DebugUtil.printTargets(consumers);
     }

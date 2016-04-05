@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu>
  *         Created on 3/28/2016.
  */
-public class OutflowCallPathHolder implements CallPathHolder {
+public class ContextSensOutflowCPHolder implements CallPathHolder {
 
     //todo any of the methods can be null if no Thread is encountered in the call graph.
     //For some soot-related reason expression Thread.start() actually invokes Thread.run().
@@ -41,7 +41,7 @@ public class OutflowCallPathHolder implements CallPathHolder {
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
-    public OutflowCallPathHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
+    public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
         this.dummyMainMethod = dummyMainMethod;
         this.consumers = consumers;
         callbackToOutflowMap = buildCallbackToOutflowMap();
@@ -105,12 +105,12 @@ public class OutflowCallPathHolder implements CallPathHolder {
         return outflow;
     }
 
-    private Collection<MethodOrMethodContext> getUICallbacks() {
-        List<MethodOrMethodContext> list = new ArrayList<>();
-        Scene.v().getCallGraph().edgesOutOf(dummyMainMethod).forEachRemaining(edge -> list.add(edge.getTgt()));
-        return list;
+    private Set<MethodOrMethodContext> getUICallbacks() {
+        return StreamUtil.asStream(Scene.v().getCallGraph().edgesOutOf(dummyMainMethod))
+                .map(Edge::getTgt).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
+    @Override
     public void printPathsFromCallbackToConsumer() {
         System.out.println("\nPaths from each callback to each consumer");
         System.out.println("============================================\n");
