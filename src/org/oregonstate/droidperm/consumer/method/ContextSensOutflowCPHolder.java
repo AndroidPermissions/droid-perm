@@ -3,6 +3,8 @@ package org.oregonstate.droidperm.consumer.method;
 import org.oregonstate.droidperm.util.CachingSupplier;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
 import soot.jimple.toolkits.callgraph.CallGraph;
@@ -17,6 +19,10 @@ import java.util.stream.Collectors;
  *         Created on 3/28/2016.
  */
 public class ContextSensOutflowCPHolder implements CallPathHolder {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
+
+    private long time = System.currentTimeMillis();
 
     private MethodOrMethodContext dummyMainMethod;
     private Set<MethodOrMethodContext> consumers;
@@ -53,6 +59,10 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
             if (!Collections.disjoint(outflowNodes, consumers)) {
                 map.put(callback, outflow);
             }
+
+            long newTime = System.currentTimeMillis();
+            logger.info("DP: Callback processed: " + callback + " in " + (newTime - time) / 1E3 + " sec");
+            time = newTime;
         }
         return map;
     }
@@ -116,14 +126,21 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
             InvokeExpr invokeExpr = ((InvokeStmt) unit).getInvokeExpr();
             // only virtual invocations require context sensitivity.
             if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
-                InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
-                SootMethod staticTargetMethod = invoke.getMethod();
-                //in Jimple target is always Local, regardless of who is the qualifier in Java.
-                Local target = (Local) invoke.getBase();
-
                 //we canot compute this list if there are no edges, hence the need for a supplier
                 Supplier<List<SootMethod>> actualTargetMethods = new CachingSupplier<>(() -> {
-                    Set<Type> targetPossibleTypes = pta.reachingObjects(context, target).possibleTypes();
+                    InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
+                    SootMethod staticTargetMethod = invoke.getMethod();
+                    //in Jimple target is always Local, regardless of who is the qualifier in Java.
+                    Local target = (Local) invoke.getBase();
+
+                    PointsToSet pointsToSet;
+                    try {
+                        pointsToSet = pta.reachingObjects(context, target);
+                    } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
+                        logger.debug(e.toString());
+                        return Collections.emptyList();
+                    }
+                    Set<Type> targetPossibleTypes = pointsToSet.possibleTypes();
                     return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, targetPossibleTypes);
                 });
 

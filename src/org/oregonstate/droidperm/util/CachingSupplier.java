@@ -17,8 +17,9 @@ public class CachingSupplier<T> implements Supplier<T> {
 
     @Override
     public T get() {
-        if (data == null) {
+        if (supplier != null&& data == null) {
             data = supplier.get();
+            supplier = null;
         }
         return data;
     }

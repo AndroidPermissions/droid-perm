@@ -10,6 +10,7 @@ import soot.Scene;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.infoflow.source.data.SourceSinkDefinition;
 import soot.jimple.toolkits.callgraph.Edge;
+import soot.options.Options;
 
 import java.util.*;
 import java.util.function.Function;
@@ -43,6 +44,8 @@ public class MethodPermDetector {
     }
 
     private void analyze() {
+        Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
+
         setupApp = new DPSetupApplication();
         try {
             setupApp.calculateSourcesSinksEntrypoints("producersConsumers.txt");
