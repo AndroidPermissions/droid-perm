@@ -27,10 +27,9 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
      * <br/>
      * 1-st level map: key = callback, value = outflow of that callback.
      * <br/>
-     * 2-nd level map: key = node in the outflow (meth in context), value = edge to its parent. Entries are of the form:
-     * (N, Edge(src = P, dest = N))
+     * 2-nd level map: key = node in the outflow, value = parent node. Both are context-sensitive.
      */
-    private Map<MethodOrMethodContext, Map<MethodInContext, Edge>> callbackToOutflowMap;
+    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> callbackToOutflowMap;
 
     /**
      * Map from consumers to sets of callbacks.
@@ -44,10 +43,10 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         consumerCallbacks = buildConsumerCallbacksFromOutflows();
     }
 
-    private Map<MethodOrMethodContext, Map<MethodInContext, Edge>> buildCallbackToOutflowMap() {
-        Map<MethodOrMethodContext, Map<MethodInContext, Edge>> map = new HashMap<>();
+    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
+        Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> map = new HashMap<>();
         for (MethodOrMethodContext callback : getUICallbacks()) {
-            Map<MethodInContext, Edge> outflow = getBreadthFirstOutflow(callback);
+            Map<MethodInContext, MethodInContext> outflow = getBreadthFirstOutflow(callback);
 
             Collection<MethodOrMethodContext> outflowNodes =
                     outflow.keySet().stream().map(pair -> pair.method).collect(Collectors.toList());
@@ -72,19 +71,21 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     //todo won't work if 2 runnables are touched from the same callback
     //I have to put true context-sensitive MethodContext for thread.run() methods.
     //todo also, speed is extremely slow on conversations
-    private Map<MethodInContext, Edge> getBreadthFirstOutflow(MethodOrMethodContext root) {
+    private Map<MethodInContext, MethodInContext> getBreadthFirstOutflow(MethodOrMethodContext root) {
         CallGraph cg = Scene.v().getCallGraph();
         PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         Queue<MethodInContext> queue = new ArrayDeque<>();
         Set<MethodInContext> traversed = new HashSet<>();
 
         //a map from child to parent edge is equivalent to 1-CFA cotnext sensitivity.
-        Map<MethodInContext, Edge> outflow = new HashMap<>();
+        Map<MethodInContext, MethodInContext> outflow = new HashMap<>();
         MethodInContext rootInContext = new MethodInContext(root, null);
         queue.add(rootInContext);
         traversed.add(rootInContext);
 
+
         for (MethodInContext meth = queue.poll(); meth != null; meth = queue.poll()) {
+            final MethodInContext methCopy = meth; //to make lambda expressions happy
             MethodOrMethodContext srcMeth = meth.method;
             Context context = meth.context;
             if (srcMeth.method().hasActiveBody()) {
@@ -95,7 +96,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
                             if (!traversed.contains(tgtInContext)) {
                                 traversed.add(tgtInContext);
                                 queue.add(tgtInContext);
-                                outflow.put(tgtInContext, edge);
+                                outflow.put(tgtInContext, methCopy);
                                 if (consumers.contains(edge.getTgt())) {
                                     consumersInContext.add(tgtInContext);
                                 }
@@ -159,7 +160,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         System.out.println("============================================\n");
 
 
-        for (Map.Entry<MethodOrMethodContext, Map<MethodInContext, Edge>> entry : callbackToOutflowMap
+        for (Map.Entry<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> entry : callbackToOutflowMap
                 .entrySet()) {
             for (MethodInContext consumerInContext : consumersInContext) {
                 if (entry.getValue().containsKey(consumerInContext)) {
@@ -170,7 +171,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     }
 
     private void printPath(MethodOrMethodContext src, MethodInContext dest,
-                           Map<MethodInContext, Edge> outflow) {
+                           Map<MethodInContext, MethodInContext> outflow) {
         List<MethodOrMethodContext> path = computePathFromOutflow(src, dest, outflow);
 
         System.out.println("From " + src + "\n  to " + dest);
@@ -184,14 +185,12 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     }
 
     private List<MethodOrMethodContext> computePathFromOutflow(MethodOrMethodContext src, MethodInContext dest,
-                                                               Map<MethodInContext, Edge> outflow) {
+                                                               Map<MethodInContext, MethodInContext> outflow) {
         List<MethodOrMethodContext> path = new ArrayList<>();
         MethodInContext node = dest;
         while (node != null && node.method != src) {
             path.add(node.method);
-            Edge edge = outflow.get(node);
-            //fixme incompatible to previous MethodInContext definition
-            node = edge != null ? new MethodInContext(edge.getSrc(), null /*fixme*/) : null;
+            node = outflow.get(node);
         }
         path.add(node != null ? node.method : null);
         Collections.reverse(path);
