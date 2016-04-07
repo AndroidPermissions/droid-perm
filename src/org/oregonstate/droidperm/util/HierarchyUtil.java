@@ -2,14 +2,11 @@ package org.oregonstate.droidperm.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soot.Scene;
-import soot.SootClass;
-import soot.SootMethod;
+import soot.*;
 import soot.jimple.infoflow.data.SootMethodAndClass;
+import soot.util.ArraySet;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,5 +35,29 @@ public class HierarchyUtil {
 
             return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);
         }
+    }
+
+    /**
+     * For concrete types use concrete dispatch, for types of class AnySubType use abstract dispatch.
+     * <p>
+     * todo check if abstract dispatch is really needed
+     */
+    public static List<SootMethod> resolveHybridDispatch(SootMethod staticTargetMethod,
+                                                         Set<Type> targetPossibleTypes) {
+        Hierarchy hierarchy = Scene.v().getActiveHierarchy();
+        Set<SootMethod> set = new ArraySet<>();
+        for (Type cls : new ArrayList<>(targetPossibleTypes)) {
+            if (cls instanceof RefType)
+                set.add(hierarchy.resolveConcreteDispatch(((RefType) cls).getSootClass(), staticTargetMethod));
+            else if (cls instanceof ArrayType) {
+                set.add(hierarchy
+                        .resolveConcreteDispatch((RefType.v("java.lang.Object")).getSootClass(), staticTargetMethod));
+            } else if (cls instanceof AnySubType) {
+                set.addAll(hierarchy
+                        .resolveAbstractDispatch(((AnySubType) cls).getBase().getSootClass(), staticTargetMethod));
+            } else throw new RuntimeException("Unable to resolve concrete dispatch of type " + cls);
+        }
+
+        return Collections.unmodifiableList(new ArrayList<>(set));
     }
 }

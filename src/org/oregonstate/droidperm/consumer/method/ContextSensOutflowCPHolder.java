@@ -1,13 +1,15 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.oregonstate.droidperm.util.CachingSupplier;
+import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.*;
-import soot.jimple.InstanceInvokeExpr;
-import soot.jimple.InvokeStmt;
+import soot.jimple.*;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -16,25 +18,19 @@ import java.util.stream.Collectors;
  */
 public class ContextSensOutflowCPHolder implements CallPathHolder {
 
-    //todo any of the methods can be null if no Thread is encountered in the call graph.
-    //For some soot-related reason expression Thread.start() actually invokes Thread.run().
-    final static SootClass threadClazz = Scene.v().getSootClassUnsafe("java.lang.Thread");
-    final static SootMethod threadStart = threadClazz.getMethodUnsafe("void start()");
-    final static SootMethod threadRunMeth = threadClazz.getMethodUnsafe("void run()");
-    final static SootMethod threadCons = threadClazz.getMethodUnsafe("void <init>(java.lang.Runnable)");
-
     private MethodOrMethodContext dummyMainMethod;
     private Set<MethodOrMethodContext> consumers;
+    private Set<MethodInContext> consumersInContext = new HashSet<>();
 
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
      * <br/>
      * 1-st level map: key = callback, value = outflow of that callback.
      * <br/>
-     * 2-nd level map: key = node in the outflow, value = edge to its parent. Entries are of the form:
+     * 2-nd level map: key = node in the outflow (meth in context), value = edge to its parent. Entries are of the form:
      * (N, Edge(src = P, dest = N))
      */
-    private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> callbackToOutflowMap;
+    private Map<MethodOrMethodContext, Map<MethodInContext, Edge>> callbackToOutflowMap;
 
     /**
      * Map from consumers to sets of callbacks.
@@ -48,25 +44,23 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         consumerCallbacks = buildConsumerCallbacksFromOutflows();
     }
 
-    private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> buildCallbackToOutflowMap() {
-        Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> map = new HashMap<>();
+    private Map<MethodOrMethodContext, Map<MethodInContext, Edge>> buildCallbackToOutflowMap() {
+        Map<MethodOrMethodContext, Map<MethodInContext, Edge>> map = new HashMap<>();
         for (MethodOrMethodContext callback : getUICallbacks()) {
-            Map<MethodOrMethodContext, Edge> outflow = getBreadthFirstOutflow(callback);
+            Map<MethodInContext, Edge> outflow = getBreadthFirstOutflow(callback);
 
-            if (!Collections.disjoint(outflow.keySet(), consumers)) {
+            Collection<MethodOrMethodContext> outflowNodes =
+                    outflow.keySet().stream().map(pair -> pair.method).collect(Collectors.toList());
+            if (!Collections.disjoint(outflowNodes, consumers)) {
                 map.put(callback, outflow);
             }
         }
         return map;
     }
 
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
-        return consumers.stream().collect(Collectors.toMap(
-                consumer -> consumer,
-                consumer -> callbackToOutflowMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().containsKey(consumer)).map(Map.Entry::getKey).
-                                collect(Collectors.toSet())
-        ));
+    private Set<MethodOrMethodContext> getUICallbacks() {
+        return StreamUtil.asStream(Scene.v().getCallGraph().edgesOutOf(dummyMainMethod))
+                .map(Edge::getTgt).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -78,36 +72,85 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     //todo won't work if 2 runnables are touched from the same callback
     //I have to put true context-sensitive MethodContext for thread.run() methods.
     //todo also, speed is extremely slow on conversations
-    private static Map<MethodOrMethodContext, Edge> getBreadthFirstOutflow(MethodOrMethodContext root) {
+    private Map<MethodInContext, Edge> getBreadthFirstOutflow(MethodOrMethodContext root) {
         CallGraph cg = Scene.v().getCallGraph();
-        Queue<MethodOrMethodContext> queue = new ArrayDeque<>();
-        Set<MethodOrMethodContext> traversed = new HashSet<>();
-        Map<MethodOrMethodContext, Edge> outflow = new HashMap<>();
-        queue.add(root);
-        traversed.add(root);
+        PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+        Queue<MethodInContext> queue = new ArrayDeque<>();
+        Set<MethodInContext> traversed = new HashSet<>();
 
-        for (MethodOrMethodContext node = queue.poll(); node != null; node = queue.poll()) {
-            Iterator<EdgeWrap> it = new EdgeIterator(node, cg);
-            while (it.hasNext()) {
-                EdgeWrap edgeWrap = it.next();
-                MethodOrMethodContext tgt = edgeWrap.edge.getTgt();
+        //a map from child to parent edge is equivalent to 1-CFA cotnext sensitivity.
+        Map<MethodInContext, Edge> outflow = new HashMap<>();
+        MethodInContext rootInContext = new MethodInContext(root, null);
+        queue.add(rootInContext);
+        traversed.add(rootInContext);
 
-                if (!traversed.contains(tgt)) {
-                    traversed.add(tgt);
-                    outflow.put(tgt, edgeWrap.edge);
+        for (MethodInContext meth = queue.poll(); meth != null; meth = queue.poll()) {
+            MethodOrMethodContext srcMeth = meth.method;
+            Context context = meth.context;
+            if (srcMeth.method().hasActiveBody()) {
+                srcMeth.method().getActiveBody().getUnits().stream().forEach(
+                        (Unit unit) -> getUnitEdgeIterator(unit, context, cg, pta).forEachRemaining((Edge edge) -> {
+                            MethodInContext tgtInContext = MethodInContext.forTarget(edge);
 
-                    if (edgeWrap.follow) {
-                        queue.add(tgt);
-                    }
-                }
+                            if (!traversed.contains(tgtInContext)) {
+                                traversed.add(tgtInContext);
+                                queue.add(tgtInContext);
+                                outflow.put(tgtInContext, edge);
+                                if (consumers.contains(edge.getTgt())) {
+                                    consumersInContext.add(tgtInContext);
+                                }
+                            }
+                        }));
             }
         }
         return outflow;
     }
 
-    private Set<MethodOrMethodContext> getUICallbacks() {
-        return StreamUtil.asStream(Scene.v().getCallGraph().edgesOutOf(dummyMainMethod))
-                .map(Edge::getTgt).collect(Collectors.toCollection(LinkedHashSet::new));
+    /**
+     * Iterator over outbound edges of a particular unit (likely method call).
+     */
+    private static Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg,
+                                                      PointsToAnalysis pta) {
+        if (unit instanceof InvokeStmt && context != null) {
+            InvokeExpr invokeExpr = ((InvokeStmt) unit).getInvokeExpr();
+            // only virtual invocations require context sensitivity.
+            if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
+                InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
+                SootMethod staticTargetMethod = invoke.getMethod();
+                //in Jimple target is always Local, regardless of who is the qualifier in Java.
+                Local target = (Local) invoke.getBase();
+
+                //we canot compute this list if there are no edges, hence the need for a supplier
+                Supplier<List<SootMethod>> actualTargetMethods = new CachingSupplier<>(() -> {
+                    Set<Type> targetPossibleTypes = pta.reachingObjects(context, target).possibleTypes();
+                    return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, targetPossibleTypes);
+                });
+
+                return StreamUtil.asStream(cg.edgesOutOf(unit))
+                        //Hack required due to hacks of class Thread in Soot:
+                        //if it's a THREAD edge, include it without comparing to actual targets
+                        .filter(edge -> edge.kind() == Kind.THREAD
+                                || actualTargetMethods.get().contains(edge.getTgt().method()))
+                        .iterator();
+            }
+        }
+
+        //default case, anything except virtual method calls
+        return cg.edgesOutOf(unit);
+    }
+
+    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
+        return consumersInContext.stream().collect(Collectors.toMap(
+                consumerInContext -> consumerInContext.method,
+                consumerInContext -> callbackToOutflowMap.entrySet().stream()
+                        .filter(entry -> entry.getValue().containsKey(consumerInContext)).map(Map.Entry::getKey).
+                                collect(Collectors.toSet()),
+                //merge function required, because 2 consumerInContext could map to the same consumer
+                (set1, set2) -> { //merge function, concatenating 2 sets of callbacks
+                    set1.addAll(set2);
+                    return set1;
+                }
+        ));
     }
 
     @Override
@@ -116,18 +159,18 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         System.out.println("============================================\n");
 
 
-        for (Map.Entry<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> entry : callbackToOutflowMap
+        for (Map.Entry<MethodOrMethodContext, Map<MethodInContext, Edge>> entry : callbackToOutflowMap
                 .entrySet()) {
-            for (MethodOrMethodContext consumer : consumers) {
-                if (entry.getValue().containsKey(consumer)) {
-                    printPath(entry.getKey(), consumer, entry.getValue());
+            for (MethodInContext consumerInContext : consumersInContext) {
+                if (entry.getValue().containsKey(consumerInContext)) {
+                    printPath(entry.getKey(), consumerInContext, entry.getValue());
                 }
             }
         }
     }
 
-    private void printPath(MethodOrMethodContext src, MethodOrMethodContext dest,
-                           Map<MethodOrMethodContext, Edge> outflow) {
+    private void printPath(MethodOrMethodContext src, MethodInContext dest,
+                           Map<MethodInContext, Edge> outflow) {
         List<MethodOrMethodContext> path = computePathFromOutflow(src, dest, outflow);
 
         System.out.println("From " + src + "\n  to " + dest);
@@ -140,15 +183,17 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         System.out.println();
     }
 
-    private List<MethodOrMethodContext> computePathFromOutflow(MethodOrMethodContext src, MethodOrMethodContext dest,
-                                                               Map<MethodOrMethodContext, Edge> outflow) {
+    private List<MethodOrMethodContext> computePathFromOutflow(MethodOrMethodContext src, MethodInContext dest,
+                                                               Map<MethodInContext, Edge> outflow) {
         List<MethodOrMethodContext> path = new ArrayList<>();
-        MethodOrMethodContext node = dest;
-        while (node != src) {
-            path.add(node);
-            node = outflow.get(node).getSrc();
+        MethodInContext node = dest;
+        while (node != null && node.method != src) {
+            path.add(node.method);
+            Edge edge = outflow.get(node);
+            //fixme incompatible to previous MethodInContext definition
+            node = edge != null ? new MethodInContext(edge.getSrc(), null /*fixme*/) : null;
         }
-        path.add(node);
+        path.add(node != null ? node.method : null);
         Collections.reverse(path);
         return path;
     }
@@ -158,115 +203,4 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         return consumerCallbacks.get(consumer);
     }
 
-    /**
-     * Iterator over outbound edges of a particular method.
-     */
-    private static class EdgeIterator implements Iterator<EdgeWrap> {
-        private final MethodOrMethodContext node;
-        private final CallGraph cg;
-        Iterator<Unit> units;
-        Iterator<EdgeWrap> unitEdgeIterator;
-        EdgeWrap currentEdge;
-
-        /* Thread-invocation context:
-        From Thread local var name to its runtime type*/
-        Map<String, Type> threadRunnableTypes = new HashMap<>();
-
-        public EdgeIterator(MethodOrMethodContext node, CallGraph cg) {
-            this.node = node;
-            this.cg = cg;
-            units = node.method().hasActiveBody() ? node.method().getActiveBody().getUnits().iterator() :
-                    Collections.emptyIterator();
-            unitEdgeIterator = null;
-            currentEdge = nextImpl();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return currentEdge != null;
-        }
-
-        @Override
-        public EdgeWrap next() {
-            if (currentEdge == null) {
-                throw new NoSuchElementException();
-            }
-
-            EdgeWrap result = currentEdge;
-            currentEdge = nextImpl();
-            return result;
-        }
-
-        private EdgeWrap nextImpl() {
-            if (unitEdgeIterator != null && unitEdgeIterator.hasNext()) {
-                return unitEdgeIterator.next();
-            } else {
-                while (units.hasNext()) {
-                    Unit currentUnit = units.next();
-                    unitEdgeIterator = getUnitEdgeIterator(currentUnit);
-                    if (unitEdgeIterator.hasNext()) {
-                        return unitEdgeIterator.next();
-                    }
-                }
-            }
-            return null;
-        }
-
-        private Iterator<EdgeWrap> getUnitEdgeIterator(Unit unit) {
-            if (unit instanceof InvokeStmt && ((InvokeStmt) unit).getInvokeExpr().getMethod().equals(threadCons)) {
-                InstanceInvokeExpr invokeExpr = ((InstanceInvokeExpr) ((InvokeStmt) unit).getInvokeExpr());
-
-                threadRunnableTypes.put(invokeExpr.getBase().toString(), invokeExpr.getArg(0).getType());
-            }
-
-            threadStartCase:
-            if (unit instanceof InvokeStmt && ((InvokeStmt) unit).getInvokeExpr().getMethod().equals(threadStart)) {
-                //special threatment for thread.start
-                InstanceInvokeExpr invokeExpr = ((InstanceInvokeExpr) ((InvokeStmt) unit).getInvokeExpr());
-                RefType runnableType = (RefType) threadRunnableTypes.get(invokeExpr.getBase().toString());
-                if (runnableType == null) {
-                    //no tag for this expression found, default Runnable treatment.
-                    break threadStartCase;
-                }
-
-                Optional<Edge> optional = StreamUtil.asStream(cg.edgesOutOf(unit))
-                        .filter(edge -> edge.getTgt().method() == threadRunMeth).findFirst();
-
-                if (optional.isPresent()) {
-                    Edge threadRunEdge = optional.get();
-                    MethodOrMethodContext threadRun = threadRunEdge.getTgt();
-                    Optional<Edge> runnableRunEdgeOpt = StreamUtil.asStream(cg.edgesOutOf(threadRun))
-                            .filter(edge -> edge.getTgt().method().getDeclaringClass() == runnableType.getSootClass())
-                            .findFirst();
-                    if (runnableRunEdgeOpt.isPresent()) {
-                        System.out.println("Selected edge out of Thread.run(): " + runnableRunEdgeOpt.get());
-
-                        //Return the edge from from thread to Runnable.run() only.
-                        // We skip the edge from current unit to Thread.run(),
-                        // because it will lead to analyzing the inside of Thread.run() in a regular way,
-                        // cancelling any context-sensitivity.
-                        //The problem with missing Thread.run() is purely cosmetical in the logged paths.
-                        return Arrays.asList(
-                                new EdgeWrap(threadRunEdge, false),
-                                new EdgeWrap(runnableRunEdgeOpt.get(), true)).iterator();
-                    }
-                }
-            }
-
-            //default case, all calls except a tagged Thread.start()
-            return StreamUtil.asStream(cg.edgesOutOf(unit)).map(edge -> new EdgeWrap(edge, true)).iterator();
-        }
-    }
-
-    //toopt should be a memory hog, if I stick to ad-hoc implementation, EdgeWrap should be eliminated.
-    private static class EdgeWrap {
-
-        public EdgeWrap(Edge edge, boolean follow) {
-            this.edge = edge;
-            this.follow = follow;
-        }
-
-        Edge edge;
-        boolean follow;
-    }
 }

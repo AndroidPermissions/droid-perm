@@ -60,8 +60,8 @@ public class MethodPermDetector {
 
         //select one of the call path algorithms.
         //callPathHolder = new OutflowCPHolder(dummyMainMethod, consumers);
-        //callPathHolder = new ContextSensOutflowCPHolder(dummyMainMethod, consumers);
-        callPathHolder = new InflowCPHolder(dummyMainMethod, consumers);
+        //callPathHolder = new InflowCPHolder(dummyMainMethod, consumers);
+        callPathHolder = new ContextSensOutflowCPHolder(dummyMainMethod, consumers);
 
         //DebugUtil.printTargets(consumers);
     }
