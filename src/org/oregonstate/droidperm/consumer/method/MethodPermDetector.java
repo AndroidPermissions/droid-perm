@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
@@ -24,15 +25,14 @@ public class MethodPermDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
 
-    private DPSetupApplication setupApp;
     private Set<MethodOrMethodContext> producers;
     private Set<MethodOrMethodContext> consumers;
+    private MethodOrMethodContext dummyMainMethod;
 
     //todo build them through the same algorithm as consumers
     private List<Edge> producerInflow;//could be local except debugging
     private Set<MethodOrMethodContext> producerCallbacks;
 
-    private MethodOrMethodContext dummyMainMethod;
     private CallPathHolder callPathHolder;
 
     public void analyzeAndPrint() {
@@ -46,15 +46,20 @@ public class MethodPermDetector {
     private void analyze() {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
-        setupApp = new DPSetupApplication();
+        DPSetupApplication setupApp = new DPSetupApplication();
         try {
             setupApp.calculateSourcesSinksEntrypoints("producersConsumers.txt");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        producers = CallGraphUtil.getContainedMethods(HierarchyUtil.resolveAbstractDispatches(getProducerDefs()));
-        consumers = CallGraphUtil.getContainedMethods(HierarchyUtil.resolveAbstractDispatches(getConsumerDefs()));
+        Set<SootMethodAndClass> producerDefs =
+                setupApp.getProducers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
+        Set<SootMethodAndClass> consumerDefs =
+                setupApp.getConsumers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
+
+        producers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(producerDefs));
+        consumers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(consumerDefs));
         dummyMainMethod = getDummyMain();
 
         producerInflow = CallGraphUtil.getInflowCallGraph(producers);
@@ -80,26 +85,9 @@ public class MethodPermDetector {
         //DebugUtil.pointsToTest();
     }
 
-    public Set<SootMethodAndClass> getProducerDefs() {
-        return setupApp.getProducers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
-    }
-
-    public Set<SootMethodAndClass> getConsumerDefs() {
-        return setupApp.getConsumers().stream().map(SourceSinkDefinition::getMethod).collect(Collectors.toSet());
-    }
-
-    public static MethodOrMethodContext getDummyMain() {
-        SootMethodAndClass dummyMainDef = new SootMethodAndClass("dummyMainMethod", "dummyMainClass", "void",
-                Collections.singletonList("java.lang.String[]"));
-        final String dummyMainSig = dummyMainDef.getSignature();
-        Optional<MethodOrMethodContext> optionalMeth = StreamUtil.asStream(Scene.v().getCallGraph())
-                .map(Edge::getSrc)
-                .filter(srcMeth -> srcMeth != null && srcMeth.method().getSignature().equals(dummyMainSig))
-                .findAny();
-        if (!optionalMeth.isPresent()) {
-            throw new RuntimeException("No dummy main method found");
-        }
-        return optionalMeth.get();
+    private static MethodOrMethodContext getDummyMain() {
+        String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
+        return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
     }
 
     private void printCoveredCallbacks() {

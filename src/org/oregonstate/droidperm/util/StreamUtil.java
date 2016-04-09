@@ -2,8 +2,6 @@ package org.oregonstate.droidperm.util;
 
 import java.util.Iterator;
 import java.util.function.BinaryOperator;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -25,13 +23,6 @@ public class StreamUtil {
 
     public static <T> Stream<T> asStream(Iterable<T> iterable, boolean parallel) {
         return StreamSupport.stream(iterable.spliterator(), parallel);
-    }
-
-    /**
-     * Reduces a stream of streams into a single stream.
-     */
-    public static <T> Collector<Stream<T>, ?, Stream<T>> concatReducer() {
-        return Collectors.reducing(Stream.empty(), Stream::concat);
     }
 
     public static <T> BinaryOperator<T> throwingMerger() {
