@@ -113,6 +113,12 @@ public class FlowDroidMain {
 
 	private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
 
+	static {
+		// DroidPerm default config options
+		//during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
+		config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
+	}
+
 	private static int repeatCount = 1;
 	private static int timeout = -1;
 	private static int sysTimeout = -1;

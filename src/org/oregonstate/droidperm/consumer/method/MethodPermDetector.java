@@ -79,7 +79,7 @@ public class MethodPermDetector {
         //setupApp.printConsumerDefs();
         printProducers();
         printConsumers();
-        printProducerInflow();
+        //printProducerInflow();
         callPathHolder.printPathsFromCallbackToConsumer();
         printCoveredCallbacks();
         //DebugUtil.pointsToTest();

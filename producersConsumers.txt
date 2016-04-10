@@ -18,6 +18,7 @@
 <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> _SINK_
 <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
 %   Redundant, redirect to other constructors of FileOutputStream
+%   Required if pure stubs JDK is used.
 % <java.io.FileOutputStream: void <init>(java.lang.String)> -> _SINK_
 % <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> _SINK_
 % <java.io.FileOutputStream: void <init>(java.io.File)> -> _SINK_

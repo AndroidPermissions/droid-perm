@@ -16,6 +16,11 @@ import java.util.stream.Collectors;
 public class HierarchyUtil {
     private static final Logger logger = LoggerFactory.getLogger(HierarchyUtil.class);
 
+    /**
+     * If true, allow points-to of type AnySubType. If false, throw exception for AnySubType.
+     */
+    private static final boolean ALLOW_ANY_SUBTYPE = false;
+
     public static List<SootMethod> resolveAbstractDispatches(Collection<SootMethodAndClass> methodDefs) {
         return methodDefs.stream().map(HierarchyUtil::resolveAbstractDispatch)
                 .flatMap(Collection::stream).collect(Collectors.toList());
@@ -52,7 +57,7 @@ public class HierarchyUtil {
             else if (cls instanceof ArrayType) {
                 set.add(hierarchy
                         .resolveConcreteDispatch((RefType.v("java.lang.Object")).getSootClass(), staticTargetMethod));
-            } else if (cls instanceof AnySubType) {
+            } else if (cls instanceof AnySubType && ALLOW_ANY_SUBTYPE) {
                 set.addAll(hierarchy
                         .resolveAbstractDispatch(((AnySubType) cls).getBase().getSootClass(), staticTargetMethod));
             } else throw new RuntimeException("Unable to resolve concrete dispatch of type " + cls);
