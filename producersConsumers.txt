@@ -4,11 +4,13 @@
 <android.content.Context: int checkSelfPermission(java.lang.String )> -> _SOURCE_
 <android.support.v4.content.ContextCompat: int checkSelfPermission(android.content.Context,java.lang.String )> -> _SOURCE_
 
-% Test apps: perm-test, dp_basic_threads
+% Test apps: perm-test, dp_basic_threads, others
 % ==================================
 
-<edu.oregonstate.ex.flowdroidtest.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SINK_
-<edu.oregonstate.ex.dp_basic_threads.BasicThreadsActivity: void sensitive()> -> _SINK_
+<edu.oregonstate.dp.test.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SINK_
+<edu.oregonstate.dp.test.ThreadTestActivity: void sensitive()> -> _SINK_
+<edu.oregonstate.dp.test.ExecutorTestActivity: void sensitive()> -> _SINK_
+<edu.oregonstate.dp.test.LibCallbackExTestActivity: void sensitive()> -> _SINK_
 
 % Conversations app
 % ==================================

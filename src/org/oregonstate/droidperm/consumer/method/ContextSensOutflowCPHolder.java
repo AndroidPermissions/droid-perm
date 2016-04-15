@@ -55,7 +55,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
             Map<MethodInContext, MethodInContext> outflow = getBreadthFirstOutflow(callback);
 
             Collection<MethodOrMethodContext> outflowNodes =
-                    outflow.keySet().stream().map(pair -> pair.method).collect(Collectors.toList());
+                    outflow.keySet().stream().map(methIC -> methIC.method).collect(Collectors.toList());
             if (!Collections.disjoint(outflowNodes, consumers)) {
                 map.put(callback, outflow);
             }
@@ -75,19 +75,14 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     /**
      * Produces the outflow tree starting from the root method, by breadth-first traversal.
      *
-     * @return A map from nodes in the outflow to the edge leading to its parent. Elements are of the form
-     * (N, Edge(src = P, dest = N))
+     * @return A map from nodes in the outflow to their parent.
      */
-    //todo won't work if 2 runnables are touched from the same callback
-    //I have to put true context-sensitive MethodContext for thread.run() methods.
-    //todo also, speed is extremely slow on conversations
     private Map<MethodInContext, MethodInContext> getBreadthFirstOutflow(MethodOrMethodContext root) {
         CallGraph cg = Scene.v().getCallGraph();
         PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         Queue<MethodInContext> queue = new ArrayDeque<>();
         Set<MethodInContext> traversed = new HashSet<>();
 
-        //a map from child to parent edge is equivalent to 1-CFA cotnext sensitivity.
         Map<MethodInContext, MethodInContext> outflow = new HashMap<>();
         MethodInContext rootInContext = new MethodInContext(root, null);
         queue.add(rootInContext);
@@ -95,23 +90,23 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
 
 
         for (MethodInContext meth = queue.poll(); meth != null; meth = queue.poll()) {
-            final MethodInContext methCopy = meth; //to make lambda expressions happy
-            MethodOrMethodContext srcMeth = meth.method;
-            Context context = meth.context;
+            final MethodInContext srcInContext = meth; //to make lambda expressions happy
+            MethodOrMethodContext srcMeth = srcInContext.method;
             if (srcMeth.method().hasActiveBody()) {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
-                        (Unit unit) -> getUnitEdgeIterator(unit, context, cg, pta).forEachRemaining((Edge edge) -> {
-                            MethodInContext tgtInContext = MethodInContext.forTarget(edge);
+                        (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg, pta)
+                                .forEachRemaining((Edge edge) -> {
+                                    MethodInContext tgtInContext = MethodInContext.forTarget(edge);
 
-                            if (!traversed.contains(tgtInContext)) {
-                                traversed.add(tgtInContext);
-                                queue.add(tgtInContext);
-                                outflow.put(tgtInContext, methCopy);
-                                if (consumers.contains(edge.getTgt())) {
-                                    consumersInContext.add(tgtInContext);
-                                }
-                            }
-                        }));
+                                    if (!traversed.contains(tgtInContext)) {
+                                        traversed.add(tgtInContext);
+                                        queue.add(tgtInContext);
+                                        outflow.put(tgtInContext, srcInContext);
+                                        if (consumers.contains(edge.getTgt())) {
+                                            consumersInContext.add(tgtInContext);
+                                        }
+                                    }
+                                }));
             }
         }
         return outflow;
@@ -146,9 +141,9 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
 
                 return StreamUtil.asStream(cg.edgesOutOf(unit))
                         //Hack required due to hacks of class Thread in Soot:
-                        //if it's a THREAD edge, include it without comparing to actual targets
-                        .filter(edge -> edge.kind() == Kind.THREAD
-                                || actualTargetMethods.get().contains(edge.getTgt().method()))
+                        //if it's a fake edge, include it without comparing to actual targets.
+                        .filter(edge ->
+                                actualTargetMethods.get().contains(edge.getTgt().method()) || edge.kind().isFake())
                         .iterator();
             }
         }
