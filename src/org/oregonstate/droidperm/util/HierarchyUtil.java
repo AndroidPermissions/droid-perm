@@ -74,7 +74,6 @@ public class HierarchyUtil {
         FORBID
     }
 
-    // TODO find the best treatment for this
     private static final AnySubTypeTreatment ANY_SUBTYPE_TREATMENT = AnySubTypeTreatment.ALLOW_VALID;
 
     public static List<SootMethod> resolveAbstractDispatches(Collection<SootMethodAndClass> methodDefs) {
