@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
+import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
@@ -82,6 +83,10 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
         PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         Queue<MethodInContext> queue = new ArrayDeque<>();
         Set<MethodInContext> traversed = new HashSet<>();
+
+        if (pta.getClass() != GeomPointsTo.class) {
+            throw new RuntimeException("Wrong PointsToAnalysis class found: " + pta.getClass());
+        }
 
         Map<MethodInContext, MethodInContext> outflow = new HashMap<>();
         MethodInContext rootInContext = new MethodInContext(root, null);
