@@ -16,8 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 3/28/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 3/28/2016.
  */
 public class ContextSensOutflowCPHolder implements CallPathHolder {
 
@@ -31,9 +30,9 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
 
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
-     * <br/>
+     * <p>
      * 1-st level map: key = callback, value = outflow of that callback.
-     * <br/>
+     * <p>
      * 2-nd level map: key = node in the outflow, value = parent node. Both are context-sensitive.
      */
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> callbackToOutflowMap;
@@ -127,7 +126,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
             // only virtual invocations require context sensitivity.
             if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
                 //we canot compute this list if there are no edges, hence the need for a supplier
-                Supplier<List<SootMethod>> actualTargetMethods = new CachingSupplier<>(() -> {
+                Supplier<List<SootMethod>> pointsToTargetMethods = new CachingSupplier<>(() -> {
                     InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
                     SootMethod staticTargetMethod = invoke.getMethod();
                     //in Jimple target is always Local, regardless of who is the qualifier in Java.
@@ -140,15 +139,34 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
                         logger.debug(e.toString());
                         return Collections.emptyList();
                     }
-                    Set<Type> targetPossibleTypes = pointsToSet.possibleTypes();
-                    return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, targetPossibleTypes);
+                    Set<Type> pointsToTargetTypes = pointsToSet.possibleTypes();
+                    return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, pointsToTargetTypes);
                 });
 
+                //todo: more precise support for fake edges - take into account the changed target.
+                //Fake edges alter the natural mapping between edge.srcStmt() => edge.tgt()
+                //  e.g. the actually invoked method is a different than the one allowed by class hierarchy.
+                //Problems with fake edges:
+                // 1. They alter the invoked method. Ex: Thread.start() => Thread.run().
+                //      edge.srcStmt()...getMethod() != edge.tgt()
+                // 2. They might alter invocation target. Ex: executor.submit(r) => r.run()
+                //      edge.srcStmt()...getBase()
+                //          != actual receiver inside OFCGB.methodToReceivers.get(edge.srcStmt()...getMethod())
+                //      How to get it???
+                //      v1: Get it correctly from OnFlyCallGraphBuilder.
+                //      v2: Hack it for every particular implementation of fake edge.
+
+                //Why context sensitivity works for Thread.start()?
+                //  Current algorithm won't distinguish between 2 statements Thread.start() within the same method,
+                //  but it doesn't matter for the purpose of DroidPerm.
+                //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
+                //  not through PointsToSet analysis in this class.
+                //todo: Adapt CInsens Inflow/OutflowHolder to preserve 1-CFA context sensitivity embedded into geom-pta CG.
                 return StreamUtil.asStream(cg.edgesOutOf(unit))
-                        //Hack required due to hacks of class Thread in Soot:
+                        //Fake edges are a hack in Soot for handling async constructs.
                         //if it's a fake edge, include it without comparing to actual targets.
                         .filter(edge ->
-                                actualTargetMethods.get().contains(edge.getTgt().method()) || edge.kind().isFake())
+                                pointsToTargetMethods.get().contains(edge.getTgt().method()) || edge.kind().isFake())
                         .iterator();
             }
         }
