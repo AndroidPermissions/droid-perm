@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.MethodOrMethodContext;
 import soot.Scene;
@@ -10,8 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 3/28/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 3/28/2016.
  */
 public class OutflowCPHolder implements CallPathHolder {
 
@@ -20,11 +20,11 @@ public class OutflowCPHolder implements CallPathHolder {
 
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
-     * <br/>
+     * <p/>
      * 1-st level map: key = callback, value = outflow of that callback.
-     * <br/>
-     * 2-nd level map: key = node in the outflow, value = edge to its parent. Entries are of the form:
-     * (N, Edge(src = P, dest = N))
+     * <p/>
+     * 2-nd level map: key = node in the outflow, value = edge to its parent. Entries are of the form: (N, Edge(src = P,
+     * dest = N))
      */
     private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> callbackToOutflowMap;
 
@@ -55,8 +55,9 @@ public class OutflowCPHolder implements CallPathHolder {
     /**
      * Produces the outflow tree starting from the root method, by breadth-first traversal.
      *
-     * @return A map from nodes in the outflow to the edge leading to its parent. Elements are of the form
-     * (N, Edge(src = P, dest = N))
+     * @return A map from nodes in the outflow to the edge leading to its parent.
+     * <p>
+     * Elements are of the form (N, Edge(src = P, dest = N))
      */
     private static Map<MethodOrMethodContext, Edge> getBreadthFirstOutflow(MethodOrMethodContext root) {
         CallGraph cg = Scene.v().getCallGraph();
@@ -67,6 +68,7 @@ public class OutflowCPHolder implements CallPathHolder {
         traversed.add(root);
 
         for (MethodOrMethodContext node = queue.poll(); node != null; node = queue.poll()) {
+            //DebugUtil.debugEdgesOutOf(cg, node);
             Iterator<Edge> it = cg.edgesOutOf(node);
             while (it.hasNext()) {
                 Edge edge = it.next();

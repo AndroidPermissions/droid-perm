@@ -4,7 +4,10 @@ import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import soot.*;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
-import soot.jimple.toolkits.callgraph.*;
+import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
+import soot.jimple.toolkits.callgraph.Targets;
+import soot.jimple.toolkits.callgraph.TransitiveTargets;
 import soot.util.MultiMap;
 
 import java.lang.reflect.Field;
@@ -13,8 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 2/22/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/22/2016.
  */
 public class DebugUtil {
     public static void printTransitiveTargets(MethodOrMethodContext meth) {
@@ -88,6 +90,20 @@ public class DebugUtil {
             cg.iterator().forEachRemaining(System.out::println);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void debugEdgesOutOf(CallGraph cg, MethodOrMethodContext node) {
+        if (node.toString()
+                .equals("<java.util.concurrent.AbstractExecutorService:" +
+                        " java.util.concurrent.Future submit(java.lang.Runnable)>")) {
+            System.out.println("Edges out of AbstractExecutorService.submit():");
+            cg.edgesOutOf(node).forEachRemaining(edge -> System.out.println("    " + edge));
+        }
+        if (node.toString()
+                .equals("<java.lang.Thread: void run()>")) {
+            System.out.println("Edges out of Thread.run():");
+            cg.edgesOutOf(node).forEachRemaining(edge -> System.out.println("    " + edge));
         }
     }
 }
