@@ -81,7 +81,7 @@ public class HierarchyUtil {
                 .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
-    private static List<SootMethod> resolveAbstractDispatch(SootMethodAndClass methodDef) {
+    public static List<SootMethod> resolveAbstractDispatch(SootMethodAndClass methodDef) {
         Scene scene = Scene.v();
         SootClass clazz = scene.getSootClassUnsafe(methodDef.getClassName());
         if (clazz == null) {

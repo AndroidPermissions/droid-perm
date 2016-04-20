@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
@@ -33,6 +34,11 @@ public class MethodPermDetector {
 
     private CallPathHolder callPathHolder;
 
+    /**
+     * A map from permission sets to sets of sensitive methods that require this permission set.
+     */
+    private Map<Set<String>, Set<MethodOrMethodContext>> permissionToSensitivesMap;
+
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
         analyze();
@@ -52,15 +58,28 @@ public class MethodPermDetector {
         }
 
         Set<SootMethodAndClass> permCheckerDefs = permissionDefParser.getPermCheckerDefs();
-        Set<? extends SootMethodAndClass> sensitiveDefs = permissionDefParser.getSensitiveDefs();
+        Set<AndroidMethod> sensitiveDefs = permissionDefParser.getSensitiveDefs();
 
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         sensitives = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(sensitiveDefs));
         dummyMainMethod = getDummyMain();
 
+        //todo compute sensitives from this map
+        Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs =
+                CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
+
+        //todo convert to reduce operation, ducument the refactoring
+        permissionToSensitivesMap = resolvedSensitiveDefs.entrySet().stream().collect(Collectors.toMap(
+                entry -> new HashSet<>(entry.getKey().getPermissions()), Map.Entry::getValue,
+                (sensSet1, sensSet2) -> {
+                    sensSet1.addAll(sensSet2);
+                    return sensSet1;
+                }
+        ));
+
         permCheckerInflow = CallGraphUtil.getInflowCallGraph(permCheckers);
-        permCheckerCallbacks = permCheckerInflow.stream().filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt)
-                .collect(Collectors.toSet());
+        permCheckerCallbacks = permCheckerInflow.stream()
+                .filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt).collect(Collectors.toSet());
 
         //select one of the call path algorithms.
         //callPathHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
@@ -87,37 +106,38 @@ public class MethodPermDetector {
     }
 
     private void printCoveredCallbacks() {
-        System.out.println("\n\nCovered callbacks for each permission/sensitive \n====================================");
+        System.out
+                .println("\n\nCovered callbacks for each permission/sensitive \n====================================");
 
-        //todo - a map from permission sets to sensitive sets
-        /*Map<Set<String>, Set<MethodOrMethodContext>> = sensitives.stream().collect(
-                Collectors.groupingBy(sens -> ));*/
+        for (Set<String> permSet : permissionToSensitivesMap.keySet()) {
+            System.out.println("\n" + permSet + "\n------------------------------------");
 
-        //sorting methods by toString() efficiently, without computing toString() each time.
-        Collection<MethodOrMethodContext> sortedSensitives =
-                sensitives.stream().collect(Collectors
-                        .toMap(Object::toString, Function.identity(), StreamUtil.throwingMerger(), TreeMap::new))
-                        .values();
+            //sorting methods by toString() efficiently, without computing toString() each time.
+            Collection<MethodOrMethodContext> sortedSensitives =
+                    permissionToSensitivesMap.get(permSet).stream().collect(Collectors
+                            .toMap(Object::toString, Function.identity(), StreamUtil.throwingMerger(), TreeMap::new))
+                            .values();
+            for (MethodOrMethodContext sensitive : sortedSensitives) {
+                System.out.println("\nCallbacks for: " + sensitive);
 
-        for (MethodOrMethodContext sensitive : sortedSensitives) {
-            System.out.println("\nCallbacks for: " + sensitive);
+                //true for covered callbacks, false for not covered
+                Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
+                        callPathHolder.getCallbacks(sensitive).stream()
+                                .collect(Collectors.partitioningBy(permCheckerCallbacks::contains));
 
-            //true for covered callbacks, false for not covered
-            Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
-                    callPathHolder.getCallbacks(sensitive).stream()
-                            .collect(Collectors.partitioningBy(permCheckerCallbacks::contains));
+                if (!partitionedCallbacks.get(true).isEmpty()) {
+                    System.out.println("Permission check detected:");
+                    partitionedCallbacks.get(true).stream()
+                            .forEach((MethodOrMethodContext cb) -> System.out.println("    " + cb));
+                }
 
-            if (!partitionedCallbacks.get(true).isEmpty()) {
-                System.out.println("Permission check detected:");
-                partitionedCallbacks.get(true).stream()
-                        .forEach((MethodOrMethodContext cb) -> System.out.println("    " + cb));
+                if (!partitionedCallbacks.get(false).isEmpty()) {
+                    System.out.println("Permission check NOT detected:");
+                    partitionedCallbacks.get(false).stream()
+                            .forEach(cb -> System.out.println("    " + cb));
+                }
             }
-
-            if (!partitionedCallbacks.get(false).isEmpty()) {
-                System.out.println("Permission check NOT detected:");
-                partitionedCallbacks.get(false).stream()
-                        .forEach(cb -> System.out.println("    " + cb));
-            }
+            System.out.println();
         }
         System.out.println();
     }
