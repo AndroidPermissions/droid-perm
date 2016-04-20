@@ -76,7 +76,7 @@ public class HierarchyUtil {
 
     private static final AnySubTypeTreatment ANY_SUBTYPE_TREATMENT = AnySubTypeTreatment.ALLOW_VALID;
 
-    public static List<SootMethod> resolveAbstractDispatches(Collection<SootMethodAndClass> methodDefs) {
+    public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs) {
         return methodDefs.stream().map(HierarchyUtil::resolveAbstractDispatch)
                 .flatMap(Collection::stream).collect(Collectors.toList());
     }
