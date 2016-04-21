@@ -64,11 +64,12 @@ public class MethodPermDetector {
         sensitives = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(sensitiveDefs));
         dummyMainMethod = getDummyMain();
 
-        //todo compute sensitives from this map
+        //toclean compute sensitives from this map
         Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs =
                 CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
 
-        //todo convert to reduce operation, ducument the refactoring
+        //toclean a map from permissions to sensitive defs instead
+        //toclean convert to reduce operation, ducument the refactoring
         permissionToSensitivesMap = resolvedSensitiveDefs.entrySet().stream().collect(Collectors.toMap(
                 entry -> new HashSet<>(entry.getKey().getPermissions()), Map.Entry::getValue,
                 (sensSet1, sensSet2) -> {
