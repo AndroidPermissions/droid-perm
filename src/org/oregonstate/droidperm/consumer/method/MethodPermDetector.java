@@ -10,12 +10,14 @@ import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/19/2016.
@@ -24,22 +26,32 @@ public class MethodPermDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
 
-    private Set<MethodOrMethodContext> permCheckers;
-    private Set<MethodOrMethodContext> sensitives;
     private MethodOrMethodContext dummyMainMethod;
 
-    //todo build them through the same algorithm as sensitives
-    private List<Edge> permCheckerInflow;//could be local except debugging
+    private Set<MethodOrMethodContext> permCheckers;
+    private Map<MethodOrMethodContext, Set<String>> callbackToCheckedPermsMap;
+
+    /**
+     * The combined inflow of all checkers.
+     * <p>
+     * todo build them through the same algorithm as sensitives
+     */
+    private List<Edge> permCheckerInflow;
+
+    /**
+     * Set of callbacks with permission checks.
+     */
     private Set<MethodOrMethodContext> permCheckerCallbacks;
 
-    private CallPathHolder callPathHolder;
-
     private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
+    private Set<MethodOrMethodContext> sensitives;
 
     /**
      * A map from permission sets to sets of resolved sensitive method definitions requiring this permission set.
      */
     private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
+
+    private CallPathHolder callPathHolder;
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
@@ -62,19 +74,23 @@ public class MethodPermDetector {
         Set<SootMethodAndClass> permCheckerDefs = permissionDefParser.getPermCheckerDefs();
         Set<AndroidMethod> sensitiveDefs = permissionDefParser.getSensitiveDefs();
 
-        permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         dummyMainMethod = getDummyMain();
 
+        //checkers
+        permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
+        callbackToCheckedPermsMap = buildCallbackToCheckedPermsMap(permCheckers);
+
+        permCheckerInflow = CallGraphUtil.getInflowCallGraph(permCheckers);
+        permCheckerCallbacks = permCheckerInflow.stream()
+                .filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt).collect(Collectors.toSet());
+
+        //sensitives
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
 
         sensitives = new HashSet<>();
         resolvedSensitiveDefs.values().forEach(sensitives::addAll);
 
         permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
-
-        permCheckerInflow = CallGraphUtil.getInflowCallGraph(permCheckers);
-        permCheckerCallbacks = permCheckerInflow.stream()
-                .filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt).collect(Collectors.toSet());
 
         //select one of the call path algorithms.
         //callPathHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
@@ -93,6 +109,17 @@ public class MethodPermDetector {
         callPathHolder.printPathsFromCallbackToConsumer();
         printCoveredCallbacks();
         //DebugUtil.pointsToTest();
+    }
+
+    private Map<MethodOrMethodContext, Set<String>> buildCallbackToCheckedPermsMap(
+            Set<MethodOrMethodContext> permCheckers) {
+        CallGraph cg = Scene.v().getCallGraph();
+
+        //key intuition: in both perm. checkers the last argument is the permission
+        Stream<Edge> checkerCallStream = permCheckers.stream()
+                //all edges invoking permission checks
+                .flatMap(checkerMeth -> StreamUtil.asStream(cg.edgesInto(checkerMeth)));
+        return null; //todo
     }
 
     private Map<Set<String>, Set<AndroidMethod>> buildPermissionToSensitiveDefMap(Set<AndroidMethod> permissionDefs) {
