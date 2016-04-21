@@ -161,7 +161,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
                 //  but it doesn't matter for the purpose of DroidPerm.
                 //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
                 //  not through PointsToSet analysis in this class.
-                //todo: Adapt CInsens Inflow/OutflowHolder to preserve 1-CFA context sensitivity embedded into geom-pta CG.
+                //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
                 return StreamUtil.asStream(cg.edgesOutOf(unit))
                         //Fake edges are a hack in Soot for handling async constructs.
                         //if it's a fake edge, include it without comparing to actual targets.
