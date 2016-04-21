@@ -29,7 +29,6 @@ public class PermissionDefParser {
     private static final int INITIAL_SET_SIZE = 10000;
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 
-    //toclean replace with more specific types, like PermissionDef.
     private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>(INITIAL_SET_SIZE);
     private Set<AndroidMethod> sensitiveDefs = new HashSet<>(INITIAL_SET_SIZE);
 

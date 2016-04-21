@@ -15,6 +15,19 @@ import java.util.*;
  */
 public class CallGraphUtil {
 
+    public static <T extends SootMethodAndClass> Map<T, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
+            Collection<T> methodDefs) {
+        Map<T, Set<MethodOrMethodContext>> result = new HashMap<>();
+        for (T methodDef : methodDefs) {
+            Set<MethodOrMethodContext> methods = getNodesFor(HierarchyUtil.resolveAbstractDispatch(methodDef));
+
+            if (!methods.isEmpty()) {
+                result.put(methodDef, methods);
+            }
+        }
+        return result;
+    }
+
     /**
      * Return the subset of methods (eventually in their context) contained in the call graph, out of the input
      * collection.
@@ -58,18 +71,5 @@ public class CallGraphUtil {
 
     public static List<Edge> getInflowCallGraph(Set<MethodOrMethodContext> methods) {
         return new InflowBuilder(Scene.v().getCallGraph()).getInflow(methods);
-    }
-
-    public static <T extends SootMethodAndClass> Map<T, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
-            Collection<T> methodDefs) {
-        Map<T, Set<MethodOrMethodContext>> result = new HashMap<>();
-        for (T methodDef : methodDefs) {
-            Set<MethodOrMethodContext> methods = getNodesFor(HierarchyUtil.resolveAbstractDispatch(methodDef));
-
-            if (!methods.isEmpty()) {
-                result.put(methodDef, methods);
-            }
-        }
-        return result;
     }
 }

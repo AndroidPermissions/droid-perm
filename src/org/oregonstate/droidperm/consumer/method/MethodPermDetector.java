@@ -34,10 +34,12 @@ public class MethodPermDetector {
 
     private CallPathHolder callPathHolder;
 
+    private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
+
     /**
-     * A map from permission sets to sets of sensitive methods that require this permission set.
+     * A map from permission sets to sets of resolved sensitive method definitions requiring this permission set.
      */
-    private Map<Set<String>, Set<MethodOrMethodContext>> permissionToSensitivesMap;
+    private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
@@ -61,22 +63,14 @@ public class MethodPermDetector {
         Set<AndroidMethod> sensitiveDefs = permissionDefParser.getSensitiveDefs();
 
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
-        sensitives = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(sensitiveDefs));
         dummyMainMethod = getDummyMain();
 
-        //toclean compute sensitives from this map
-        Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs =
-                CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
+        resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
 
-        //toclean a map from permissions to sensitive defs instead
-        //toclean convert to reduce operation, ducument the refactoring
-        permissionToSensitivesMap = resolvedSensitiveDefs.entrySet().stream().collect(Collectors.toMap(
-                entry -> new HashSet<>(entry.getKey().getPermissions()), Map.Entry::getValue,
-                (sensSet1, sensSet2) -> {
-                    sensSet1.addAll(sensSet2);
-                    return sensSet1;
-                }
-        ));
+        sensitives = new HashSet<>();
+        resolvedSensitiveDefs.values().forEach(sensitives::addAll);
+
+        permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
 
         permCheckerInflow = CallGraphUtil.getInflowCallGraph(permCheckers);
         permCheckerCallbacks = permCheckerInflow.stream()
@@ -101,6 +95,17 @@ public class MethodPermDetector {
         //DebugUtil.pointsToTest();
     }
 
+    private Map<Set<String>, Set<AndroidMethod>> buildPermissionToSensitiveDefMap(Set<AndroidMethod> permissionDefs) {
+        return permissionDefs.stream().collect(Collectors.toMap(
+                sensitiveDef -> new HashSet<>(sensitiveDef.getPermissions()),
+                sensitiveDef -> new HashSet<>(Collections.singleton(sensitiveDef)),
+                (set1, set2) -> { //merge function, concatenating 2 sets of sensitive defs
+                    set1.addAll(set2);
+                    return set1;
+                }
+        ));
+    }
+
     private static MethodOrMethodContext getDummyMain() {
         String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
         return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
@@ -110,14 +115,16 @@ public class MethodPermDetector {
         System.out
                 .println("\n\nCovered callbacks for each permission/sensitive \n====================================");
 
-        for (Set<String> permSet : permissionToSensitivesMap.keySet()) {
+        for (Set<String> permSet : permissionToSensitiveDefMap.keySet()) {
             System.out.println("\n" + permSet + "\n------------------------------------");
 
             //sorting methods by toString() efficiently, without computing toString() each time.
-            Collection<MethodOrMethodContext> sortedSensitives =
-                    permissionToSensitivesMap.get(permSet).stream().collect(Collectors
+            Collection<MethodOrMethodContext> sortedSensitives = permissionToSensitiveDefMap.get(permSet).stream()
+                    .flatMap(sensDef -> resolvedSensitiveDefs.get(sensDef).stream())
+                    //collection into TreeMap with keys produced by toString() ensures sorting by toString()
+                    .collect(Collectors
                             .toMap(Object::toString, Function.identity(), StreamUtil.throwingMerger(), TreeMap::new))
-                            .values();
+                    .values();
             for (MethodOrMethodContext sensitive : sortedSensitives) {
                 System.out.println("\nCallbacks for: " + sensitive);
 
