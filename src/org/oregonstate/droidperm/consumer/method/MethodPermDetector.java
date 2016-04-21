@@ -99,10 +99,7 @@ public class MethodPermDetector {
         return permissionDefs.stream().collect(Collectors.toMap(
                 sensitiveDef -> new HashSet<>(sensitiveDef.getPermissions()),
                 sensitiveDef -> new HashSet<>(Collections.singleton(sensitiveDef)),
-                (set1, set2) -> { //merge function, concatenating 2 sets of sensitive defs
-                    set1.addAll(set2);
-                    return set1;
-                }
+                StreamUtil::mutableUnion //merge function for values
         ));
     }
 

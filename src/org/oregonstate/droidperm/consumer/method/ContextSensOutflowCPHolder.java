@@ -181,11 +181,8 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
                 consumerInContext -> callbackToOutflowMap.entrySet().stream()
                         .filter(entry -> entry.getValue().containsKey(consumerInContext)).map(Map.Entry::getKey).
                                 collect(Collectors.toSet()),
-                //merge function required, because 2 consumerInContext could map to the same consumer
-                (set1, set2) -> { //merge function, concatenating 2 sets of callbacks
-                    set1.addAll(set2);
-                    return set1;
-                }
+                //merge function for values required, because 2 consumerInContext could map to the same consumer
+                StreamUtil::mutableUnion
         ));
     }
 

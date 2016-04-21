@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.util;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -29,5 +30,10 @@ public class StreamUtil {
         return (u, v) -> {
             throw new IllegalStateException(String.format("Duplicate key %s", u));
         };
+    }
+
+    public static <T> Set<T> mutableUnion(Set<T> set1, Set<T> set2) {
+        set1.addAll(set2);
+        return set1;
     }
 }
