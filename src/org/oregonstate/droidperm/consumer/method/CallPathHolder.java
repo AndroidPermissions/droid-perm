@@ -5,12 +5,13 @@ import soot.MethodOrMethodContext;
 import java.util.Set;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 4/3/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/3/2016.
  */
 public interface CallPathHolder {
 
-    Set<MethodOrMethodContext> getCallbacks(MethodOrMethodContext consumer);
+    Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive);
 
-    void printPathsFromCallbackToConsumer();
+    Set<MethodOrMethodContext> getReachableCallbacks();
+
+    void printPathsFromCallbackToSensitive();
 }

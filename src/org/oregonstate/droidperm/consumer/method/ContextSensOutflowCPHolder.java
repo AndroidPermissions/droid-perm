@@ -18,15 +18,13 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 3/28/2016.
  */
-public class ContextSensOutflowCPHolder implements CallPathHolder {
+public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
 
     private long time = System.currentTimeMillis();
 
-    private MethodOrMethodContext dummyMainMethod;
-    private Set<MethodOrMethodContext> consumers;
-    private Set<MethodInContext> consumersInContext = new HashSet<>();
+    private Set<MethodInContext> sensitivesInContext = new HashSet<>();
 
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
@@ -38,15 +36,14 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> callbackToOutflowMap;
 
     /**
-     * Map from consumers to sets of callbacks.
+     * Map from sensitives to sets of callbacks.
      */
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
+    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> sensitiveToCallbacksMap;
 
-    public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
-        this.dummyMainMethod = dummyMainMethod;
-        this.consumers = consumers;
+    public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives) {
+        super(dummyMainMethod, sensitives);
         callbackToOutflowMap = buildCallbackToOutflowMap();
-        consumerCallbacks = buildConsumerCallbacksFromOutflows();
+        sensitiveToCallbacksMap = buildConsumerCallbacksFromOutflows();
     }
 
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
@@ -56,7 +53,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
 
             Collection<MethodOrMethodContext> outflowNodes =
                     outflow.keySet().stream().map(methIC -> methIC.method).collect(Collectors.toList());
-            if (!Collections.disjoint(outflowNodes, consumers)) {
+            if (!Collections.disjoint(outflowNodes, sensitives)) {
                 map.put(callback, outflow);
             }
 
@@ -106,8 +103,8 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
                                         traversed.add(tgtInContext);
                                         queue.add(tgtInContext);
                                         outflow.put(tgtInContext, srcInContext);
-                                        if (consumers.contains(edge.getTgt())) {
-                                            consumersInContext.add(tgtInContext);
+                                        if (sensitives.contains(edge.getTgt())) {
+                                            sensitivesInContext.add(tgtInContext);
                                         }
                                     }
                                 }));
@@ -176,27 +173,27 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     }
 
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
-        return consumersInContext.stream().collect(Collectors.toMap(
-                consumerInContext -> consumerInContext.method,
-                consumerInContext -> callbackToOutflowMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().containsKey(consumerInContext)).map(Map.Entry::getKey).
+        return sensitivesInContext.stream().collect(Collectors.toMap(
+                sensitiveInContext -> sensitiveInContext.method,
+                sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
+                        .filter(entry -> entry.getValue().containsKey(sensitiveInContext)).map(Map.Entry::getKey).
                                 collect(Collectors.toSet()),
-                //merge function for values required, because 2 consumerInContext could map to the same consumer
+                //merge function for values required, because 2 sensitiveInContext could map to the same sensitive
                 StreamUtil::mutableUnion
         ));
     }
 
     @Override
-    public void printPathsFromCallbackToConsumer() {
-        System.out.println("\nPaths from each callback to each consumer");
+    public void printPathsFromCallbackToSensitive() {
+        System.out.println("\nPaths from each callback to each sensitive");
         System.out.println("============================================\n");
 
 
         for (Map.Entry<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> entry : callbackToOutflowMap
                 .entrySet()) {
-            for (MethodInContext consumerInContext : consumersInContext) {
-                if (entry.getValue().containsKey(consumerInContext)) {
-                    printPath(entry.getKey(), consumerInContext, entry.getValue());
+            for (MethodInContext sensitiveInContext : sensitivesInContext) {
+                if (entry.getValue().containsKey(sensitiveInContext)) {
+                    printPath(entry.getKey(), sensitiveInContext, entry.getValue());
                 }
             }
         }
@@ -230,8 +227,7 @@ public class ContextSensOutflowCPHolder implements CallPathHolder {
     }
 
     @Override
-    public Set<MethodOrMethodContext> getCallbacks(MethodOrMethodContext consumer) {
-        return consumerCallbacks.get(consumer);
+    protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
+        return sensitiveToCallbacksMap;
     }
-
 }

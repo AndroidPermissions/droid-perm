@@ -26,22 +26,12 @@ public class MethodPermDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
 
+    @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
 
     private Set<MethodOrMethodContext> permCheckers;
+    private CallPathHolder checkerPathsHolder;
     private Map<MethodOrMethodContext, Set<String>> callbackToCheckedPermsMap;
-
-    /**
-     * The combined inflow of all checkers.
-     * <p>
-     * todo build them through the same algorithm as sensitives
-     */
-    private List<Edge> permCheckerInflow;
-
-    /**
-     * Set of callbacks with permission checks.
-     */
-    private Set<MethodOrMethodContext> permCheckerCallbacks;
 
     private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
     private Set<MethodOrMethodContext> sensitives;
@@ -51,7 +41,7 @@ public class MethodPermDetector {
      */
     private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
 
-    private CallPathHolder callPathHolder;
+    private CallPathHolder sensitivePathsHolder;
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
@@ -78,11 +68,9 @@ public class MethodPermDetector {
 
         //checkers
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
-        callbackToCheckedPermsMap = buildCallbackToCheckedPermsMap(permCheckers);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers);
 
-        permCheckerInflow = CallGraphUtil.getInflowCallGraph(permCheckers);
-        permCheckerCallbacks = permCheckerInflow.stream()
-                .filter(e -> e.getSrc().equals(dummyMainMethod)).map(Edge::getTgt).collect(Collectors.toSet());
+        callbackToCheckedPermsMap = buildCallbackToCheckedPermsMap(permCheckers);
 
         //sensitives
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
@@ -93,9 +81,9 @@ public class MethodPermDetector {
         permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
 
         //select one of the call path algorithms.
-        //callPathHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
-        //callPathHolder = new InflowCPHolder(dummyMainMethod, sensitives);
-        callPathHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives);
+        //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
+        //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives);
 
         //DebugUtil.printTargets(sensitives);
     }
@@ -103,10 +91,9 @@ public class MethodPermDetector {
     private void printResults() {
         //setupApp.printProducerDefs();
         //setupApp.printConsumerDefs();
-        printProducers();
-        printConsumers();
-        //printProducerInflow();
-        callPathHolder.printPathsFromCallbackToConsumer();
+        printCheckers();
+        printSensitives();
+        sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printCoveredCallbacks();
         //DebugUtil.pointsToTest();
     }
@@ -153,9 +140,10 @@ public class MethodPermDetector {
                 System.out.println("\nCallbacks for: " + sensitive);
 
                 //true for covered callbacks, false for not covered
+                Set<MethodOrMethodContext> checkerCallbacks = checkerPathsHolder.getReachableCallbacks();
                 Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
-                        callPathHolder.getCallbacks(sensitive).stream()
-                                .collect(Collectors.partitioningBy(permCheckerCallbacks::contains));
+                        sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
+                                .collect(Collectors.partitioningBy(checkerCallbacks::contains));
 
                 if (!partitionedCallbacks.get(true).isEmpty()) {
                     System.out.println("Permission check detected:");
@@ -174,22 +162,14 @@ public class MethodPermDetector {
         System.out.println();
     }
 
-    public void printProducers() {
-        System.out.println("\n\nProducers in the app: \n====================================");
+    public void printCheckers() {
+        System.out.println("\n\nCheckers in the app: \n====================================");
         permCheckers.forEach(System.out::println);
     }
 
-    public void printConsumers() {
-        System.out.println("\n\nConsumers in the app: \n====================================");
+    public void printSensitives() {
+        System.out.println("\n\nSensitives in the app: \n====================================");
         sensitives.forEach(System.out::println);
-    }
-
-    private void printProducerInflow() {
-        System.out.println("\n============================================");
-        System.out.println("Inflow call graph for permCheckers:\n");
-
-        permCheckerInflow.stream().map(Edge::getSrc).distinct()
-                .forEach(System.out::println);
     }
 
 }

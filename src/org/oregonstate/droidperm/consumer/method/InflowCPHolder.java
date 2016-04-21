@@ -8,36 +8,29 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 4/3/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/3/2016.
  */
-public class InflowCPHolder implements CallPathHolder {
-
-    private MethodOrMethodContext dummyMainMethod;
-    private Set<MethodOrMethodContext> consumers;
+public class InflowCPHolder extends AbstractCallPathHolder {
 
     /**
-     * 1st level map: key = consumer, value = inflow graph as 2nd lvl map.
-     * <br/>
-     * 2nd level map: key = source node, value = list of edges having that source node.
+     * 1st level map: key = consumer, value = inflow graph as 2nd lvl map. <br/> 2nd level map: key = source node, value
+     * = list of edges having that source node.
      */
     private Map<MethodOrMethodContext, Map<MethodOrMethodContext, List<Edge>>> consumerToInflowGraphMap;
 
     /**
-     * Map from consumers to sets of callbacks.
+     * Map from sensitives to sets of callbacks.
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
     public InflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
-        this.dummyMainMethod = dummyMainMethod;
-        this.consumers = consumers;
-
+        super(dummyMainMethod, consumers);
         consumerToInflowGraphMap = buildConsumerToInflowGraphMap();
         consumerCallbacks = buildConsumerCallbacksFromInflows();
     }
 
     private Map<MethodOrMethodContext, Map<MethodOrMethodContext, List<Edge>>> buildConsumerToInflowGraphMap() {
-        return consumers.stream().collect(Collectors.toMap(
+        return sensitives.stream().collect(Collectors.toMap(
                 consumer -> consumer,
                 consumer -> CallGraphUtil.getInflowCallGraph(consumer).stream()
                         .filter(edge -> edge.getSrc() != null) //basically elliminates the main method.
@@ -46,7 +39,7 @@ public class InflowCPHolder implements CallPathHolder {
     }
 
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromInflows() {
-        return consumers.stream().collect(Collectors.toMap(
+        return sensitives.stream().collect(Collectors.toMap(
                 consumer -> consumer,
                 consumer -> consumerToInflowGraphMap.get(consumer)
                         .get(dummyMainMethod).stream() // list of edges coming from main in this inflow
@@ -57,9 +50,9 @@ public class InflowCPHolder implements CallPathHolder {
 
     void printConsumerInflows() {
         System.out.println("\n============================================");
-        System.out.println("Inflow call graph for consumers\n");
+        System.out.println("Inflow call graph for sensitives\n");
 
-        for (MethodOrMethodContext meth : consumers) {
+        for (MethodOrMethodContext meth : sensitives) {
             System.out.println("\nConsumer " + meth + " :\n");
             consumerToInflowGraphMap.get(meth).forEach(
                     (src, edges) -> {
@@ -70,11 +63,11 @@ public class InflowCPHolder implements CallPathHolder {
     }
 
     @Override
-    public void printPathsFromCallbackToConsumer() {
+    public void printPathsFromCallbackToSensitive() {
         System.out.println("\nPaths from each callback to each consumer");
         System.out.println("============================================\n");
 
-        for (MethodOrMethodContext cons : consumers) {
+        for (MethodOrMethodContext cons : sensitives) {
             Map<MethodOrMethodContext, List<Edge>> inflow = consumerToInflowGraphMap.get(cons);
             for (MethodOrMethodContext callback : consumerCallbacks.get(cons)) {
                 printPath(callback, cons, inflow);
@@ -129,7 +122,7 @@ public class InflowCPHolder implements CallPathHolder {
     }
 
     @Override
-    public Set<MethodOrMethodContext> getCallbacks(MethodOrMethodContext consumer) {
-        return consumerCallbacks.get(consumer);
+    protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
+        return consumerCallbacks;
     }
 }

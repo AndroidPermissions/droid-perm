@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.consumer.method;
 
-import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.MethodOrMethodContext;
 import soot.Scene;
@@ -13,10 +12,7 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 3/28/2016.
  */
-public class OutflowCPHolder implements CallPathHolder {
-
-    private MethodOrMethodContext dummyMainMethod;
-    private Set<MethodOrMethodContext> consumers;
+public class OutflowCPHolder extends AbstractCallPathHolder {
 
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
@@ -29,13 +25,12 @@ public class OutflowCPHolder implements CallPathHolder {
     private Map<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> callbackToOutflowMap;
 
     /**
-     * Map from consumers to sets of callbacks.
+     * Map from sensitives to sets of callbacks.
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> consumerCallbacks;
 
     public OutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> consumers) {
-        this.dummyMainMethod = dummyMainMethod;
-        this.consumers = consumers;
+        super(dummyMainMethod, consumers);
         callbackToOutflowMap = buildCallbackToOutflowMap();
         consumerCallbacks = buildConsumerCallbacksFromOutflows();
     }
@@ -45,7 +40,7 @@ public class OutflowCPHolder implements CallPathHolder {
         for (MethodOrMethodContext callback : getUICallbacks()) {
             Map<MethodOrMethodContext, Edge> outflow = getBreadthFirstOutflow(callback);
 
-            if (!Collections.disjoint(outflow.keySet(), consumers)) {
+            if (!Collections.disjoint(outflow.keySet(), sensitives)) {
                 map.put(callback, outflow);
             }
         }
@@ -90,7 +85,7 @@ public class OutflowCPHolder implements CallPathHolder {
     }
 
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
-        return consumers.stream().collect(Collectors.toMap(
+        return sensitives.stream().collect(Collectors.toMap(
                 consumer -> consumer,
                 consumer -> callbackToOutflowMap.entrySet().stream()
                         .filter(entry -> entry.getValue().containsKey(consumer)).map(Map.Entry::getKey).
@@ -99,14 +94,14 @@ public class OutflowCPHolder implements CallPathHolder {
     }
 
     @Override
-    public void printPathsFromCallbackToConsumer() {
+    public void printPathsFromCallbackToSensitive() {
         System.out.println("\nPaths from each callback to each consumer");
         System.out.println("============================================\n");
 
 
         for (Map.Entry<MethodOrMethodContext, Map<MethodOrMethodContext, Edge>> entry : callbackToOutflowMap
                 .entrySet()) {
-            for (MethodOrMethodContext consumer : consumers) {
+            for (MethodOrMethodContext consumer : sensitives) {
                 if (entry.getValue().containsKey(consumer)) {
                     printPath(entry.getKey(), consumer, entry.getValue());
                 }
@@ -142,7 +137,7 @@ public class OutflowCPHolder implements CallPathHolder {
     }
 
     @Override
-    public Set<MethodOrMethodContext> getCallbacks(MethodOrMethodContext consumer) {
-        return consumerCallbacks.get(consumer);
+    protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
+        return consumerCallbacks;
     }
 }
