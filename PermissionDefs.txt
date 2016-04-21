@@ -11,9 +11,7 @@
 <edu.oregonstate.dp.test.ThreadTestActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.ExecutorTestActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.LibCallbackExTestActivity: void sensitive()> -> DIAGNOSTIC
-
-% Conversations app
-% ==================================
+<edu.oregonstate.dp.test.MultiplePermActivity: void sensitive()> -> DIAGNOSTIC
 
 % WRITE_EXTERNAL_STORAGE
 
@@ -25,6 +23,14 @@
 % <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
 % <java.io.FileOutputStream: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
 
+% LOCATION
+
+<android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> -> ACCESS_COARSE_LOCATION
+<android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus.Listener)> -> ACCESS_FINE_LOCATION
+
+% Conversations app
+% ==================================
+
 % READ_CONTACTS 1
 
 <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)> -> READ_CONTACTS
@@ -34,4 +40,3 @@
 
 <android.content.CursorLoader: void <init>(android.content.Context)> -> READ_CONTACTS
 <android.content.CursorLoader: void <init>(android.content.Context,android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)> -> READ_CONTACTS
-
