@@ -11,6 +11,8 @@
 package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -47,77 +49,7 @@ import java.util.concurrent.*;
 
 public class FlowDroidMain {
 
-	private static final class MyResultsAvailableHandler implements
-			ResultsAvailableHandler {
-		private final BufferedWriter wr;
-
-		private MyResultsAvailableHandler() {
-			this.wr = null;
-		}
-
-		private MyResultsAvailableHandler(BufferedWriter wr) {
-			this.wr = wr;
-		}
-
-		@Override
-		public void onResultsAvailable(
-				IInfoflowCFG cfg, InfoflowResults results) {
-			// Dump the results
-			if (results == null) {
-				print("No results found.");
-			}
-			else {
-				// Report the results
-				for (ResultSinkInfo sink : results.getResults().keySet()) {
-					print("Found a flow to sink " + sink + ", from the following sources:");
-					for (ResultSourceInfo source : results.getResults().get(sink)) {
-						print("\t- " + source.getSource() + " (in "
-								+ cfg.getMethodOf(source.getSource()).getSignature()  + ")");
-						if (source.getPath() != null)
-							print("\t\ton Path " + Arrays.toString(source.getPath()));
-					}
-				}
-
-				// Serialize the results if requested
-				// Write the results into a file if requested
-				if (resultFilePath != null && !resultFilePath.isEmpty()) {
-					InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
-					try {
-						serializer.serialize(results, resultFilePath);
-					} catch (FileNotFoundException ex) {
-						System.err.println("Could not write data flow results to file: " + ex.getMessage());
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (XMLStreamException ex) {
-						System.err.println("Could not write data flow results to file: " + ex.getMessage());
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					}
-				}
-			}
-
-			new MethodPermDetector().analyzeAndPrint();
-		}
-
-		private void print(String string) {
-			try {
-				System.out.println(string);
-				if (wr != null)
-					wr.write(string + "\n");
-			}
-			catch (IOException ex) {
-				// ignore
-			}
-		}
-	}
-
-	private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
-
-	static {
-		// DroidPerm default config options
-		//during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
-		config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
-	}
+	private static final Logger logger = LoggerFactory.getLogger(FlowDroidMain.class);
 
 	private static int repeatCount = 1;
 	private static int timeout = -1;
@@ -129,10 +61,19 @@ public class FlowDroidMain {
 	private static String resultFilePath = "";
 
 	private static String additionalClasspath = "";
+	private static String permissionDefFile = "PermissionDefs.txt";
 
 	private static boolean DEBUG = true;
 
+	private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
 	private static IIPCManager ipcManager = null;
+
+	static {
+		// DroidPerm default config options
+		//during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
+		config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
+	}
+
 	public static void setIPCManager(IIPCManager ipcManager)
 	{
 		FlowDroidMain.ipcManager = ipcManager;
@@ -387,6 +328,10 @@ public class FlowDroidMain {
 			}
 
 			//new in DroidPerm - additional classpath for analysis
+			else if (args[i].equalsIgnoreCase("--PERM-DEF-FILE")) {
+				permissionDefFile = args[i + 1];
+				i += 2;
+			}
 			else if (args[i].equalsIgnoreCase("--additionalCP")) {
 				additionalClasspath = args[i + 1];
 				i += 2;
@@ -401,7 +346,7 @@ public class FlowDroidMain {
 			}
 
 			else
-				throw new RuntimeException("Invalid option: " + args[i]);
+				throw new IllegalArgumentException("Invalid option: " + args[i]);
 		}
 		return true;
 	}
@@ -415,6 +360,11 @@ public class FlowDroidMain {
 				&& config.getCallgraphAlgorithm() != CallgraphAlgorithm.AutomaticSelection) {
 			System.err.println("Flow-insensitive aliasing can only be configured for callgraph "
 					+ "algorithms that support this choice.");
+			return false;
+		}
+
+		if(!new File(permissionDefFile).exists()) {
+			logger.error("FATAL: Permission definition file not found: "+ permissionDefFile);
 			return false;
 		}
 		return true;
@@ -635,7 +585,7 @@ public class FlowDroidMain {
 
 			//DroidPerm insertion
 			if (!config.isTaintAnalysisEnabled()) {
-				new MethodPermDetector().analyzeAndPrint();
+				new MethodPermDetector().analyzeAndPrint(permissionDefFile);
 			}
 
 			System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
@@ -780,6 +730,7 @@ public class FlowDroidMain {
 		System.out.println();
 		System.out.println("New in DroidPerm:");
 		System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
+		System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
 		System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
 		System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
 		System.out.println();
@@ -794,6 +745,70 @@ public class FlowDroidMain {
 		System.out.println("\t--ADDITIONALCP - doesn't work for now, " +
 				"current workaround is to instrument android.jar and put all the classpath inside");
 
+	}
+
+	private static final class MyResultsAvailableHandler implements
+			ResultsAvailableHandler {
+		private final BufferedWriter wr;
+
+		private MyResultsAvailableHandler() {
+			this.wr = null;
+		}
+
+		private MyResultsAvailableHandler(BufferedWriter wr) {
+			this.wr = wr;
+		}
+
+		@Override
+		public void onResultsAvailable(
+				IInfoflowCFG cfg, InfoflowResults results) {
+			// Dump the results
+			if (results == null) {
+				print("No results found.");
+			}
+			else {
+				// Report the results
+				for (ResultSinkInfo sink : results.getResults().keySet()) {
+					print("Found a flow to sink " + sink + ", from the following sources:");
+					for (ResultSourceInfo source : results.getResults().get(sink)) {
+						print("\t- " + source.getSource() + " (in "
+								+ cfg.getMethodOf(source.getSource()).getSignature()  + ")");
+						if (source.getPath() != null)
+							print("\t\ton Path " + Arrays.toString(source.getPath()));
+					}
+				}
+
+				// Serialize the results if requested
+				// Write the results into a file if requested
+				if (resultFilePath != null && !resultFilePath.isEmpty()) {
+					InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
+					try {
+						serializer.serialize(results, resultFilePath);
+					} catch (FileNotFoundException ex) {
+						System.err.println("Could not write data flow results to file: " + ex.getMessage());
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					} catch (XMLStreamException ex) {
+						System.err.println("Could not write data flow results to file: " + ex.getMessage());
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					}
+				}
+			}
+
+			new MethodPermDetector().analyzeAndPrint(permissionDefFile);
+		}
+
+		private void print(String string) {
+			try {
+				System.out.println(string);
+				if (wr != null)
+					wr.write(string + "\n");
+			}
+			catch (IOException ex) {
+				// ignore
+			}
+		}
 	}
 
 }

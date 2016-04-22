@@ -44,20 +44,20 @@ public class MethodPermDetector {
 
     private CallPathHolder sensitivePathsHolder;
 
-    public void analyzeAndPrint() {
+    public void analyzeAndPrint(String permissionDefFile) {
         long startTime = System.currentTimeMillis();
-        analyze();
+        analyze(permissionDefFile);
         printResults();
 
         System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
-    private void analyze() {
+    private void analyze(String permissionDefFile) {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         PermissionDefParser permissionDefParser;
         try {
-            permissionDefParser = new PermissionDefParser("PermissionDefs.txt");
+            permissionDefParser = new PermissionDefParser(permissionDefFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
