@@ -12,6 +12,7 @@
 <edu.oregonstate.dp.test.ExecutorTestActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.LibCallbackExTestActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.MultiplePermActivity: void sensitive()> -> DIAGNOSTIC
+<edu.oregonstate.dp.test.PropagatedMultiplePermActivity: void sensitive()> -> DIAGNOSTIC
 
 % WRITE_EXTERNAL_STORAGE
 

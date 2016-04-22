@@ -1,13 +1,14 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.oregonstate.droidperm.util.MyCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soot.MethodOrMethodContext;
-import soot.Value;
+import soot.*;
 import soot.jimple.InvokeExpr;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.Edge;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,20 +25,29 @@ public class CheckerUtil {
                 callback -> callback,
                 //here getCallsToSensitiveFor actually means calls to checkers
                 callback -> checkerPathsHolder.getCallsToSensitiveFor(callback).stream()
-                        .map(CheckerUtil::getPermissionFromChecker).collect(Collectors.toSet())
+                        .map(CheckerUtil::getPossiblePermissionsFromChecker).collect(MyCollectors.toFlatSet())
         ));
     }
 
-    static String getPermissionFromChecker(Edge checkerCall) {
+    static Set<String> getPossiblePermissionsFromChecker(Edge checkerCall) {
         InvokeExpr invoke = checkerCall.srcStmt().getInvokeExpr();
 
         //key intuition: in both perm. checker versions the last argument is the permission value
         Value lastArg = invoke.getArg(invoke.getArgCount() - 1);
         if (lastArg instanceof StringConstant) {
-            return ((StringConstant) lastArg).value;
-        } else {
-            logger.warn("Permission checkers with last argument non string literal are not supported: " + invoke);
-            return null;
+            return Collections.singleton(((StringConstant) lastArg).value);
+        } else if (lastArg instanceof Local) {
+            PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+            Set<String> permSet = pta.reachingObjects((Local) lastArg).possibleStringConstants();
+            if (permSet != null) {
+                if (permSet.size() != 1) {
+                    logger.warn("Possible imprecision in the permission check: " + invoke + ", possible values: " +
+                            permSet);
+                }
+                return permSet;
+            }
         }
+        logger.warn("Permission checkers not supported for: " + invoke);
+        return Collections.emptySet();
     }
 }
