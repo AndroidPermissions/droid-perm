@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import soot.MethodOrMethodContext;
+import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -30,6 +31,11 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
     @Override
     public Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive) {
         return getSensitiveToCallbacksMap().get(sensitive);
+    }
+
+    @Override
+    public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
+        throw new UnsupportedOperationException();//can be done for each implementation, but differently
     }
 
     /**

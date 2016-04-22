@@ -10,26 +10,27 @@ import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
-import soot.jimple.toolkits.callgraph.CallGraph;
-import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/19/2016.
  */
 public class MethodPermDetector {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
 
     private Set<MethodOrMethodContext> permCheckers;
+
+    //toperf holders for checkers and sensitives could be combined into one. One traversal could produce both.
+    @SuppressWarnings("FieldCanBeLocal")
     private CallPathHolder checkerPathsHolder;
     private Map<MethodOrMethodContext, Set<String>> callbackToCheckedPermsMap;
 
@@ -69,8 +70,7 @@ public class MethodPermDetector {
         //checkers
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers);
-
-        callbackToCheckedPermsMap = buildCallbackToCheckedPermsMap(permCheckers);
+        callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
 
         //sensitives
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
@@ -98,17 +98,6 @@ public class MethodPermDetector {
         //DebugUtil.pointsToTest();
     }
 
-    private Map<MethodOrMethodContext, Set<String>> buildCallbackToCheckedPermsMap(
-            Set<MethodOrMethodContext> permCheckers) {
-        CallGraph cg = Scene.v().getCallGraph();
-
-        //key intuition: in both perm. checkers the last argument is the permission
-        Stream<Edge> checkerCallStream = permCheckers.stream()
-                //all edges invoking permission checks
-                .flatMap(checkerMeth -> StreamUtil.asStream(cg.edgesInto(checkerMeth)));
-        return null; //todo
-    }
-
     private Map<Set<String>, Set<AndroidMethod>> buildPermissionToSensitiveDefMap(Set<AndroidMethod> permissionDefs) {
         return permissionDefs.stream().collect(Collectors.toMap(
                 sensitiveDef -> new HashSet<>(sensitiveDef.getPermissions()),
@@ -127,6 +116,8 @@ public class MethodPermDetector {
                 .println("\n\nCovered callbacks for each permission/sensitive \n====================================");
 
         for (Set<String> permSet : permissionToSensitiveDefMap.keySet()) {
+            String perm = permSet.iterator().next();//one perm per sensitive for now
+
             System.out.println("\n" + permSet + "\n------------------------------------");
 
             //sorting methods by toString() efficiently, without computing toString() each time.
@@ -140,10 +131,11 @@ public class MethodPermDetector {
                 System.out.println("\nCallbacks for: " + sensitive);
 
                 //true for covered callbacks, false for not covered
-                Set<MethodOrMethodContext> checkerCallbacks = checkerPathsHolder.getReachableCallbacks();
                 Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
                         sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
-                                .collect(Collectors.partitioningBy(checkerCallbacks::contains));
+                                .collect(Collectors.partitioningBy(
+                                        callback -> callbackToCheckedPermsMap.get(callback) != null
+                                                && callbackToCheckedPermsMap.get(callback).contains(perm)));
 
                 if (!partitionedCallbacks.get(true).isEmpty()) {
                     System.out.println("Permission check detected:");

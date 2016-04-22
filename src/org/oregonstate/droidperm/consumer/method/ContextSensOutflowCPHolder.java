@@ -43,7 +43,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives) {
         super(dummyMainMethod, sensitives);
         callbackToOutflowMap = buildCallbackToOutflowMap();
-        sensitiveToCallbacksMap = buildConsumerCallbacksFromOutflows();
+        sensitiveToCallbacksMap = buildSensitiveToCallbacksMap();
     }
 
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
@@ -172,7 +172,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return cg.edgesOutOf(unit);
     }
 
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildConsumerCallbacksFromOutflows() {
+    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildSensitiveToCallbacksMap() {
         return sensitivesInContext.stream().collect(Collectors.toMap(
                 sensitiveInContext -> sensitiveInContext.method,
                 sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
@@ -224,6 +224,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         path.add(node != null ? node.method : null);
         Collections.reverse(path);
         return path;
+    }
+
+    @Override
+    public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
+        CallGraph cg = Scene.v().getCallGraph();
+        return callbackToOutflowMap.get(callback).keySet().stream().filter(sensitivesInContext::contains)
+                .map(methInCt -> cg.findEdge((Unit) methInCt.context, methInCt.method.method()))
+                .collect(Collectors.toSet());
     }
 
     @Override

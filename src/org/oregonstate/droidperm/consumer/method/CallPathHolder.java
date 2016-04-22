@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import soot.MethodOrMethodContext;
+import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.Set;
 
@@ -12,6 +13,8 @@ public interface CallPathHolder {
     Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive);
 
     Set<MethodOrMethodContext> getReachableCallbacks();
+
+    Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback);
 
     void printPathsFromCallbackToSensitive();
 }
