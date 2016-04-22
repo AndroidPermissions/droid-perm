@@ -131,27 +131,33 @@ public class MethodPermDetector {
                 System.out.println("\nCallbacks for: " + sensitive);
 
                 //true for covered callbacks, false for not covered
-                Map<Boolean, List<MethodOrMethodContext>> partitionedCallbacks =
+                Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                         sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
-                                .collect(Collectors.partitioningBy(
-                                        callback -> callbackToCheckedPermsMap.get(callback) != null
-                                                && callbackToCheckedPermsMap.get(callback).contains(perm)));
+                                .collect(Collectors.groupingBy(
+                                        callback -> getPermCheckStatus(perm, callback)));
 
-                if (!partitionedCallbacks.get(true).isEmpty()) {
-                    System.out.println("Permission check detected:");
-                    partitionedCallbacks.get(true).stream()
-                            .forEach((MethodOrMethodContext cb) -> System.out.println("    " + cb));
-                }
-
-                if (!partitionedCallbacks.get(false).isEmpty()) {
-                    System.out.println("Permission check NOT detected:");
-                    partitionedCallbacks.get(false).stream()
-                            .forEach(cb -> System.out.println("    " + cb));
+                for (PermCheckStatus status : PermCheckStatus.values()) {
+                    if (permCheckStatusToCallbacks.get(status) != null) {
+                        System.out.println("Perm check " + status + ":");
+                        permCheckStatusToCallbacks.get(status).stream()
+                                .forEach(callback -> System.out.println("    " + callback));
+                    }
                 }
             }
             System.out.println();
         }
         System.out.println();
+    }
+
+    private PermCheckStatus getPermCheckStatus(String perm, MethodOrMethodContext callback) {
+        if (callbackToCheckedPermsMap.get(callback) != null) {
+            if (callbackToCheckedPermsMap.get(callback).contains(perm)) {
+                return PermCheckStatus.DETECTED;
+            } else if (!callbackToCheckedPermsMap.get(callback).isEmpty()) {
+                return PermCheckStatus.UNRELATED;
+            }
+        }
+        return PermCheckStatus.NOT_DETECTED;
     }
 
     public void printCheckers() {
@@ -163,5 +169,22 @@ public class MethodPermDetector {
         System.out.println("\n\nSensitives in the app: \n====================================");
         sensitives.forEach(System.out::println);
     }
+
+    public enum PermCheckStatus {
+        DETECTED("Permission check detected"),
+        UNRELATED("Unrelated permission check detected"),
+        NOT_DETECTED("No permission check detected");
+
+        private String description;
+
+        PermCheckStatus(String description) {
+            this.description = description;
+        }
+
+        public String description() {
+            return description;
+        }
+    }
+
 
 }
