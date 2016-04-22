@@ -36,7 +36,7 @@ public class CallGraphUtil {
      */
     public static Set<MethodOrMethodContext> getNodesFor(Collection<SootMethod> methods) {
         return methods.stream().map(CallGraphUtil::getNodesFor)
-                .collect(HashSet::new, Set::addAll, Set::addAll); //Collect MoMC sets for every method into one set
+                .collect(MyCollectors.toFlatSet()); //Collect MoMC sets for every method into one set
     }
 
     public static Set<MethodOrMethodContext> getNodesFor(SootMethod method) {

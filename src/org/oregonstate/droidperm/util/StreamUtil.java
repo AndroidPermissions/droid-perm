@@ -9,8 +9,7 @@ import java.util.stream.StreamSupport;
 /**
  * Misc methods to facilitate conversion of Iterable/Iterator objects to streams.
  *
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 2/20/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/20/2016.
  */
 public class StreamUtil {
 
