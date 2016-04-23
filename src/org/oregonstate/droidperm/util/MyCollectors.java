@@ -33,6 +33,16 @@ public class MyCollectors {
                 CH_UNORDERED_ID);
     }
 
+    public static <T, U>
+    Collector<Map<T, U>, ?, Map<T, U>> toFlatMap() {
+        return new CollectorImpl<>((Supplier<Map<T, U>>) HashMap::new, Map::putAll,
+                (left, right) -> {
+                    left.putAll(right);
+                    return left;
+                },
+                CH_UNORDERED_ID);
+    }
+
     @SuppressWarnings("unchecked")
     private static <I, R> Function<I, R> castingIdentity() {
         return i -> (R) i;

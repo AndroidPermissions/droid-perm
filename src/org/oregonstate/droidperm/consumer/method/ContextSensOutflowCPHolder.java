@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
+import soot.jimple.spark.ondemand.genericutil.HashSetMultiMap;
+import soot.jimple.spark.ondemand.genericutil.MultiMap;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
@@ -26,6 +28,11 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private Set<MethodInContext> sensitivesInContext = new HashSet<>();
 
+    //todo investigate using a true call graph for outflows, instead of these maps.
+    //Potentially will improve performance, since callbackToOutflowMap contains a lot of repetition.
+    //advantage: efficient navigation both upwards and downwards.
+    // Could use MethodOrMethodContext, or downright MethodContext
+    // to distinguish between edges in the Soot CG and edges in my outflow CG.
     /**
      * Map from UI callbacks to their outflows, as breadth-first trees in the call graph.
      * <p>
@@ -36,6 +43,11 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> callbackToOutflowMap;
 
     /**
+     * From each MethodInContext in the call graph, the set of sensitives it reaches.
+     */
+    private MultiMap<MethodInContext, MethodOrMethodContext> reachableSensitives;
+
+    /**
      * Map from sensitives to sets of callbacks.
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> sensitiveToCallbacksMap;
@@ -44,6 +56,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         super(dummyMainMethod, sensitives);
         callbackToOutflowMap = buildCallbackToOutflowMap();
         sensitiveToCallbacksMap = buildSensitiveToCallbacksMap();
+        buildReachableSensitives();
     }
 
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
@@ -176,11 +189,34 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return sensitivesInContext.stream().collect(Collectors.toMap(
                 sensitiveInContext -> sensitiveInContext.method,
                 sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
-                        .filter(entry -> entry.getValue().containsKey(sensitiveInContext)).map(Map.Entry::getKey).
-                                collect(Collectors.toSet()),
+                        .filter(cbToOutflowEntry -> cbToOutflowEntry.getValue().containsKey(sensitiveInContext))
+                        .map(Map.Entry::getKey).collect(Collectors.toSet()),
                 //merge function for values required, because 2 sensitiveInContext could map to the same sensitive
                 StreamUtil::mutableUnion
         ));
+    }
+
+    private void buildReachableSensitives() {
+        reachableSensitives = new HashSetMultiMap<>();
+        for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
+            for (MethodInContext sensitiveInContext : sensitivesInContext) {
+                if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
+                    collectReachableSensitivesOnPath(callback, sensitiveInContext, callbackToOutflowMap.get(callback));
+                }
+            }
+        }
+    }
+
+    private void collectReachableSensitivesOnPath(MethodOrMethodContext src, MethodInContext sensitiveInContext,
+                                                  Map<MethodInContext, MethodInContext> outflow) {
+        MethodInContext node = sensitiveInContext;
+        while (node != null && node.method != src) {
+            reachableSensitives.put(node, sensitiveInContext.method);
+            node = outflow.get(node);
+        }
+        if (node != null) {
+            reachableSensitives.put(node, sensitiveInContext.method);
+        }
     }
 
     @Override
@@ -189,11 +225,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         System.out.println("============================================\n");
 
 
-        for (Map.Entry<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> entry : callbackToOutflowMap
-                .entrySet()) {
+        for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
-                if (entry.getValue().containsKey(sensitiveInContext)) {
-                    printPath(entry.getKey(), sensitiveInContext, entry.getValue());
+                if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
+                    printPath(callback, sensitiveInContext, callbackToOutflowMap.get(callback));
                 }
             }
         }
@@ -227,7 +262,13 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     }
 
     @Override
+    public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
+        return reachableSensitives.get(MethodInContext.forTarget(edge));
+    }
+
+    @Override
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
+        //toperf cg.findEdge() is potentially expensive. Better keep edges in the outflow.
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(sensitivesInContext::contains)
                 .map(methInCt -> cg.findEdge((Unit) methInCt.context, methInCt.method.method()))

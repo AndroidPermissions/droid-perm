@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.util;
 
+import org.oregonstate.droidperm.consumer.method.CallPathHolder;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import soot.*;
 import soot.jimple.VirtualInvokeExpr;
@@ -105,5 +106,20 @@ public class DebugUtil {
             System.out.println("Edges out of Thread.run():");
             cg.edgesOutOf(node).forEachRemaining(edge -> System.out.println("    " + edge));
         }
+    }
+
+    /**
+     * For the given pair sensitive-callback, print all locations that call the sensitive. For each location, print
+     * class name and line number.
+     */
+    public static void printCallClassesAndLineNumbers(MethodOrMethodContext sensitive, MethodOrMethodContext callback,
+                                                      CallPathHolder sensitivePathsHolder) {
+        System.out.println("        Sensitive calls: ");
+        //from bytecode we can only get line numbers, not column numbers.
+        //noinspection ConstantConditions
+        sensitivePathsHolder.getCallsToMeth(sensitive, callback).forEach(edge ->
+                System.out.println("        " + edge.src().getDeclaringClass() + ": "
+                        + edge.srcStmt().getJavaSourceStartLineNumber())
+        );
     }
 }

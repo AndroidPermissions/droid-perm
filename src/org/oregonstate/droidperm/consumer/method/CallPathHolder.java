@@ -15,6 +15,8 @@ public interface CallPathHolder {
 
     Set<MethodOrMethodContext> getReachableCallbacks();
 
+    Set<MethodOrMethodContext> getReacheableSensitives(Edge edge);
+
     Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback);
 
     void printPathsFromCallbackToSensitive();

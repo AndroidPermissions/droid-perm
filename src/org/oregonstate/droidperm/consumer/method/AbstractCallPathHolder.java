@@ -44,6 +44,11 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Map from sensitives to sets of callbacks.
      */
