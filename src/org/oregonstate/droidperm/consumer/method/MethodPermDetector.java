@@ -1,7 +1,10 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.perm.PermissionDefParser;
-import org.oregonstate.droidperm.util.*;
+import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.HierarchyUtil;
+import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
@@ -124,8 +127,6 @@ public class MethodPermDetector {
                 .println("\n\nCovered callbacks for each permission/sensitive \n====================================");
 
         for (Set<String> permSet : permissionToSensitiveDefMap.keySet()) {
-            String perm = permSet.iterator().next();//one perm per sensitive for now
-
             System.out.println("\n" + permSet + "\n------------------------------------");
 
             //sorting methods by toString() efficiently, without computing toString() each time.
@@ -142,7 +143,7 @@ public class MethodPermDetector {
                 Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                         sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
                                 .collect(Collectors.groupingBy(
-                                        callback -> getPermCheckStatus(perm, callback)));
+                                        callback -> getPermCheckStatus(permSet, callback)));
 
                 for (PermCheckStatus status : PermCheckStatus.values()) {
                     if (permCheckStatusToCallbacks.get(status) != null) {
@@ -159,9 +160,15 @@ public class MethodPermDetector {
         System.out.println();
     }
 
-    private PermCheckStatus getPermCheckStatus(String perm, MethodOrMethodContext callback) {
+    /**
+     * @return A value indicating whether the permissions in this set are checked by permission checks in the given
+     * callback. If there are multiple permissions in the set, ANY ONE OF them should be covered by checks.
+     * <p>
+     * For multiple permissions ANY ONE OF is the most commonly used case, to account for the 2 Location permissions.
+     */
+    private PermCheckStatus getPermCheckStatus(Set<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
-            if (callbackToCheckedPermsMap.get(callback).contains(perm)) {
+            if (!Collections.disjoint(permSet, callbackToCheckedPermsMap.get(callback))) {
                 return PermCheckStatus.DETECTED;
             } else if (!callbackToCheckedPermsMap.get(callback).isEmpty()) {
                 return PermCheckStatus.UNRELATED;
