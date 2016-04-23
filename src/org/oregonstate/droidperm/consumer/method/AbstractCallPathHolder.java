@@ -4,6 +4,7 @@ import soot.MethodOrMethodContext;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +37,11 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
     @Override
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
         throw new UnsupportedOperationException();//can be done for each implementation, but differently
+    }
+
+    @Override
+    public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
+        throw new UnsupportedOperationException();
     }
 
     /**

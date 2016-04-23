@@ -235,6 +235,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     }
 
     @Override
+    public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
+        CallGraph cg = Scene.v().getCallGraph();
+        return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
+                .map(methInCt -> cg.findEdge((Unit) methInCt.context, methInCt.method.method()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
         return sensitiveToCallbacksMap;
     }

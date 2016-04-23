@@ -22,7 +22,6 @@ import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
-import soot.jimple.infoflow.config.IInfoflowConfig;
 import soot.jimple.infoflow.data.Abstraction;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
@@ -35,7 +34,6 @@ import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.jimple.infoflow.util.SystemClassHandler;
-import soot.options.Options;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
@@ -528,15 +526,14 @@ public class FlowDroidMain {
 
 			// Set configuration object
 			app.setConfig(config);
-			if (noTaintWrapper)
-				app.setSootConfig(new IInfoflowConfig() {
 
-					@Override
-					public void setSootOptions(Options options) {
-						options.set_include_all(true);
-					}
-
-				});
+            //toclean insert additional Soot options here
+			app.setSootConfig(options -> {
+                options.set_keep_line_number(true);
+                if (noTaintWrapper) {
+                    options.set_include_all(true);
+                }
+            });
 
 			final ITaintPropagationWrapper taintWrapper;
 			if (noTaintWrapper)

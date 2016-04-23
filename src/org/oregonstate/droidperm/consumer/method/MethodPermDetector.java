@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.consumer.method;
 import org.oregonstate.droidperm.perm.PermissionDefParser;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.HierarchyUtil;
+import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,10 +75,7 @@ public class MethodPermDetector {
 
         //sensitives
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
-
-        sensitives = new HashSet<>();
-        resolvedSensitiveDefs.values().forEach(sensitives::addAll);
-
+        sensitives = resolvedSensitiveDefs.values().stream().collect(MyCollectors.toFlatSet());
         permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
 
         //select one of the call path algorithms.
@@ -140,13 +138,29 @@ public class MethodPermDetector {
                     if (permCheckStatusToCallbacks.get(status) != null) {
                         System.out.println("Perm check " + status + ":");
                         permCheckStatusToCallbacks.get(status).stream()
-                                .forEach(callback -> System.out.println("    " + callback));
+                                .forEach(callback -> {
+                                    System.out.println("    " + callback + " Sens. calls: ");
+                                    printCallClassesAndLineNumbers(sensitive, callback);
+                                });
                     }
                 }
             }
             System.out.println();
         }
         System.out.println();
+    }
+
+    /**
+     * For the given pair sensitive-callback, print all locations that call the sensitive. For each location, print
+     * class name and line number.
+     */
+    private void printCallClassesAndLineNumbers(MethodOrMethodContext sensitive, MethodOrMethodContext callback) {
+        //from bytecode we can only get line numbers, not column numbers.
+        //noinspection ConstantConditions
+        sensitivePathsHolder.getCallsToMeth(sensitive, callback).forEach(edge ->
+                System.out.println("        " + edge.src().getDeclaringClass() + ": "
+                        + edge.srcStmt().getJavaSourceStartLineNumber())
+        );
     }
 
     private PermCheckStatus getPermCheckStatus(String perm, MethodOrMethodContext callback) {

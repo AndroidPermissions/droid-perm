@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.consumer.method;
 import soot.MethodOrMethodContext;
 import soot.jimple.toolkits.callgraph.Edge;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -17,4 +18,9 @@ public interface CallPathHolder {
     Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback);
 
     void printPathsFromCallbackToSensitive();
+
+    /**
+     * There might be multiple calls to meth in one callback, that's why list is needed.
+     */
+    List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback);
 }
