@@ -1,12 +1,14 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.oregonstate.droidperm.util.SortUtil;
 import soot.MethodOrMethodContext;
 import soot.jimple.toolkits.callgraph.Edge;
 
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/21/2016.
@@ -14,17 +16,21 @@ import java.util.Set;
 public abstract class AbstractCallPathHolder implements CallPathHolder {
     protected MethodOrMethodContext dummyMainMethod;
     protected Set<MethodOrMethodContext> sensitives;
-    private Set<MethodOrMethodContext> reachableCallbacks;
+
+    /**
+     * Elements are unique
+     */
+    private List<MethodOrMethodContext> reachableCallbacks;
 
     public AbstractCallPathHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives) {
         this.sensitives = sensitives;
         this.dummyMainMethod = dummyMainMethod;
     }
 
-    public Set<MethodOrMethodContext> getReachableCallbacks() {
+    public List<MethodOrMethodContext> getReachableCallbacks() {
         if (reachableCallbacks == null) {
-            reachableCallbacks = new HashSet<>();
-            getSensitiveToCallbacksMap().values().stream().forEach(reachableCallbacks::addAll);
+            reachableCallbacks = getSensitiveToCallbacksMap().values().stream().flatMap(Collection::stream)
+                    .distinct().sorted(SortUtil.getSootMethodPrettyPrintComparator()).collect(Collectors.toList());
         }
         return reachableCallbacks;
     }

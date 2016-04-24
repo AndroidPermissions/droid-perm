@@ -1,10 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.perm.PermissionDefParser;
-import org.oregonstate.droidperm.util.CallGraphUtil;
-import org.oregonstate.droidperm.util.HierarchyUtil;
-import org.oregonstate.droidperm.util.MyCollectors;
-import org.oregonstate.droidperm.util.StreamUtil;
+import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
@@ -142,8 +139,9 @@ public class MethodPermDetector {
                 //true for covered callbacks, false for not covered
                 Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                         sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
+                                .sorted(SortUtil.getSootMethodPrettyPrintComparator())
                                 .collect(Collectors.groupingBy(
-                                        callback -> getPermCheckStatus(permSet, callback)));
+                                        callback -> getPermCheckStatusForAny(permSet, callback)));
 
                 for (PermCheckStatus status : PermCheckStatus.values()) {
                     if (permCheckStatusToCallbacks.get(status) != null) {
@@ -162,13 +160,29 @@ public class MethodPermDetector {
 
     /**
      * @return A value indicating whether the permissions in this set are checked by permission checks in the given
-     * callback. If there are multiple permissions in the set, ANY ONE OF them should be covered by checks.
+     * callback. Checks for multiple permissions are linked by OR relationship.
      * <p>
-     * For multiple permissions ANY ONE OF is the most commonly used case, to account for the 2 Location permissions.
+     * For multiple permissions OR (ANY ONE OF) is the most commonly used case, to account for the 2 Location
+     * permissions.
      */
-    private PermCheckStatus getPermCheckStatus(Set<String> permSet, MethodOrMethodContext callback) {
+    private PermCheckStatus getPermCheckStatusForAny(Set<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
             if (!Collections.disjoint(permSet, callbackToCheckedPermsMap.get(callback))) {
+                return PermCheckStatus.DETECTED;
+            } else if (!callbackToCheckedPermsMap.get(callback).isEmpty()) {
+                return PermCheckStatus.UNRELATED;
+            }
+        }
+        return PermCheckStatus.NOT_DETECTED;
+    }
+
+    /**
+     * @return A value indicating whether the permissions in this set are checked by permission checks in the given
+     * callback. Checks for multiple permissions are linked by AND relationship.
+     */
+    private PermCheckStatus getPermCheckStatusForAll(Set<String> permSet, MethodOrMethodContext callback) {
+        if (callbackToCheckedPermsMap.get(callback) != null) {
+            if (callbackToCheckedPermsMap.get(callback).containsAll(permSet)) {
                 return PermCheckStatus.DETECTED;
             } else if (!callbackToCheckedPermsMap.get(callback).isEmpty()) {
                 return PermCheckStatus.UNRELATED;

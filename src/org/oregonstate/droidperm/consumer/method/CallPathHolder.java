@@ -13,7 +13,10 @@ public interface CallPathHolder {
 
     Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive);
 
-    Set<MethodOrMethodContext> getReachableCallbacks();
+    /**
+     * We also sort the callbacks by their class name followed by method declaration line number.
+     */
+    List<MethodOrMethodContext> getReachableCallbacks();
 
     Set<MethodOrMethodContext> getReacheableSensitives(Edge edge);
 
