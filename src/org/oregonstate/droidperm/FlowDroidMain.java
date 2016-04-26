@@ -36,10 +36,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class FlowDroidMain {
@@ -59,7 +56,7 @@ public class FlowDroidMain {
     private static String permissionDefFile = "PermissionDefs.txt";
 
 
-    private static boolean DEBUG = true;
+    private static final boolean DEBUG = true;
 
     private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
     private static IIPCManager ipcManager = null;
@@ -91,13 +88,16 @@ public class FlowDroidMain {
         File outputDir = new File("JimpleOutput");
         if (outputDir.isDirectory()) {
             boolean success = true;
+            //noinspection ConstantConditions
             for (File f : outputDir.listFiles()) {
                 success = success && f.delete();
             }
             if (!success) {
                 System.err.println("Cleanup of output directory " + outputDir + " failed!");
             }
-            outputDir.delete();
+            if (!outputDir.delete()) {
+                System.err.println("Cleanup of output directory " + outputDir + " failed!");
+            }
         }
 
         // Parse additional command-line arguments
@@ -111,16 +111,8 @@ public class FlowDroidMain {
         List<String> apkFiles = new ArrayList<String>();
         File apkFile = new File(args[0]);
         if (apkFile.isDirectory()) {
-            String[] dirFiles = apkFile.list(new FilenameFilter() {
-
-                @Override
-                public boolean accept(File dir, String name) {
-                    return (name.endsWith(".apk"));
-                }
-
-            });
-            for (String s : dirFiles)
-                apkFiles.add(s);
+            String[] dirFiles = apkFile.list((dir, name) -> (name.endsWith(".apk")));
+            Collections.addAll(apkFiles, dirFiles);
         } else {
             //apk is a file so grab the extension
             String extension = apkFile.getName().substring(apkFile.getName().lastIndexOf("."));
@@ -152,8 +144,7 @@ public class FlowDroidMain {
                     fullFilePath = fileName;
                 System.out.println("Analyzing file " + fullFilePath + "...");
                 File flagFile = new File("_Run_" + new File(fileName).getName());
-                if (flagFile.exists())
-                    continue;
+                //noinspection ResultOfMethodCallIgnored
                 flagFile.createNewFile();
             } else
                 fullFilePath = fileName;
@@ -335,27 +326,18 @@ public class FlowDroidMain {
     }
 
     private static void runAnalysisTimeout(final String fileName, final String androidJar) {
-        FutureTask<InfoflowResults> task = new FutureTask<InfoflowResults>(new Callable<InfoflowResults>() {
+        FutureTask<InfoflowResults> task = new FutureTask<>(() -> {
 
-            @Override
-            public InfoflowResults call() throws Exception {
+            try (BufferedWriter wr = new BufferedWriter(
+                    new FileWriter("_out_" + new File(fileName).getName() + ".txt"))) {
+                final long beforeRun = System.nanoTime();
+                wr.write("Running data flow analysis...\n");
+                final InfoflowResults res = runAnalysis(fileName, androidJar);
+                wr.write("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds\n");
 
-                final BufferedWriter wr =
-                        new BufferedWriter(new FileWriter("_out_" + new File(fileName).getName() + ".txt"));
-                try {
-                    final long beforeRun = System.nanoTime();
-                    wr.write("Running data flow analysis...\n");
-                    final InfoflowResults res = runAnalysis(fileName, androidJar);
-                    wr.write("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds\n");
-
-                    wr.flush();
-                    return res;
-                } finally {
-                    if (wr != null)
-                        wr.close();
-                }
+                wr.flush();
+                return res;
             }
-
         });
         ExecutorService executor = Executors.newFixedThreadPool(1);
         executor.execute(task);
@@ -584,10 +566,8 @@ public class FlowDroidMain {
                 private ITaintPropagationWrapper wrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
 
                 private boolean isSystemClass(Stmt stmt) {
-                    if (stmt.containsInvokeExpr())
-                        return SystemClassHandler.isClassInSystemPackage(
-                                stmt.getInvokeExpr().getMethod().getDeclaringClass().getName());
-                    return false;
+                    return stmt.containsInvokeExpr() && SystemClassHandler
+                            .isClassInSystemPackage(stmt.getInvokeExpr().getMethod().getDeclaringClass().getName());
                 }
 
                 @Override
@@ -709,7 +689,7 @@ public class FlowDroidMain {
         private final BufferedWriter wr;
 
         private MyResultsAvailableHandler() {
-            this.wr = null;
+            this(null);
         }
 
         private MyResultsAvailableHandler(BufferedWriter wr) {
@@ -717,8 +697,7 @@ public class FlowDroidMain {
         }
 
         @Override
-        public void onResultsAvailable(
-                IInfoflowCFG cfg, InfoflowResults results) {
+        public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
             // Dump the results
             if (results == null) {
                 print("No results found.");
@@ -740,11 +719,7 @@ public class FlowDroidMain {
                     InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
                     try {
                         serializer.serialize(results, resultFilePath);
-                    } catch (FileNotFoundException ex) {
-                        System.err.println("Could not write data flow results to file: " + ex.getMessage());
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
-                    } catch (XMLStreamException ex) {
+                    } catch (FileNotFoundException | XMLStreamException ex) {
                         System.err.println("Could not write data flow results to file: " + ex.getMessage());
                         ex.printStackTrace();
                         throw new RuntimeException(ex);
