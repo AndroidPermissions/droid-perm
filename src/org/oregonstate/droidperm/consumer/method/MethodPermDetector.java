@@ -191,6 +191,11 @@ public class MethodPermDetector {
         return PermCheckStatus.NOT_DETECTED;
     }
 
+    /**
+     * todo: There's a discrepancy between the way permission checks are matched with sensitives here and in
+     * printCoveredCallbacks(). There ANY ONE perm per sensitive should be checked for the whole sensitive to be
+     * checked. Here ALL the perms for a statement should be checked for the statement to be checked.
+     */
     private void printReachableSensitivesInCallbackStmts() {
         System.out.println("\nRequired permissions for code inside each callback:");
         System.out.println("========================================================================");
@@ -204,8 +209,12 @@ public class MethodPermDetector {
                         .filter(set -> set != null)
                         .collect(MyCollectors.toFlatSet());
                 if (!sensitives.isEmpty()) {
+                    Set<String> permSet = getPermissionsFor(sensitives);
+                    PermCheckStatus checkStatus = getPermCheckStatusForAll(permSet, callback);
+                    String checkMsg = checkStatus == PermCheckStatus.DETECTED ? "guarded" : "UNGUARDED";
+
                     System.out.println("    " + unit.getJavaSourceStartLineNumber() + ": "
-                            + ((Stmt) unit).getInvokeExpr().getMethod() + " : " + getPermissionsFor(sensitives));
+                            + ((Stmt) unit).getInvokeExpr().getMethod() + " : " + permSet + ", " + checkMsg);
                 }
             }
         }
