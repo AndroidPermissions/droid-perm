@@ -13,5 +13,18 @@
     <orderEntry type="module" module-name="soot" />
     <orderEntry type="module" module-name="soot-infoflow" />
     <orderEntry type="module" module-name="soot-infoflow-android" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/commons-io-2.5.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://D:/API/commons-io-2.5/commons-io-2.5-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="file://D:/API/commons-io-2.5/src/main/java" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -287,12 +287,8 @@ public class FlowDroidMain {
             } else if (args[i].equalsIgnoreCase("--logsourcesandsinks")) {
                 config.setLogSourcesAndSinks(true);
                 i++;
-            }
 
-            //new in DroidPerm - additional classpath for analysis
-            else if (args[i].equalsIgnoreCase("--PERM-DEF-FILE")) {
-                permissionDefFile = new File(args[i + 1]);
-                i += 2;
+                //new in DroidPerm - additional classpath for analysis
             } else if (args[i].equalsIgnoreCase("--additionalCP")) {
                 additionalClasspath = args[i + 1];
                 i += 2;
@@ -301,6 +297,9 @@ public class FlowDroidMain {
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--code-elimination-mode")) {
                 config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.valueOf(args[i + 1]));
+                i += 2;
+            } else if (args[i].equalsIgnoreCase("--PERM-DEF-FILE")) {
+                permissionDefFile = new File(args[i + 1]);
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--TXT-OUT")) {
                 txtOut = new File(args[i + 1]);
@@ -737,7 +736,7 @@ public class FlowDroidMain {
                 }
             }
 
-            new MethodPermDetector(permissionDefFile, xmlOut, txtOut).analyzeAndPrint();
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
         }
 
         private void print(String string) {

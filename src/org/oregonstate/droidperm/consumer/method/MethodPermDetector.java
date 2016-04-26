@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.apache.commons.io.output.TeeOutputStream;
 import org.oregonstate.droidperm.perm.PermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
@@ -14,6 +15,9 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,7 +55,7 @@ public class MethodPermDetector {
 
     private CallPathHolder sensitivePathsHolder;
 
-    public MethodPermDetector(File permissionDefFile, File xmlOut, File txtOut) {
+    public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
         this.permissionDefFile = permissionDefFile;
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
@@ -107,7 +111,17 @@ public class MethodPermDetector {
         printSensitives();
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printCoveredCallbacks();
-        printReachableSensitivesInCallbackStmts();
+
+        //Print main results
+        //Allows branching the output into System.out and a file.
+        try {
+            PrintStream summaryOut = txtOut != null
+                    ? new PrintStream(new TeeOutputStream(System.out, new FileOutputStream(txtOut))) : System.out;
+            printReachableSensitivesInCallbackStmts(summaryOut);
+            summaryOut.flush();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         //DebugUtil.pointsToTest();
     }
 
@@ -207,13 +221,13 @@ public class MethodPermDetector {
      * printCoveredCallbacks(). There ANY ONE perm per sensitive should be checked for the whole sensitive to be
      * checked. Here ALL the perms for a statement should be checked for the statement to be checked.
      */
-    private void printReachableSensitivesInCallbackStmts() {
-        System.out.println("\nRequired permissions for code inside each callback:");
-        System.out.println("========================================================================");
+    private void printReachableSensitivesInCallbackStmts(PrintStream out) {
+        out.println("\nRequired permissions for code inside each callback:");
+        out.println("========================================================================");
 
         CallGraph cg = Scene.v().getCallGraph();
         for (MethodOrMethodContext callback : sensitivePathsHolder.getReachableCallbacks()) {
-            System.out.println("\n" + callback + " :");
+            out.println("\n" + callback + " :");
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
                 Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
                         .map(edge -> sensitivePathsHolder.getReacheableSensitives(edge))
@@ -222,14 +236,14 @@ public class MethodPermDetector {
                 if (!sensitives.isEmpty()) {
                     Set<String> permSet = getPermissionsFor(sensitives);
                     PermCheckStatus checkStatus = getPermCheckStatusForAll(permSet, callback);
-                    String checkMsg = checkStatus == PermCheckStatus.DETECTED ? "guarded" : "UNGUARDED";
+                    String checkMsg = checkStatus == PermCheckStatus.DETECTED ? "YES" : "NO";
 
-                    System.out.println("    " + unit.getJavaSourceStartLineNumber() + ": "
-                            + ((Stmt) unit).getInvokeExpr().getMethod() + " : " + permSet + ", " + checkMsg);
+                    out.println("    " + unit.getJavaSourceStartLineNumber() + ": "
+                            + ((Stmt) unit).getInvokeExpr().getMethod() + " : " + permSet + ", guarded: " + checkMsg);
                 }
             }
         }
-        System.out.println();
+        out.println();
     }
 
     public Set<String> getPermissionsFor(Collection<MethodOrMethodContext> sensitives) {
@@ -258,6 +272,7 @@ public class MethodPermDetector {
             this.description = description;
         }
 
+        @SuppressWarnings("unused")
         public String description() {
             return description;
         }
