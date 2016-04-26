@@ -13,6 +13,7 @@ import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
+import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,6 +25,10 @@ public class MethodPermDetector {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
+
+    private File permissionDefFile;
+    private File txtOut;
+    private File xmlOut;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -46,15 +51,21 @@ public class MethodPermDetector {
 
     private CallPathHolder sensitivePathsHolder;
 
-    public void analyzeAndPrint(String permissionDefFile) {
+    public MethodPermDetector(File permissionDefFile, File xmlOut, File txtOut) {
+        this.permissionDefFile = permissionDefFile;
+        this.txtOut = txtOut;
+        this.xmlOut = xmlOut;
+    }
+
+    public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
-        analyze(permissionDefFile);
+        analyze();
         printResults();
 
         System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
-    private void analyze(String permissionDefFile) {
+    private void analyze() {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         PermissionDefParser permissionDefParser;

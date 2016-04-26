@@ -11,6 +11,7 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -44,14 +45,14 @@ public class PermissionDefParser {
     /**
      * Creates a PermissionDefParser loading data from a file.
      */
-    public PermissionDefParser(String fileName) throws IOException {
-        readFile(fileName);
+    public PermissionDefParser(File file) throws IOException {
+        readFile(file);
         parseLines();
     }
 
-    private void readFile(String fileName) throws IOException {
+    private void readFile(File file) throws IOException {
         lines = new ArrayList<>();
-        try (FileReader fr = new FileReader(fileName)) {
+        try (FileReader fr = new FileReader(file)) {
             try (BufferedReader br = new BufferedReader(fr)) {
                 String line;
                 while ((line = br.readLine()) != null)

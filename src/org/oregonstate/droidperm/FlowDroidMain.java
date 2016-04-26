@@ -53,7 +53,9 @@ public class FlowDroidMain {
     private static String resultFilePath = "";
 
     private static String additionalClasspath = "";
-    private static String permissionDefFile = "PermissionDefs.txt";
+    private static File permissionDefFile = new File("PermissionDefs.txt");
+    private static File txtOut;
+    private static File xmlOut;
 
 
     private static final boolean DEBUG = true;
@@ -289,7 +291,7 @@ public class FlowDroidMain {
 
             //new in DroidPerm - additional classpath for analysis
             else if (args[i].equalsIgnoreCase("--PERM-DEF-FILE")) {
-                permissionDefFile = args[i + 1];
+                permissionDefFile = new File(args[i + 1]);
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--additionalCP")) {
                 additionalClasspath = args[i + 1];
@@ -299,6 +301,12 @@ public class FlowDroidMain {
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--code-elimination-mode")) {
                 config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.valueOf(args[i + 1]));
+                i += 2;
+            } else if (args[i].equalsIgnoreCase("--TXT-OUT")) {
+                txtOut = new File(args[i + 1]);
+                i += 2;
+            } else if (args[i].equalsIgnoreCase("--XML-OUT")) {
+                xmlOut = new File(args[i + 1]);
                 i += 2;
             } else
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
@@ -318,7 +326,7 @@ public class FlowDroidMain {
             return false;
         }
 
-        if (!new File(permissionDefFile).exists()) {
+        if (!permissionDefFile.exists()) {
             logger.error("FATAL: Permission definition file not found: " + permissionDefFile);
             return false;
         }
@@ -526,7 +534,7 @@ public class FlowDroidMain {
 
             //DroidPerm insertion
             if (!config.isTaintAnalysisEnabled()) {
-                new MethodPermDetector().analyzeAndPrint(permissionDefFile);
+                new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
             }
 
             System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
@@ -670,6 +678,8 @@ public class FlowDroidMain {
         System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
         System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
+        System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
+        System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
@@ -727,7 +737,7 @@ public class FlowDroidMain {
                 }
             }
 
-            new MethodPermDetector().analyzeAndPrint(permissionDefFile);
+            new MethodPermDetector(permissionDefFile, xmlOut, txtOut).analyzeAndPrint();
         }
 
         private void print(String string) {
