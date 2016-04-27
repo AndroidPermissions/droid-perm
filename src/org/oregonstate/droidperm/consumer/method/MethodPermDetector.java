@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.apache.commons.io.output.TeeOutputStream;
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.PermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
+import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -114,13 +116,23 @@ public class MethodPermDetector {
 
         //Print main results
         //Allows branching the output into System.out and a file.
-        try {
-            PrintStream summaryOut = txtOut != null
-                    ? new PrintStream(new TeeOutputStream(System.out, new FileOutputStream(txtOut))) : System.out;
-            printReachableSensitivesInCallbackStmts(summaryOut);
-            summaryOut.flush();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+        PrintStream summaryOut = System.out;
+        if (txtOut != null) {
+            try {
+                summaryOut = new PrintStream(new TeeOutputStream(System.out, new FileOutputStream(txtOut)));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        printReachableSensitivesInCallbackStmts(summaryOut);
+        summaryOut.flush();
+
+        if (xmlOut != null) {
+            try {
+                JaxbUtil.save(JaxbUtil.buildJaxbData(this), xmlOut);
+            } catch (JAXBException e) {
+                throw new RuntimeException(e);
+            }
         }
         //DebugUtil.pointsToTest();
     }
@@ -205,7 +217,7 @@ public class MethodPermDetector {
      * @return A value indicating whether the permissions in this set are checked by permission checks in the given
      * callback. Checks for multiple permissions are linked by AND relationship.
      */
-    private PermCheckStatus getPermCheckStatusForAll(Set<String> permSet, MethodOrMethodContext callback) {
+    public PermCheckStatus getPermCheckStatusForAll(Set<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
             if (callbackToCheckedPermsMap.get(callback).containsAll(permSet)) {
                 return PermCheckStatus.DETECTED;
@@ -259,6 +271,10 @@ public class MethodPermDetector {
     public void printSensitives() {
         System.out.println("\n\nSensitives in the app: \n====================================");
         sensitives.forEach(System.out::println);
+    }
+
+    public CallPathHolder getSensitivePathsHolder() {
+        return sensitivePathsHolder;
     }
 
     public enum PermCheckStatus {
