@@ -27,7 +27,8 @@
 % LOCATION
 
 <android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> -> ACCESS_COARSE_LOCATION
-<android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus.Listener)> -> ACCESS_FINE_LOCATION
+<android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus$Listener)> -> ACCESS_FINE_LOCATION
+<android.location.LocationManager: boolean addNmeaListener(android.location.GpsStatus$NmeaListener)> -> ACCESS_FINE_LOCATION
 
 % Conversations app
 % ==================================
