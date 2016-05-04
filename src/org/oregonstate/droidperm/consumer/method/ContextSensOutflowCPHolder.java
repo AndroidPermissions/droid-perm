@@ -54,6 +54,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives) {
         super(dummyMainMethod, sensitives);
+        if (Scene.v().getPointsToAnalysis().getClass() != GeomPointsTo.class) {
+            logger.warn("ContextSensOutflowCPHolder is slow with PointsTo algorithms other than GEOM");
+        }
+
         callbackToOutflowMap = buildCallbackToOutflowMap();
         sensitiveToCallbacksMap = buildSensitiveToCallbacksMap();
         buildReachableSensitives();
@@ -92,10 +96,6 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         Queue<MethodInContext> queue = new ArrayDeque<>();
         Set<MethodInContext> traversed = new HashSet<>();
-
-        if (pta.getClass() != GeomPointsTo.class) {
-            throw new RuntimeException("Wrong PointsToAnalysis class found: " + pta.getClass());
-        }
 
         Map<MethodInContext, MethodInContext> outflow = new HashMap<>();
         MethodInContext rootInContext = new MethodInContext(root, null);
