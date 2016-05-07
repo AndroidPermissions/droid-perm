@@ -25,10 +25,29 @@
 % <java.io.FileOutputStream: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
 
 % LOCATION
+% ==================================
 
-<android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> -> ACCESS_COARSE_LOCATION
+<android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void addProximityAlert(double, double, float, long, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void removeProximityAlert(android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void removeUpdates(android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestLocationUpdates(long, float, android.location.Criteria, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestLocationUpdates(long, float, android.location.Criteria, android.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestSingleUpdate(android.location.Criteria, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestSingleUpdate(android.location.Criteria, android.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestSingleUpdate(java.lang.String, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.location.LocationManager: void requestSingleUpdate(java.lang.String, android.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus$Listener)> -> ACCESS_FINE_LOCATION
 <android.location.LocationManager: boolean addNmeaListener(android.location.GpsStatus$NmeaListener)> -> ACCESS_FINE_LOCATION
+
+% CAMERA
+% ==================================
+
+<android.hardware.camera2.CameraManager: void openCamera(java.lang.String, android.hardware.camera2.CameraDevice$StateCallback, android.os.Handler)> -> CAMERA
+
 
 % Conversations app
 % ==================================

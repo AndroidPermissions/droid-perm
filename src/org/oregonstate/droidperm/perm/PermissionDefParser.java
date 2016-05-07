@@ -99,6 +99,7 @@ public class PermissionDefParser {
             androidMethodDef.setSource(true);
         } else {
             Set<String> permissions = Arrays.asList(checkerOrPermList.split(",")).stream()
+                    .map(String::trim)
                     .map(PermissionDefParser::parsePermission).collect(Collectors.toSet());
             androidMethodDef =
                     new AndroidMethod(methodName, methodParameters, returnType, className, permissions);
