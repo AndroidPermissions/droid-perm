@@ -1,6 +1,9 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.apache.commons.io.output.TeeOutputStream;
+import org.oregonstate.droidperm.jaxb.JaxbCallback;
+import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
+import org.oregonstate.droidperm.jaxb.JaxbStmt;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.PermissionDefParser;
 import org.oregonstate.droidperm.util.*;
@@ -8,11 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
-import soot.Unit;
-import soot.jimple.Stmt;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
-import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 
 import javax.xml.bind.JAXBException;
@@ -56,6 +56,12 @@ public class MethodPermDetector {
     private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
 
     private CallPathHolder sensitivePathsHolder;
+
+    /**
+     * Map from callback to the set of permissions checked but unused within that callback.
+     */
+    private Map<MethodOrMethodContext, Set<String>> unusedChecks;
+    private JaxbCallbackList jaxbData;
 
     public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
         this.permissionDefFile = permissionDefFile;
@@ -103,6 +109,8 @@ public class MethodPermDetector {
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives);
 
+        jaxbData = JaxbUtil.buildJaxbData(this);
+        unusedChecks = buildUnusedChecks();
         //DebugUtil.printTargets(sensitives);
     }
 
@@ -124,12 +132,13 @@ public class MethodPermDetector {
                 throw new RuntimeException(e);
             }
         }
-        printReachableSensitivesInCallbackStmts(summaryOut);
+
+        printReachableSensitivesInCallbackStmts(jaxbData, summaryOut);
         summaryOut.flush();
 
         if (xmlOut != null) {
             try {
-                JaxbUtil.save(JaxbUtil.buildJaxbData(this), xmlOut);
+                JaxbUtil.save(jaxbData, xmlOut);
             } catch (JAXBException e) {
                 throw new RuntimeException(e);
             }
@@ -228,31 +237,17 @@ public class MethodPermDetector {
         return PermCheckStatus.NOT_DETECTED;
     }
 
-    /**
-     * todo: There's a discrepancy between the way permission checks are matched with sensitives here and in
-     * printCoveredCallbacks(). There ANY ONE perm per sensitive should be checked for the whole sensitive to be
-     * checked. Here ALL the perms for a statement should be checked for the statement to be checked.
-     */
-    private void printReachableSensitivesInCallbackStmts(PrintStream out) {
+    private static void printReachableSensitivesInCallbackStmts(JaxbCallbackList data, PrintStream out) {
         out.println("\nRequired permissions for code inside each callback:");
         out.println("========================================================================");
 
-        CallGraph cg = Scene.v().getCallGraph();
-        for (MethodOrMethodContext callback : sensitivePathsHolder.getReachableCallbacks()) {
+        for (JaxbCallback callback : data.getCallbacks()) {
             out.println("\n" + callback + " :");
-            for (Unit unit : callback.method().getActiveBody().getUnits()) {
-                Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
-                        .map(edge -> sensitivePathsHolder.getReacheableSensitives(edge))
-                        .filter(set -> set != null)
-                        .collect(MyCollectors.toFlatSet());
-                if (!sensitives.isEmpty()) {
-                    Set<String> permSet = getPermissionsFor(sensitives);
-                    PermCheckStatus checkStatus = getPermCheckStatusForAll(permSet, callback);
-                    String checkMsg = checkStatus == PermCheckStatus.DETECTED ? "YES" : "NO";
-
-                    out.println("    " + unit.getJavaSourceStartLineNumber() + ": "
-                            + ((Stmt) unit).getInvokeExpr().getMethod() + " : " + permSet + ", guarded: " + checkMsg);
-                }
+            for (JaxbStmt jaxbStmt : callback.getStmts()) {
+                String checkMsg = jaxbStmt.isGuarded() ? "YES" : "NO";
+                out.println("    " + jaxbStmt.getLine() + ": "
+                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getPermissions() + ", guarded: " +
+                        checkMsg);
             }
         }
         out.println();
@@ -292,6 +287,14 @@ public class MethodPermDetector {
         public String description() {
             return description;
         }
+    }
+
+    private Map<MethodOrMethodContext, Set<String>> buildUnusedChecks() {
+        //need some data structures about used permissions first
+        /*Map<MethodOrMethodContext, Set<String>> result =
+                callbackToCheckedPermsMap.keySet().stream().filter()*/
+
+        return null;
     }
 
 }

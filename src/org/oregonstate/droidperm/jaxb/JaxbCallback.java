@@ -56,4 +56,14 @@ public class JaxbCallback {
     public void addStmt(JaxbStmt stmt) {
         stmts.add(stmt);
     }
+
+    @Override
+    public String toString() {
+        return ("<" +
+                declaringClass +
+                ": " +
+                signature +
+                ">")
+                .intern();
+    }
 }

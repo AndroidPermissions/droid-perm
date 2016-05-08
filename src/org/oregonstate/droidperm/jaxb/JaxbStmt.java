@@ -46,6 +46,15 @@ public class JaxbStmt {
         return callSignature;
     }
 
+    public String getCallFullSignature() {
+        return ("<" +
+                callClass +
+                ": " +
+                callSignature +
+                ">")
+                .intern();
+    }
+
     public void setCallSignature(String callSignature) {
         this.callSignature = callSignature;
     }

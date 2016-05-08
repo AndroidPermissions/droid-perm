@@ -20,6 +20,11 @@ import java.util.Set;
  */
 public class JaxbUtil {
 
+    /**
+     * todo: There's a discrepancy between the way permission checks are matched with sensitives here and in
+     * printCoveredCallbacks(). There ANY ONE perm per sensitive should be checked for the whole sensitive to be
+     * checked. Here ALL the perms for a statement should be checked for the statement to be checked.
+     */
     public static JaxbCallbackList buildJaxbData(MethodPermDetector detector) {
         CallGraph cg = Scene.v().getCallGraph();
         JaxbCallbackList jaxbCallbackList = new JaxbCallbackList();
