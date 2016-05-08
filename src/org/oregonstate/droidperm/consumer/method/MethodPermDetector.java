@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.consumer.method;
 
-import org.apache.commons.io.output.TeeOutputStream;
 import org.oregonstate.droidperm.jaxb.JaxbCallback;
 import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
 import org.oregonstate.droidperm.jaxb.JaxbStmt;
@@ -122,20 +121,15 @@ public class MethodPermDetector {
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printCoveredCallbacks();
 
-        //Print main results
-        //Allows branching the output into System.out and a file.
-        //todo remove this TeeOutputStream
-        PrintStream summaryOut = System.out;
+        //Print main results tu System.out and optionally to a file
+        printReachableSensitivesInCallbackStmts(jaxbData, System.out);
         if (txtOut != null) {
-            try {
-                summaryOut = new PrintStream(new TeeOutputStream(System.out, new FileOutputStream(txtOut)));
+            try (PrintStream summaryOut = new PrintStream(new FileOutputStream(txtOut))) {
+                printReachableSensitivesInCallbackStmts(jaxbData, summaryOut);
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }
-
-        printReachableSensitivesInCallbackStmts(jaxbData, summaryOut);
-        summaryOut.flush();
 
         if (xmlOut != null) {
             try {
