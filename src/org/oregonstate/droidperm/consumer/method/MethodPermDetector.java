@@ -56,10 +56,16 @@ public class MethodPermDetector {
 
     private CallPathHolder sensitivePathsHolder;
 
+    private Map<MethodOrMethodContext, Set<String>> callbackToRequiredPermsMap;
+    private Set<String> sometimesNotCheckedPerms;
+
     /**
-     * Map from callback to the set of permissions checked but unused within that callback.
+     * Map from callback to lvl 2 map describing checked permissions in this callback.
+     * <p>
+     * Lvl2 map: from checked permissions to usage status of this check: used, unused or possibly used through ICC.
      */
-    private Map<MethodOrMethodContext, Set<String>> unusedChecks;
+    private Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> checkerStatusMap;
+
     private JaxbCallbackList jaxbData;
 
     public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
@@ -108,7 +114,9 @@ public class MethodPermDetector {
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives);
 
-        unusedChecks = buildUnusedChecks();
+        callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
+        sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
+        checkerStatusMap = buildCheckerStatusMap();
         jaxbData = JaxbUtil.buildJaxbData(this);
         //DebugUtil.printTargets(sensitives);
     }
@@ -179,7 +187,6 @@ public class MethodPermDetector {
             for (MethodOrMethodContext sensitive : sortedSensitives) {
                 System.out.println("\nCallbacks for: " + sensitive);
 
-                //true for covered callbacks, false for not covered
                 Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                         sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
                                 .sorted(SortUtil.getSootMethodPrettyPrintComparator())
@@ -286,24 +293,6 @@ public class MethodPermDetector {
         }
     }
 
-    private Map<MethodOrMethodContext, Set<String>> buildUnusedChecks() {
-        Map<MethodOrMethodContext, Set<String>> callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
-
-        //need some data structures about used permissions first
-
-        return callbackToCheckedPermsMap.keySet().stream().collect(Collectors.toMap(
-                callback -> callback,
-                callback -> {
-                    //TreeSet ensures sorting by name
-                    Set<String> perms = new TreeSet<>(callbackToCheckedPermsMap.get(callback));
-                    Set<String> consumedPerms = callbackToRequiredPermsMap.get(callback);
-                    consumedPerms = consumedPerms != null ? consumedPerms : Collections.emptySet();
-                    perms.removeAll(consumedPerms);
-                    return perms;
-                }
-        ));
-    }
-
     private Map<MethodOrMethodContext, Set<String>> buildCallbackToRequiredPermsMap() {
         return sensitivePathsHolder.getReachableCallbacks().stream().collect(Collectors.toMap(
                 callback -> callback,
@@ -313,6 +302,47 @@ public class MethodPermDetector {
         ));
     }
 
+    private Set<String> buildSometimesNotCheckedPerms() {
+        return callbackToRequiredPermsMap.keySet().stream().flatMap(callback ->
+                callbackToRequiredPermsMap.get(callback).stream()
+                        //only keep permissions that are required but not checked, globally
+                        .filter(perm -> !callbackToCheckedPermsMap.get(callback).contains(perm))
+        ).collect(Collectors.toSet());
+    }
+
+    private Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> buildCheckerStatusMap() {
+        return callbackToCheckedPermsMap.keySet().stream().collect(Collectors.toMap(
+                callback -> callback,
+                callback -> {
+                    Set<String> perms = callbackToCheckedPermsMap.get(callback);
+
+                    return perms.stream().collect(Collectors.toMap(
+                            perm -> perm,
+                            perm -> getCheckUsageStatus(callback, perm)
+                    ));
+                }
+        ));
+    }
+
+    private CheckerUsageStatus getCheckUsageStatus(MethodOrMethodContext callback, String perm) {
+        Set<String> reqPerms = callbackToRequiredPermsMap.get(callback);
+        reqPerms = reqPerms != null ? reqPerms : Collections.emptySet();
+
+        if (reqPerms.contains(perm)) {
+            return CheckerUsageStatus.USED;
+        } else if (sometimesNotCheckedPerms.contains(perm)) {
+            return CheckerUsageStatus.UNUSED_POSSIBLY_ICC;
+        } else {
+            return CheckerUsageStatus.UNUSED;
+        }
+    }
+
+    public enum CheckerUsageStatus {
+        USED,
+        UNUSED,
+        UNUSED_POSSIBLY_ICC;
+    }
+
     private void printUnusedChecks() {
         System.out.println("\nChecked permissions inside each callback:");
         System.out.println("========================================================================");
@@ -320,9 +350,12 @@ public class MethodPermDetector {
         for (MethodOrMethodContext callback : checkerPathsHolder.getReachableCallbacks()) {
             //now callbacks are nicely sorted
             System.out.println("\n" + callback + " :");
-            for (String perm : unusedChecks.get(callback)) {
-                String status = "NO";
-                System.out.println("    " + perm + " used: " + status);
+            for (String perm : checkerStatusMap.get(callback).keySet()) {
+                CheckerUsageStatus status = checkerStatusMap.get(callback).get(perm);
+                String statusString = status == CheckerUsageStatus.USED ? "used"
+                        : status == CheckerUsageStatus.UNUSED ? "NOT used"
+                        : "NOT used POSSIBLY ICC";
+                System.out.printf("    %-50s  status: %-20s\n", perm, statusString);
             }
         }
         System.out.println();
