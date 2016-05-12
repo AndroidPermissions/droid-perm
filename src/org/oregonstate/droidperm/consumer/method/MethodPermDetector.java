@@ -125,6 +125,7 @@ public class MethodPermDetector {
         printSensitives();
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printCoveredCallbacks();
+        printUnusedChecks();
 
         //Print main results tu System.out and optionally to a file
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
@@ -143,8 +144,6 @@ public class MethodPermDetector {
                 throw new RuntimeException(e);
             }
         }
-
-        printUnusedChecks();
         //DebugUtil.pointsToTest();
     }
 
