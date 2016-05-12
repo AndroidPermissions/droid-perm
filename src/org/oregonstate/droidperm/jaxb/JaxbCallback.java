@@ -6,7 +6,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/26/2016.
@@ -17,6 +19,9 @@ public class JaxbCallback {
     private String declaringClass;
     private String signature;
     private List<JaxbStmt> stmts = new ArrayList<>();
+
+    @XmlElement
+    Map<String, CheckerUsageStatus> checkerStatusMap = new HashMap<>();
 
     public JaxbCallback() {
     }
@@ -55,6 +60,10 @@ public class JaxbCallback {
 
     public void addStmt(JaxbStmt stmt) {
         stmts.add(stmt);
+    }
+
+    public void setCheckerStatusMap(Map<String, CheckerUsageStatus> checkerStatusMap) {
+        this.checkerStatusMap = checkerStatusMap;
     }
 
     @Override

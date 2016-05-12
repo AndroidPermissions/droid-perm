@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.consumer.method;
 
-import org.oregonstate.droidperm.jaxb.JaxbCallback;
-import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
-import org.oregonstate.droidperm.jaxb.JaxbStmt;
-import org.oregonstate.droidperm.jaxb.JaxbUtil;
+import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.perm.PermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
@@ -64,7 +61,7 @@ public class MethodPermDetector {
      * <p>
      * Lvl2 map: from checked permissions to usage status of this check: used, unused or possibly used through ICC.
      */
-    private Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> checkerStatusMap;
+    private Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> callbackCheckerStatusMap;
 
     private JaxbCallbackList jaxbData;
 
@@ -116,7 +113,7 @@ public class MethodPermDetector {
 
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
-        checkerStatusMap = buildCheckerStatusMap();
+        callbackCheckerStatusMap = buildCheckerStatusMap();
         jaxbData = JaxbUtil.buildJaxbData(this);
         //DebugUtil.printTargets(sensitives);
     }
@@ -241,6 +238,10 @@ public class MethodPermDetector {
         return PermCheckStatus.NOT_DETECTED;
     }
 
+    public Map<String, CheckerUsageStatus> getCheckerStatusMap(MethodOrMethodContext callback) {
+        return callbackCheckerStatusMap.get(callback);
+    }
+
     private static void printReachableSensitivesInCallbackStmts(JaxbCallbackList data, PrintStream out) {
         out.println("\nRequired permissions for code inside each callback:");
         out.println("========================================================================");
@@ -337,12 +338,6 @@ public class MethodPermDetector {
         }
     }
 
-    public enum CheckerUsageStatus {
-        USED,
-        UNUSED,
-        UNUSED_POSSIBLY_ICC;
-    }
-
     private void printUnusedChecks() {
         System.out.println("\nChecked permissions inside each callback:");
         System.out.println("========================================================================");
@@ -350,8 +345,8 @@ public class MethodPermDetector {
         for (MethodOrMethodContext callback : checkerPathsHolder.getReachableCallbacks()) {
             //now callbacks are nicely sorted
             System.out.println("\n" + callback + " :");
-            for (String perm : checkerStatusMap.get(callback).keySet()) {
-                CheckerUsageStatus status = checkerStatusMap.get(callback).get(perm);
+            for (String perm : callbackCheckerStatusMap.get(callback).keySet()) {
+                CheckerUsageStatus status = callbackCheckerStatusMap.get(callback).get(perm);
                 String statusString = status == CheckerUsageStatus.USED ? "used"
                         : status == CheckerUsageStatus.UNUSED ? "NOT used"
                         : "NOT used POSSIBLY ICC";

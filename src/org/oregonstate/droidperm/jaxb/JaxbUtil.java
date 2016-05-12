@@ -31,6 +31,7 @@ public class JaxbUtil {
 
         for (MethodOrMethodContext callback : detector.getSensitivePathsHolder().getReachableCallbacks()) {
             JaxbCallback jaxbCallback = new JaxbCallback(callback.method());
+            jaxbCallback.setCheckerStatusMap(detector.getCheckerStatusMap(callback));
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
                 Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
                         .map(edge -> detector.getSensitivePathsHolder().getReacheableSensitives(edge))
