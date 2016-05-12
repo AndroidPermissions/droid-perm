@@ -306,7 +306,8 @@ public class MethodPermDetector {
         return callbackToRequiredPermsMap.keySet().stream().flatMap(callback ->
                 callbackToRequiredPermsMap.get(callback).stream()
                         //only keep permissions that are required but not checked, globally
-                        .filter(perm -> !callbackToCheckedPermsMap.get(callback).contains(perm))
+                        .filter(perm -> callbackToCheckedPermsMap.get(callback) == null ||
+                                !callbackToCheckedPermsMap.get(callback).contains(perm))
         ).collect(Collectors.toSet());
     }
 
