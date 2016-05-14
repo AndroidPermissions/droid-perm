@@ -61,3 +61,8 @@
 
 <android.content.CursorLoader: void <init>(android.content.Context)> -> READ_CONTACTS
 <android.content.CursorLoader: void <init>(android.content.Context,android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)> -> READ_CONTACTS
+
+% XYZTouristsAttraction
+% ==================================
+
+<com.google.android.gms.location.FusedLocationProviderApi: android.location.Location getLastLocation(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_FINE_LOCATION
