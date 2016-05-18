@@ -236,27 +236,36 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private void printPath(MethodOrMethodContext src, MethodInContext dest,
                            Map<MethodInContext, MethodInContext> outflow) {
-        List<MethodOrMethodContext> path = computePathFromOutflow(src, dest, outflow);
+        List<MethodInContext> path = computePathFromOutflow(src, dest, outflow);
 
         System.out.println("From " + src + "\n  to " + dest);
         System.out.println("--------------------------------------------");
         if (path != null) {
-            path.forEach(System.out::println);
+            path.forEach(methodInC -> System.out.print(methodInC != null ? displayString(methodInC) : null));
+            System.out.println();
         } else {
             System.out.println("Not found!");
         }
         System.out.println();
     }
 
-    private List<MethodOrMethodContext> computePathFromOutflow(MethodOrMethodContext src, MethodInContext dest,
-                                                               Map<MethodInContext, MethodInContext> outflow) {
-        List<MethodOrMethodContext> path = new ArrayList<>();
+    private String displayString(MethodInContext methodInC) {
+        if (methodInC.context == null) {
+            return methodInC.method.toString();
+        } else {
+            return " : " + ((Stmt) methodInC.context).getJavaSourceStartLineNumber() + "\n" + methodInC.method;
+        }
+    }
+
+    private List<MethodInContext> computePathFromOutflow(MethodOrMethodContext src, MethodInContext dest,
+                                                         Map<MethodInContext, MethodInContext> outflow) {
+        List<MethodInContext> path = new ArrayList<>();
         MethodInContext node = dest;
         while (node != null && node.method != src) {
-            path.add(node.method);
+            path.add(node);
             node = outflow.get(node);
         }
-        path.add(node != null ? node.method : null);
+        path.add(node != null ? node : null);
         Collections.reverse(path);
         return path;
     }
