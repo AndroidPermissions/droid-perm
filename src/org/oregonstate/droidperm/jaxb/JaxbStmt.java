@@ -6,9 +6,8 @@ import soot.jimple.Stmt;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -20,19 +19,17 @@ public class JaxbStmt {
     private String callClass;
     private String callSignature;
     private int line;
-    private boolean guarded;
-    private List<String> permissions;
+    private Map<String, Boolean> permissionStatusMap;
 
     public JaxbStmt() {
     }
 
-    public JaxbStmt(Stmt stmt, boolean guarded, Collection<String> permissions) {
+    public JaxbStmt(Stmt stmt, Map<String, Boolean> permissionStatusMap) {
         SootMethod sootMethod = stmt.getInvokeExpr().getMethod();
         callClass = sootMethod.getDeclaringClass().getName();
         callSignature = sootMethod.getSubSignature();
         line = stmt.getJavaSourceStartLineNumber();
-        this.guarded = guarded;
-        this.permissions = new ArrayList<>(permissions);
+        this.permissionStatusMap = permissionStatusMap;
     }
 
     @XmlAttribute
@@ -71,28 +68,28 @@ public class JaxbStmt {
         this.line = line;
     }
 
-    @XmlAttribute
-    public boolean isGuarded() {
-        return guarded;
+    public boolean allGuarded() {
+        return permissionStatusMap.values().stream().allMatch(guarded -> guarded);
     }
 
-    public void setGuarded(boolean guarded) {
-        this.guarded = guarded;
-    }
-
+    /**
+     * Map from permission to guarded status.
+     */
     @XmlElement(name = "permission")
-    public List<String> getPermissions() {
-        return permissions;
+    public Map<String, Boolean> getPermissionStatusMap() {
+        return permissionStatusMap;
     }
 
-    public List<String> getShortPermNames() {
+    public List<String> getpermDisplayStrings() {
         String prefix = "android.permission.";
         int prefixLen = prefix.length();
-        return permissions.stream().map(perm -> perm.startsWith(prefix) ? perm.substring(prefixLen) : prefix)
+        return permissionStatusMap.keySet().stream().map(perm ->
+                (perm.startsWith(prefix) ? perm.substring(prefixLen) : prefix)
+                        + (permissionStatusMap.get(perm) ? "" : " (no check)"))
                 .collect(Collectors.toList());
     }
 
-    public void setPermissions(List<String> permissions) {
-        this.permissions = permissions;
+    public void setPermissionStatusMap(Map<String, Boolean> permissionStatusMap) {
+        this.permissionStatusMap = permissionStatusMap;
     }
 }

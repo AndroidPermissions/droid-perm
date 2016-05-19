@@ -13,7 +13,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.File;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/26/2016.
@@ -39,9 +42,13 @@ public class JaxbUtil {
                         .collect(MyCollectors.toFlatSet());
                 if (!sensitives.isEmpty()) {
                     Set<String> permSet = detector.getPermissionsFor(sensitives);
-                    boolean guarded = detector.getPermCheckStatusForAll(permSet, callback) ==
-                            MethodPermDetector.PermCheckStatus.DETECTED;
-                    JaxbStmt jaxbStmt = new JaxbStmt((Stmt) unit, guarded, permSet);
+                    Map<String, Boolean> permGaurdedMap = permSet.stream()
+                            .collect(Collectors.toMap(perm -> perm,
+                                    perm -> detector
+                                            .getPermCheckStatusForAll(Collections.singletonList(perm), callback) ==
+                                            MethodPermDetector.PermCheckStatus.DETECTED));
+
+                    JaxbStmt jaxbStmt = new JaxbStmt((Stmt) unit, permGaurdedMap);
                     jaxbCallback.addStmt(jaxbStmt);
                 }
             }

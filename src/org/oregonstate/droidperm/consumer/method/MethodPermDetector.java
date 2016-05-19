@@ -226,7 +226,7 @@ public class MethodPermDetector {
      * @return A value indicating whether the permissions in this set are checked by permission checks in the given
      * callback. Checks for multiple permissions are linked by AND relationship.
      */
-    public PermCheckStatus getPermCheckStatusForAll(Set<String> permSet, MethodOrMethodContext callback) {
+    public PermCheckStatus getPermCheckStatusForAll(Collection<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
             if (callbackToCheckedPermsMap.get(callback).containsAll(permSet)) {
                 return PermCheckStatus.DETECTED;
@@ -248,10 +248,9 @@ public class MethodPermDetector {
         for (JaxbCallback callback : data.getCallbacks()) {
             out.println("\n" + callback + " :");
             for (JaxbStmt jaxbStmt : callback.getStmts()) {
-                String checkMsg = jaxbStmt.isGuarded() ? "YES" : "NO";
+                String checkMsg = jaxbStmt.allGuarded() ? "" : " --- checks INCOMPLETE";
                 out.println("    " + jaxbStmt.getLine() + ": "
-                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getShortPermNames() + ", guarded: " +
-                        checkMsg);
+                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getpermDisplayStrings() + checkMsg);
             }
         }
         out.println();
