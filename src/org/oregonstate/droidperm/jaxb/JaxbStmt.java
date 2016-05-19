@@ -6,7 +6,10 @@ import soot.jimple.Stmt;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/26/2016.
@@ -18,7 +21,7 @@ public class JaxbStmt {
     private String callSignature;
     private int line;
     private boolean guarded;
-    private Collection<String> permissions;
+    private List<String> permissions;
 
     public JaxbStmt() {
     }
@@ -29,7 +32,7 @@ public class JaxbStmt {
         callSignature = sootMethod.getSubSignature();
         line = stmt.getJavaSourceStartLineNumber();
         this.guarded = guarded;
-        this.permissions = permissions;
+        this.permissions = new ArrayList<>(permissions);
     }
 
     @XmlAttribute
@@ -78,11 +81,18 @@ public class JaxbStmt {
     }
 
     @XmlElement(name = "permission")
-    public Collection<String> getPermissions() {
+    public List<String> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(Collection<String> permissions) {
+    public List<String> getShortPermNames() {
+        String prefix = "android.permission.";
+        int prefixLen = prefix.length();
+        return permissions.stream().map(perm -> perm.startsWith(prefix) ? perm.substring(prefixLen) : prefix)
+                .collect(Collectors.toList());
+    }
+
+    public void setPermissions(List<String> permissions) {
         this.permissions = permissions;
     }
 }

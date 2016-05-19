@@ -250,7 +250,7 @@ public class MethodPermDetector {
             for (JaxbStmt jaxbStmt : callback.getStmts()) {
                 String checkMsg = jaxbStmt.isGuarded() ? "YES" : "NO";
                 out.println("    " + jaxbStmt.getLine() + ": "
-                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getPermissions() + ", guarded: " +
+                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getShortPermNames() + ", guarded: " +
                         checkMsg);
             }
         }
