@@ -19,6 +19,12 @@ public class JaxbStmt {
     private String callClass;
     private String callSignature;
     private int line;
+
+    /**
+     * key = permission
+     * <p>
+     * value: true = checked, false = not checked
+     */
     private Map<String, Boolean> permissionStatusMap;
 
     public JaxbStmt() {
@@ -91,5 +97,10 @@ public class JaxbStmt {
 
     public void setPermissionStatusMap(Map<String, Boolean> permissionStatusMap) {
         this.permissionStatusMap = permissionStatusMap;
+    }
+
+    public List<String> getUncheckedPermissions() {
+        return permissionStatusMap.keySet().stream().filter(perm -> !permissionStatusMap.get(perm))
+                .collect(Collectors.toList());
     }
 }
