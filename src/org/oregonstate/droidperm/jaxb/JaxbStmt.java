@@ -80,7 +80,7 @@ public class JaxbStmt {
         return permissionStatusMap;
     }
 
-    public List<String> getpermDisplayStrings() {
+    public List<String> getPermDisplayStrings() {
         String prefix = "android.permission.";
         int prefixLen = prefix.length();
         return permissionStatusMap.keySet().stream().map(perm ->

@@ -250,7 +250,7 @@ public class MethodPermDetector {
             for (JaxbStmt jaxbStmt : callback.getStmts()) {
                 String checkMsg = jaxbStmt.allGuarded() ? "" : " --- checks INCOMPLETE";
                 out.println("    " + jaxbStmt.getLine() + ": "
-                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getpermDisplayStrings() + checkMsg);
+                        + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getPermDisplayStrings() + checkMsg);
             }
         }
         out.println();
