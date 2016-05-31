@@ -24,6 +24,11 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
 
+    /**
+     * Methods ignored by the outflow algorithm
+     */
+    private List<SootMethod> outflowIgnoreList;
+
     private long time = System.currentTimeMillis();
 
     private Set<MethodInContext> sensitivesInContext = new HashSet<>();
@@ -52,8 +57,11 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> sensitiveToCallbacksMap;
 
-    public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives) {
+    public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
+                                      List<SootMethod> outflowIgnoreList) {
         super(dummyMainMethod, sensitives);
+        this.outflowIgnoreList = outflowIgnoreList;
+
         if (Scene.v().getPointsToAnalysis().getClass() != GeomPointsTo.class) {
             logger.warn("ContextSensOutflowCPHolder is slow with PointsTo algorithms other than GEOM");
         }
@@ -106,7 +114,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         for (MethodInContext meth = queue.poll(); meth != null; meth = queue.poll()) {
             final MethodInContext srcInContext = meth; //to make lambda expressions happy
             MethodOrMethodContext srcMeth = srcInContext.method;
-            if (srcMeth.method().hasActiveBody()) {
+            if (srcMeth.method().hasActiveBody() &&
+                    //do not pass through methods in the ignore list
+                    !outflowIgnoreList.contains(srcMeth.method())) {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
                         (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg, pta)
                                 .forEachRemaining((Edge edge) -> {

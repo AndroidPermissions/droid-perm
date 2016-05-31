@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.SootMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.options.Options;
@@ -29,6 +30,7 @@ public class MethodPermDetector {
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
 
     private File permissionDefFile;
+    private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
     private File txtOut;
     private File xmlOut;
 
@@ -83,8 +85,10 @@ public class MethodPermDetector {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         PermissionDefParser permissionDefParser;
+        List<SootMethod> outflowIgnoreList;
         try {
             permissionDefParser = new PermissionDefParser(permissionDefFile);
+            outflowIgnoreList = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -96,7 +100,7 @@ public class MethodPermDetector {
 
         //checkers
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreList);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
 
         //sensitives
@@ -109,7 +113,7 @@ public class MethodPermDetector {
         //select one of the call path algorithms.
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreList);
 
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
