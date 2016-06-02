@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
+    private final PointsToAnalysis pointsToAnalysis;
 
     /**
      * Methods ignored by the outflow algorithm
@@ -62,7 +63,8 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         super(dummyMainMethod, sensitives);
         this.outflowIgnoreList = outflowIgnoreList;
 
-        if (Scene.v().getPointsToAnalysis().getClass() != GeomPointsTo.class) {
+        pointsToAnalysis = Scene.v().getPointsToAnalysis();
+        if (pointsToAnalysis.getClass() != GeomPointsTo.class) {
             logger.warn("ContextSensOutflowCPHolder is slow with PointsTo algorithms other than GEOM");
         }
 
@@ -101,7 +103,6 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private Map<MethodInContext, MethodInContext> getBreadthFirstOutflow(MethodOrMethodContext root) {
         CallGraph cg = Scene.v().getCallGraph();
-        PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         Queue<MethodInContext> queue = new ArrayDeque<>();
         Set<MethodInContext> traversed = new HashSet<>();
 
@@ -118,7 +119,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                     //do not pass through methods in the ignore list
                     !outflowIgnoreList.contains(srcMeth.method())) {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
-                        (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg, pta)
+                        (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg)
                                 .forEachRemaining((Edge edge) -> {
                                     MethodInContext tgtInContext = MethodInContext.forTarget(edge);
 
@@ -139,26 +140,20 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     /**
      * Iterator over outbound edges of a particular unit (likely method call).
      */
-    private static Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg,
-                                                      PointsToAnalysis pta) {
+    private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
         if (unit instanceof InvokeStmt && context != null) {
-            InvokeExpr invokeExpr = ((InvokeStmt) unit).getInvokeExpr();
+            InvokeStmt invokeStmt = (InvokeStmt) unit;
+            InvokeExpr invokeExpr = invokeStmt.getInvokeExpr();
             // only virtual invocations require context sensitivity.
             if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
                 //we canot compute this list if there are no edges, hence the need for a supplier
                 Supplier<List<SootMethod>> pointsToTargetMethods = new CachingSupplier<>(() -> {
-                    InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
-                    SootMethod staticTargetMethod = invoke.getMethod();
-                    //in Jimple target is always Local, regardless of who is the qualifier in Java.
-                    Local target = (Local) invoke.getBase();
-
-                    PointsToSet pointsToSet;
-                    try {
-                        pointsToSet = pta.reachingObjects(context, target);
-                    } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
-                        logger.debug(e.toString());
+                    PointsToSet pointsToSet = getPointsTo(invokeStmt, context);
+                    if (pointsToSet == null) {
                         return Collections.emptyList();
                     }
+
+                    SootMethod staticTargetMethod = invokeExpr.getMethod();
                     Set<Type> pointsToTargetTypes = pointsToSet.possibleTypes();
                     return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, pointsToTargetTypes);
                 });
@@ -249,9 +244,13 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         List<MethodInContext> path = computePathFromOutflow(src, dest, outflow);
 
         System.out.println("From " + src + "\n  to " + dest);
-        System.out.println("--------------------------------------------");
+        System.out.println("----------------------------------------------------------------------------------------");
         if (path != null) {
-            path.forEach(methodInC -> System.out.print(methodInC != null ? displayString(methodInC) : null));
+            for (int i = 0; i < path.size(); i++) {
+                MethodInContext methodInC = path.get(i);
+                MethodInContext child = i < path.size() - 1 ? path.get(i + 1) : null;
+                System.out.println(methodInC != null ? pathNodeToString(methodInC, child) : null);
+            }
             System.out.println();
         } else {
             System.out.println("Not found!");
@@ -259,12 +258,29 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         System.out.println();
     }
 
-    private String displayString(MethodInContext methodInC) {
-        if (methodInC.context == null) {
-            return methodInC.method.toString();
-        } else {
-            return " : " + ((Stmt) methodInC.context).getJavaSourceStartLineNumber() + "\n" + methodInC.method;
+    /**
+     * @param methodInC currently printed method
+     * @param child     child of methodInC
+     * @return string to print representing methodInC
+     */
+    private String pathNodeToString(MethodInContext methodInC, MethodInContext child) {
+        StringBuilder out = new StringBuilder();
+        out.append(methodInC.method);
+
+        if (child != null && child.context != null) {
+            out.append(" : ").append(((Stmt) child.context).getJavaSourceStartLineNumber());
         }
+
+        PointsToSet pointsTo = child != null ?
+                getPointsTo((Stmt) child.context, methodInC.context)
+                : null;
+        if (pointsTo != null) {
+            out.append("\n                                                                p-to: ");
+            out.append(pointsTo.possibleTypes().stream()
+                    .map(type -> type.toString().substring(type.toString().lastIndexOf(".") + 1))
+                    .collect(Collectors.toList()));
+        }
+        return out.toString();
     }
 
     private List<MethodInContext> computePathFromOutflow(MethodOrMethodContext src, MethodInContext dest,
@@ -278,6 +294,27 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         path.add(node != null ? node : null);
         Collections.reverse(path);
         return path;
+    }
+
+    private PointsToSet getPointsTo(Stmt stmt, Context context) {
+        //implementation adapted from getUnitEdgeIterator
+        if (stmt instanceof InvokeStmt && context != null) {
+            InvokeExpr invokeExpr = stmt.getInvokeExpr();
+            // only virtual invocations require context sensitivity.
+            if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
+                InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
+                //in Jimple target is always Local, regardless of who is the qualifier in Java.
+                Local target = (Local) invoke.getBase();
+
+                try {
+                    return pointsToAnalysis.reachingObjects(context, target);
+                } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
+                    logger.debug(e.toString());
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
