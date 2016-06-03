@@ -119,7 +119,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                     //do not pass through methods in the ignore list
                     !outflowIgnoreList.contains(srcMeth.method())) {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
-                        (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg)
+                        (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.getContext(), cg)
                                 .forEachRemaining((Edge edge) -> {
                                     MethodInContext tgtInContext = new MethodInContext(edge);
 
@@ -280,12 +280,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         StringBuilder out = new StringBuilder();
         out.append(methodInC.method);
 
-        if (child != null && child.context != null) {
-            out.append(" : ").append(((Stmt) child.context).getJavaSourceStartLineNumber());
+        if (child != null && child.getContext() != null) {
+            out.append(" : ").append(((Stmt) child.getContext()).getJavaSourceStartLineNumber());
         }
 
         PointsToSet pointsTo = child != null ?
-                getPointsTo((Stmt) child.context, methodInC.context)
+                getPointsTo((Stmt) child.getContext(), methodInC.getContext())
                 : null;
         if (pointsTo != null) {
             out.append("\n                                                                p-to: ");
@@ -340,7 +340,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         //toperf cg.findEdge() is potentially expensive. Better keep edges in the outflow.
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(sensitivesInContext::contains)
-                .map(methInCt -> cg.findEdge((Unit) methInCt.context, methInCt.method.method()))
+                .map(methInCt -> cg.findEdge((Unit) methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toSet());
     }
 
@@ -348,7 +348,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
-                .map(methInCt -> cg.findEdge((Unit) methInCt.context, methInCt.method.method()))
+                .map(methInCt -> cg.findEdge((Unit) methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toList());
     }
 

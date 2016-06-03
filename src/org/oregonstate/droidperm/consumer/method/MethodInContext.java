@@ -18,7 +18,6 @@ import java.util.Objects;
  */
 public class MethodInContext {
     public final MethodOrMethodContext method;
-    public final Context context;
     public final Edge edge;
 
     /**
@@ -28,14 +27,16 @@ public class MethodInContext {
      */
     public MethodInContext(MethodOrMethodContext method) {
         this.method = method;
-        this.context = null;
         this.edge = null;
     }
 
     public MethodInContext(Edge edge) {
         this.method = edge.getTgt();
-        this.context = edge.srcStmt();
         this.edge = edge;
+    }
+
+    public Context getContext() {
+        return edge != null ? edge.srcStmt() : null;
     }
 
     /**
@@ -49,8 +50,8 @@ public class MethodInContext {
         if (!(o instanceof MethodInContext)) {
             return false;
         }
-        MethodInContext p = (MethodInContext) o;
-        return Objects.equals(p.method, method) && Objects.equals(p.context, context);
+        MethodInContext param = (MethodInContext) o;
+        return Objects.equals(param.method, method) && Objects.equals(param.edge, edge);
     }
 
     /**
@@ -60,11 +61,11 @@ public class MethodInContext {
      */
     @Override
     public int hashCode() {
-        return (method == null ? 0 : method.hashCode()) ^ (context == null ? 0 : context.hashCode());
+        return (method == null ? 0 : method.hashCode()) ^ (edge == null ? 0 : edge.hashCode());
     }
 
     @Override
     public String toString() {
-        return method + " called from " + context;
+        return method + " called from " + getContext();
     }
 }
