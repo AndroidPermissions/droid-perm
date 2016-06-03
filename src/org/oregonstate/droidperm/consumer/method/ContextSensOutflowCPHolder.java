@@ -278,12 +278,16 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private String pathNodeToString(MethodInContext methodInC, MethodInContext child) {
         StringBuilder out = new StringBuilder();
+
+        //parent method
         out.append(methodInC.method);
 
+        //invocation line number in parent method
         if (child != null && child.getContext() != null) {
             out.append(" : ").append(((Stmt) child.getContext()).getJavaSourceStartLineNumber());
         }
 
+        //points to of the invocation target
         PointsToSet pointsTo = child != null ?
                 getPointsTo((Stmt) child.getContext(), methodInC.getContext())
                 : null;
@@ -293,6 +297,15 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                     .map(type -> type.toString().substring(type.toString().lastIndexOf(".") + 1))
                     .collect(Collectors.toList()));
         }
+
+        //shortcutted call, if it's a fake edge
+        if (child != null && child.edge.kind().isFake()) { //child edge is always != null
+            out.append("\n    ");
+            out.append(getInvokedMethod((InvokeStmt) child.getContext()));
+            out.append(
+                    "\n                                                                FAKE edge: call shortcutted");
+        }
+
         return out.toString();
     }
 
@@ -328,6 +341,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             }
         }
         return null;
+    }
+
+    private static SootMethod getInvokedMethod(InvokeStmt stmt) {
+        return stmt.getInvokeExpr().getMethod();
     }
 
     @Override
