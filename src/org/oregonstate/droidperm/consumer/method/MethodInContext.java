@@ -1,8 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 /**
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- * Created on 4/5/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/5/2016.
  * <p>
  * Source: http://stackoverflow.com/a/18586688/4182868
  */
@@ -14,36 +13,36 @@ import soot.jimple.toolkits.callgraph.Edge;
 import java.util.Objects;
 
 /**
- * Container to ease passing around a tuple of two objects. This object provides a sensible
- * implementation of equals(), returning true if equals() is true on each of the contained
- * objects.
+ * Container to ease passing around a tuple of two objects. This object provides a sensible implementation of equals(),
+ * returning true if equals() is true on each of the contained objects.
  */
 public class MethodInContext {
     public final MethodOrMethodContext method;
     public final Context context;
+    public final Edge edge;
 
     /**
      * Constructor for a MethodInContext.
      *
-     * @param method  the method in the MethodInContext
-     * @param context the context
+     * @param method the method in the MethodInContext
      */
-    public MethodInContext(MethodOrMethodContext method, Context context) {
+    public MethodInContext(MethodOrMethodContext method) {
         this.method = method;
-        this.context = context;
+        this.context = null;
+        this.edge = null;
     }
 
-    public static MethodInContext forTarget(Edge edge) {
-        return new MethodInContext(edge.getTgt(), edge.srcStmt());
+    public MethodInContext(Edge edge) {
+        this.method = edge.getTgt();
+        this.context = edge.srcStmt();
+        this.edge = edge;
     }
 
     /**
-     * Checks the two objects for equality by delegating to their respective
-     * {@link Object#equals(Object)} methods.
+     * Checks the two objects for equality by delegating to their respective {@link Object#equals(Object)} methods.
      *
      * @param o the {@link MethodInContext} to which this one is to be checked for equality
-     * @return true if the underlying objects of the MethodInContext are both considered
-     * equal
+     * @return true if the underlying objects of the MethodInContext are both considered equal
      */
     @Override
     public boolean equals(Object o) {

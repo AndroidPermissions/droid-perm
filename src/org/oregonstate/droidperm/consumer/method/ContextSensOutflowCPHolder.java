@@ -107,7 +107,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         Set<MethodInContext> traversed = new HashSet<>();
 
         Map<MethodInContext, MethodInContext> outflow = new HashMap<>();
-        MethodInContext rootInContext = new MethodInContext(root, null);
+        MethodInContext rootInContext = new MethodInContext(root);
         queue.add(rootInContext);
         traversed.add(rootInContext);
 
@@ -121,7 +121,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
                         (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.context, cg)
                                 .forEachRemaining((Edge edge) -> {
-                                    MethodInContext tgtInContext = MethodInContext.forTarget(edge);
+                                    MethodInContext tgtInContext = new MethodInContext(edge);
 
                                     if (!traversed.contains(tgtInContext)) {
                                         traversed.add(tgtInContext);
@@ -332,7 +332,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     @Override
     public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
-        return reachableSensitives.get(MethodInContext.forTarget(edge));
+        return reachableSensitives.get(new MethodInContext(edge));
     }
 
     @Override
