@@ -178,16 +178,29 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 //  not through PointsToSet analysis in this class.
                 //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
                 return StreamUtil.asStream(cg.edgesOutOf(unit))
-                        //Fake edges are a hack in Soot for handling async constructs.
-                        //if it's a fake edge, include it without comparing to actual targets.
-                        .filter(edge ->
-                                pointsToTargetMethods.get().contains(edge.getTgt().method()) || edge.kind().isFake())
+                        .filter(edge -> isPointsToValidEdge(pointsToTargetMethods, edge))
                         .iterator();
             }
         }
 
         //default case, anything except virtual method calls
         return cg.edgesOutOf(unit);
+    }
+
+    private boolean isPointsToValidEdge(Supplier<List<SootMethod>> pointsToTargetMethods, Edge edge) {
+        //      this is the main case: real edges
+        return pointsToTargetMethods.get().contains(edge.getTgt().method())
+                //2nd case: fake edges
+                //Fake edges are a hack in Soot for handling async constructs.
+                //If it's a fake edge, include it without comparing to actual targets.
+                //With one exception: ExecutorService.execute(). That one is handled better by crafted classpath.
+                || (edge.kind().isFake());
+                /*Limitation: cannot disable fake edges kinf EXECUTOR, because it would require crafting
+                a custom executor.execute() for every implementation of ExecutorService. Those fake edges are still
+                needed when executor.execute() is called directly by the app.
+
+                 The only drawback is a bit uglier paths, due to fake edge being logged instead of a nice crafted one.
+                */
     }
 
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildSensitiveToCallbacksMap() {
