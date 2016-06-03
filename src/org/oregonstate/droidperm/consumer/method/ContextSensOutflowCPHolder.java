@@ -324,7 +324,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private PointsToSet getPointsTo(Stmt stmt, Context context) {
         //implementation adapted from getUnitEdgeIterator
-        if (stmt instanceof InvokeStmt && context != null) {
+        if (stmt instanceof InvokeStmt) {
             InvokeExpr invokeExpr = stmt.getInvokeExpr();
             // only virtual invocations require context sensitivity.
             if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
@@ -333,7 +333,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 Local target = (Local) invoke.getBase();
 
                 try {
-                    return pointsToAnalysis.reachingObjects(context, target);
+                    if (context != null) {
+                        return pointsToAnalysis.reachingObjects(context, target);
+                    } else {
+                        //context == null means we are in a top-level method, which is still a valid option
+                        return pointsToAnalysis.reachingObjects(target);
+                    }
                 } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
                     logger.debug(e.toString());
                     return null;
