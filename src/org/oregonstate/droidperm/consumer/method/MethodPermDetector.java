@@ -187,20 +187,25 @@ public class MethodPermDetector {
             for (MethodOrMethodContext sensitive : sortedSensitives) {
                 System.out.println("\nCallbacks for: " + sensitive);
 
-                Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
-                        sensitivePathsHolder.getReachableCallbacks(sensitive).stream()
-                                .sorted(SortUtil.getSootMethodPrettyPrintComparator())
-                                .collect(Collectors.groupingBy(
-                                        callback -> getPermCheckStatusForAny(permSet, callback)));
+                Set<MethodOrMethodContext> reachableCallbacks = sensitivePathsHolder.getReachableCallbacks(sensitive);
 
-                for (PermCheckStatus status : PermCheckStatus.values()) {
-                    if (permCheckStatusToCallbacks.get(status) != null) {
-                        System.out.println("Perm check " + status + ":");
-                        for (MethodOrMethodContext callback : permCheckStatusToCallbacks.get(status)) {
-                            System.out.println("    " + callback);
-                            //DebugUtil.printCallClassesAndLineNumbers(sensitive, callback, sensitivePathsHolder);
+                if (reachableCallbacks != null) {
+                    Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
+                            reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
+                                    .collect(Collectors.groupingBy(
+                                            callback -> getPermCheckStatusForAny(permSet, callback)));
+
+                    for (PermCheckStatus status : PermCheckStatus.values()) {
+                        if (permCheckStatusToCallbacks.get(status) != null) {
+                            System.out.println("Perm check " + status + ":");
+                            for (MethodOrMethodContext callback : permCheckStatusToCallbacks.get(status)) {
+                                System.out.println("    " + callback);
+                                //DebugUtil.printCallClassesAndLineNumbers(sensitive, callback, sensitivePathsHolder);
+                            }
                         }
                     }
+                } else {
+                    System.out.println("    All instances in the ignore list.");
                 }
             }
             System.out.println();
