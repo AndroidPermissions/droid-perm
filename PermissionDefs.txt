@@ -1,8 +1,14 @@
 % Permission checkers
 % ==================================
 
+% The only 3 forms of checkSelfPermission().
+% There are also methods like checkPermission(), but they were not encountered in real-life apps yet.
+
 <android.content.Context: int checkSelfPermission(java.lang.String )> -> _PERM_CHECKER_
 <android.support.v4.content.ContextCompat: int checkSelfPermission(android.content.Context,java.lang.String )> -> _PERM_CHECKER_
+
+% Used by some methods in Android compat framework.
+<android.support.v4.content.PermissionChecker: int checkSelfPermission(android.content.Context,java.lang.String )> -> _PERM_CHECKER_
 
 % Test apps: perm-test, dp_basic_threads, others
 % ==================================

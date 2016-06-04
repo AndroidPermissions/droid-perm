@@ -1,1 +1,25 @@
+% Methods to be excluded from outflow analysis.
+% Whenever such a method is encountered, its body will not be analyzed.
+
+% Compat framework
+%================================
+
+%   Contains checks for LOCATION. Risks polluting the analysis with false positive checks.
+<android.support.v7.app.TwilightManager: android.location.Location getLastKnownLocation()>
+
+%   Causes an untractable mess that touches all fragments in the app.
+%   Full context sensitivity is likely not enough to solve this.
+%   Unlikely to touch any permissions that were not granted before.
+%   See: Twidere app, "Corpus tests 3 - checks & CSens ES.md"
+<android.support.v4.app.FragmentActivity: void onSaveInstanceState(android.os.Bundle)>
+
+% Test apps
+%================================
 <edu.oregonstate.dp.ignore.IgnoreListTestAct: void sensitiveIgnored()>
+<edu.oregonstate.dp.ignore.IgnoreListTestAct: void sensitiveIgnored2()>
+
+%   Twidere app
+%========================================
+%   78 false positives. Perm checked by pattern:
+%       catch (SecurityException ignore) {}
+<org.mariotaku.twidere.util.Utils: android.location.Location getCachedLocation(android.content.Context)>
