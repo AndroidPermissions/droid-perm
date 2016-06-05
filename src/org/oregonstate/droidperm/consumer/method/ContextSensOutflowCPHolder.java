@@ -28,7 +28,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     /**
      * Methods ignored by the outflow algorithm
      */
-    private List<SootMethod> outflowIgnoreList;
+    private Set<SootMethod> outflowIgnoreSet;
 
     private long time = System.currentTimeMillis();
 
@@ -59,9 +59,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> sensitiveToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
-                                      List<SootMethod> outflowIgnoreList) {
+                                      Set<SootMethod> outflowIgnoreSet) {
         super(dummyMainMethod, sensitives);
-        this.outflowIgnoreList = outflowIgnoreList;
+        this.outflowIgnoreSet = outflowIgnoreSet;
 
         pointsToAnalysis = Scene.v().getPointsToAnalysis();
         if (pointsToAnalysis.getClass() != GeomPointsTo.class) {
@@ -117,7 +117,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             MethodOrMethodContext srcMeth = srcInContext.method;
             if (srcMeth.method().hasActiveBody() &&
                     //do not pass through methods in the ignore list
-                    !outflowIgnoreList.contains(srcMeth.method())) {
+                    !outflowIgnoreSet.contains(srcMeth.method())) {
                 srcMeth.method().getActiveBody().getUnits().stream().forEach(
                         (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.getContext(), cg)
                                 .forEachRemaining((Edge edge) -> {

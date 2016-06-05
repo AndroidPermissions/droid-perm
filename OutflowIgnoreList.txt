@@ -1,6 +1,12 @@
 % Methods to be excluded from outflow analysis.
 % Whenever such a method is encountered, its body will not be analyzed.
 
+% Universal
+%================================
+? extends <android.app.Activity: void onRequestPermissionsResult(int,java.lang.String[],int[])>
+? extends <android.support.v4.app.ActivityCompat$OnRequestPermissionsResultCallback: void onRequestPermissionsResult(int,java.lang.String[],int[])>
+
+
 % Compat framework
 %================================
 

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -18,12 +19,12 @@ public class OutflowIgnoreListLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(OutflowIgnoreListLoader.class);
 
-    public static List<SootMethod> load(File file) throws IOException {
+    public static Set<SootMethod> load(File file) throws IOException {
         List<String> methodSigs = Files.lines(file.toPath())
                 .filter(line -> !(line.isEmpty() || line.startsWith("%")))
                 .map(String::trim)
                 .collect(Collectors.toList());
-        List<SootMethod> sootMethods = SceneUtil.grabMethods(methodSigs);
+        Set<SootMethod> sootMethods = SceneUtil.grabMethods(methodSigs);
         logger.info("Loaded outflow ignore list with {} methods.", sootMethods.size());
 
         return sootMethods;

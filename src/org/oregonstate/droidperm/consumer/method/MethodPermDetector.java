@@ -85,10 +85,10 @@ public class MethodPermDetector {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         PermissionDefParser permissionDefParser;
-        List<SootMethod> outflowIgnoreList;
+        Set<SootMethod> outflowIgnoreSet;
         try {
             permissionDefParser = new PermissionDefParser(permissionDefFile);
-            outflowIgnoreList = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
+            outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +100,7 @@ public class MethodPermDetector {
 
         //checkers
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreList);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
 
         //sensitives
@@ -113,7 +113,7 @@ public class MethodPermDetector {
         //select one of the call path algorithms.
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreList);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
 
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
