@@ -8,8 +8,12 @@ package org.oregonstate.droidperm.consumer.method;
 
 import soot.Context;
 import soot.MethodOrMethodContext;
+import soot.Value;
+import soot.jimple.InstanceInvokeExpr;
+import soot.jimple.InvokeStmt;
 import soot.jimple.toolkits.callgraph.Edge;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -39,6 +43,16 @@ public class MethodInContext {
         return edge != null ? edge.srcStmt() : null;
     }
 
+    public MethodOrMethodContext getSrcMethod() {
+        return edge != null ? edge.getSrc() : null;
+    }
+
+    public Value getTargetObj() {
+        return edge != null && edge.srcStmt() instanceof InvokeStmt &&
+                edge.srcStmt().getInvokeExpr() instanceof InstanceInvokeExpr
+                ? ((InstanceInvokeExpr) edge.srcStmt().getInvokeExpr()).getBase() : null;
+    }
+
     /**
      * Checks the two objects for equality by delegating to their respective {@link Object#equals(Object)} methods.
      *
@@ -66,6 +80,21 @@ public class MethodInContext {
 
     @Override
     public String toString() {
-        return method + " called from " + getContext();
+        return method + "\n        called from " + getSrcMethod() + "\n        targetObj: " + getTargetObj();
+    }
+
+    public static class SortingComparator implements Comparator<MethodInContext> {
+        @Override
+        public int compare(MethodInContext o1, MethodInContext o2) {
+            int methodCompare = o1.method.toString().compareTo(o2.method.toString());
+            if (methodCompare != 0) {
+                return methodCompare;
+            }
+            if (o1.edge == null) {
+                return o2.edge == null ? 0 : -1;
+            } else {
+                return o2.edge == null ? 1 : o1.edge.toString().compareTo(o2.edge.toString());
+            }
+        }
     }
 }

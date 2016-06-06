@@ -122,7 +122,7 @@ public class InflowCPHolder extends AbstractCallPathHolder {
     }
 
     @Override
-    protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
+    public Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
         return consumerCallbacks;
     }
 }

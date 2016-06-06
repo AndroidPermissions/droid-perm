@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.util;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.BinaryOperator;
@@ -34,5 +35,11 @@ public class StreamUtil {
     public static <T> Set<T> mutableUnion(Set<T> set1, Set<T> set2) {
         set1.addAll(set2);
         return set1;
+    }
+
+    public static <T> Set<T> newObjectUnion(Set<T> set1, Set<T> set2) {
+        Set<T> result = new HashSet<>(set1);
+        result.addAll(set2);
+        return result;
     }
 }

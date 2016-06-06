@@ -24,11 +24,15 @@
 
 <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> WRITE_EXTERNAL_STORAGE
 <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> WRITE_EXTERNAL_STORAGE
-%   Redundant, redirect to other constructors of FileOutputStream
-%   Required if pure stubs JDK is used.
-% <java.io.FileOutputStream: void <init>(java.lang.String)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileOutputStream: void <init>(java.lang.String)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileOutputStream: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
+
+<java.io.FileWriter: void <init>(java.io.FileDescriptor)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileWriter: void <init>(java.io.File,boolean)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileWriter: void <init>(java.lang.String)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileWriter: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
+<java.io.FileWriter: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
 
 % LOCATION
 % ==================================

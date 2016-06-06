@@ -4,6 +4,7 @@ import soot.MethodOrMethodContext;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -28,4 +29,9 @@ public interface CallPathHolder {
      * There might be multiple calls to meth in one callback, that's why list is needed.
      */
     List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback);
+
+    /**
+     * Map from reachable sensitives to sets of callbacks.
+     */
+    Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap();
 }

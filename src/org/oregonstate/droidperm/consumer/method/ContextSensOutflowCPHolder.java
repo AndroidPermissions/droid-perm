@@ -56,7 +56,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     /**
      * Map from sensitives to sets of callbacks.
      */
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> sensitiveToCallbacksMap;
+    private Map<MethodInContext, Set<MethodOrMethodContext>> sensitiveInCToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
                                       Set<SootMethod> outflowIgnoreSet) {
@@ -69,7 +69,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
 
         callbackToOutflowMap = buildCallbackToOutflowMap();
-        sensitiveToCallbacksMap = buildSensitiveToCallbacksMap();
+        sensitiveInCToCallbacksMap = buildSensitiveToCallbacksMap();
         buildReachableSensitives();
     }
 
@@ -203,14 +203,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 */
     }
 
-    private Map<MethodOrMethodContext, Set<MethodOrMethodContext>> buildSensitiveToCallbacksMap() {
+    private Map<MethodInContext, Set<MethodOrMethodContext>> buildSensitiveToCallbacksMap() {
         return sensitivesInContext.stream().collect(Collectors.toMap(
-                sensitiveInContext -> sensitiveInContext.method,
+                sensitiveInContext -> sensitiveInContext,
                 sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
                         .filter(cbToOutflowEntry -> cbToOutflowEntry.getValue().containsKey(sensitiveInContext))
-                        .map(Map.Entry::getKey).collect(Collectors.toSet()),
-                //merge function for values required, because 2 sensitiveInContext could map to the same sensitive
-                StreamUtil::mutableUnion
+                        .map(Map.Entry::getKey).collect(Collectors.toSet())
         ));
     }
 
@@ -375,7 +373,15 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     }
 
     @Override
-    protected Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
-        return sensitiveToCallbacksMap;
+    public Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
+        return sensitiveInCToCallbacksMap.keySet().stream().collect(Collectors.toMap(
+                sensInC -> sensInC.method,
+                sensInC -> sensitiveInCToCallbacksMap.get(sensInC),
+                StreamUtil::newObjectUnion
+        ));
+    }
+
+    public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
+        return sensitiveInCToCallbacksMap;
     }
 }
