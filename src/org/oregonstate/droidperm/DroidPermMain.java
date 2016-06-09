@@ -39,9 +39,14 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class FlowDroidMain {
+/**
+ * Adapted from FlowDroid Test class.
+ *
+ * @see soot.jimple.infoflow.android.TestApps.Test
+ */
+public class DroidPermMain {
 
-    private static final Logger logger = LoggerFactory.getLogger(FlowDroidMain.class);
+    private static final Logger logger = LoggerFactory.getLogger(DroidPermMain.class);
 
     private static int repeatCount = 1;
     private static int timeout = -1;
@@ -72,11 +77,11 @@ public class FlowDroidMain {
     private static long initTime;
 
     public static void setIPCManager(IIPCManager ipcManager) {
-        FlowDroidMain.ipcManager = ipcManager;
+        DroidPermMain.ipcManager = ipcManager;
     }
 
     public static IIPCManager getIPCManager() {
-        return FlowDroidMain.ipcManager;
+        return DroidPermMain.ipcManager;
     }
 
     /**

@@ -107,7 +107,7 @@ To build apk file:
 
 Create a new run configuration with the following settings:
 
--   Main class: org.oregonstate.droidperm.FlowDroidMain
+-   Main class: org.oregonstate.droidperm.DroidPermMain
 
 -   VM options: -Xmx8g
 
