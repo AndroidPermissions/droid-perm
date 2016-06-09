@@ -69,6 +69,8 @@ public class FlowDroidMain {
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
     }
 
+    private static long initTime;
+
     public static void setIPCManager(IIPCManager ipcManager) {
         FlowDroidMain.ipcManager = ipcManager;
     }
@@ -82,11 +84,21 @@ public class FlowDroidMain {
      *             (path/android-platforms/)
      */
     public static void main(final String[] args) throws IOException, InterruptedException {
+        //Processing command line options
         if (args.length < 2) {
             printUsage();
             return;
         }
-        //start with cleanup:
+
+        // Parse additional command-line arguments
+        if (!parseAdditionalOptions(args))
+            return;
+        if (!validateAdditionalOptions())
+            return;
+        if (repeatCount <= 0)
+            return;
+
+        //Cleanup
         File outputDir = new File("JimpleOutput");
         if (outputDir.isDirectory()) {
             boolean success = true;
@@ -102,14 +114,7 @@ public class FlowDroidMain {
             }
         }
 
-        // Parse additional command-line arguments
-        if (!parseAdditionalOptions(args))
-            return;
-        if (!validateAdditionalOptions())
-            return;
-        if (repeatCount <= 0)
-            return;
-
+        //The rest
         List<String> apkFiles = new ArrayList<String>();
         File apkFile = new File(args[0]);
         if (apkFile.isDirectory()) {
@@ -134,9 +139,10 @@ public class FlowDroidMain {
 
         int oldRepeatCount = repeatCount;
         for (final String fileName : apkFiles) {
+            System.gc();
+
             repeatCount = oldRepeatCount;
             final String fullFilePath;
-            System.gc();
 
             // Directory handling
             if (apkFiles.size() > 1) {
@@ -163,7 +169,9 @@ public class FlowDroidMain {
                 repeatCount--;
             }
 
-            System.gc();
+            //DroidPerm insertion
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+            System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
         }
     }
 
@@ -467,7 +475,7 @@ public class FlowDroidMain {
 
     private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
         try {
-            final long beforeRun = System.nanoTime();
+            initTime = System.nanoTime();
 
             final SetupApplication app;
             if (null == ipcManager) {
@@ -531,12 +539,7 @@ public class FlowDroidMain {
                 }
             }
 
-            //DroidPerm insertion
-            if (!config.isTaintAnalysisEnabled()) {
-                new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
-            }
-
-            System.out.println("Analysis has run for " + (System.nanoTime() - beforeRun) / 1E9 + " seconds");
+            System.out.println("FlowDroid has run for " + (System.nanoTime() - initTime) / 1E9 + " seconds\n\n");
 
             return res;
         } catch (IOException ex) {
@@ -735,8 +738,6 @@ public class FlowDroidMain {
                     }
                 }
             }
-
-            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
         }
 
         private void print(String string) {

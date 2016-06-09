@@ -1,9 +1,35 @@
-% perm-test
+% SOURCES
+%=======================
+
+% General - don't work yet
+
+<android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
+
+% SINKS
+%=======================
+
+% General - don't work yet
+
+<java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> _SINK_
+<java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
+% <java.io.FileOutputStream: void <init>(java.lang.String)> -> _SINK_
+% <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> _SINK_
+% <java.io.FileOutputStream: void <init>(java.io.File)> -> _SINK_
+
+% storage_basic app
+%=======================
+
+<edu.oregonstate.dp.test.BasicStoragePermActivity: java.io.File getExternalCacheDirWrap()> -> _SOURCE_
+<edu.oregonstate.dp.test.BasicStoragePermActivity: void newFileOutputStream(java.io.File)> -> _SINK_
+
+% perm-test app
+%=======================
 
 <edu.oregonstate.ex.flowdroidtest.FileManager: java.lang.String getCachePath(java.net.URL)> -> _SOURCE_
 <edu.oregonstate.ex.flowdroidtest.FileManager: java.io.FileOutputStream createFileOutputStream(java.io.File)> -> _SINK_
 
-% taint-test-to-runnable
+% taint-test-to-runnable app
+%=======================
 
 <edu.oregonstate.ex.ttest.MainActivity: java.lang.String source()> -> _SOURCE_
 <edu.oregonstate.ex.ttest.MainActivity: void sink(java.lang.String)> -> _SINK_
