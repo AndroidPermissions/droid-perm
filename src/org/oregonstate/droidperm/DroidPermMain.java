@@ -7,6 +7,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
+import com.google.common.base.Strings;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,11 @@ public class DroidPermMain {
     private static boolean aggressiveTaintWrapper = false;
     private static boolean noTaintWrapper = false;
     private static String summaryPath = "";
-    private static String resultFilePath = "";
+
+    /**
+     * Xml output of FlowDroid. Option "--saveresults {File}".
+     */
+    private static String flowDroidXmlOut;
 
     private static String additionalClasspath = "";
     private static File permissionDefFile = new File("PermissionDefs.txt");
@@ -274,7 +279,7 @@ public class DroidPermMain {
                 summaryPath = args[i + 1];
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--saveresults")) {
-                resultFilePath = args[i + 1];
+                flowDroidXmlOut = args[i + 1];
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--sysflows")) {
                 config.setIgnoreFlowsInSystemPackages(false);
@@ -409,7 +414,7 @@ public class DroidPermMain {
                 "--pathalgo", pathAlgorithmToString(config.getPathBuilder()),
                 (summaryPath != null && !summaryPath.isEmpty()) ? "--summarypath" : "",
                 (summaryPath != null && !summaryPath.isEmpty()) ? summaryPath : "",
-                (resultFilePath != null && !resultFilePath.isEmpty()) ? "--saveresults" : "",
+                (flowDroidXmlOut != null && !flowDroidXmlOut.isEmpty()) ? "--saveresults" : "",
                 noTaintWrapper ? "--notaintwrapper" : "",
 //				"--repeatCount", Integer.toString(repeatCount),
                 config.getEnableArraySizeTainting() ? "" : "--noarraysize",
@@ -715,33 +720,37 @@ public class DroidPermMain {
 
         @Override
         public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
-            // Dump the results
             if (results == null) {
                 print("No results found.");
-            } else {
-                // Report the results
-                for (ResultSinkInfo sink : results.getResults().keySet()) {
-                    print("Found a flow to sink " + sink + ", from the following sources:");
-                    for (ResultSourceInfo source : results.getResults().get(sink)) {
-                        print("\t- " + source.getSource() + " (in "
-                                + cfg.getMethodOf(source.getSource()).getSignature() + ")");
-                        if (source.getPath() != null)
-                            print("\t\ton Path " + Arrays.toString(source.getPath()));
-                    }
-                }
+                return;
+            }
 
-                // Serialize the results if requested
-                // Write the results into a file if requested
-                if (resultFilePath != null && !resultFilePath.isEmpty()) {
-                    InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
-                    try {
-                        serializer.serialize(results, resultFilePath);
-                    } catch (FileNotFoundException | XMLStreamException ex) {
-                        System.err.println("Could not write data flow results to file: " + ex.getMessage());
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
-                    }
+            printResults(cfg, results);
+            if (!Strings.isNullOrEmpty(flowDroidXmlOut)) {
+                printResultsToXml(cfg, results);
+            }
+        }
+
+        private void printResults(IInfoflowCFG cfg, InfoflowResults results) {
+            for (ResultSinkInfo sink : results.getResults().keySet()) {
+                print("Found a flow to sink " + sink + ", from the following sources:");
+                for (ResultSourceInfo source : results.getResults().get(sink)) {
+                    print("\t- " + source.getSource() + " (in "
+                            + cfg.getMethodOf(source.getSource()).getSignature() + ")");
+                    if (source.getPath() != null)
+                        print("\t\ton Path " + Arrays.toString(source.getPath()));
                 }
+            }
+        }
+
+        private void printResultsToXml(IInfoflowCFG cfg, InfoflowResults results) {
+            InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
+            try {
+                serializer.serialize(results, flowDroidXmlOut);
+            } catch (FileNotFoundException | XMLStreamException ex) {
+                System.err.println("Could not write data flow results to file: " + ex.getMessage());
+                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
         }
 
