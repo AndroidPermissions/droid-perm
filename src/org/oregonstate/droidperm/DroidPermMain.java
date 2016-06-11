@@ -7,7 +7,6 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
-import com.google.common.base.Strings;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,18 +21,12 @@ import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
 import soot.jimple.infoflow.data.Abstraction;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
-import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.ipc.IIPCManager;
 import soot.jimple.infoflow.results.InfoflowResults;
-import soot.jimple.infoflow.results.ResultSinkInfo;
-import soot.jimple.infoflow.results.ResultSourceInfo;
-import soot.jimple.infoflow.results.xml.InfoflowResultsSerializer;
-import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.jimple.infoflow.util.SystemClassHandler;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -534,7 +527,7 @@ public class DroidPermMain {
             }
 
             System.out.println("Running data flow analysis...");
-            final InfoflowResults res = app.runInfoflow(new MyResultsAvailableHandler());
+            final InfoflowResults res = app.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
 
             if (config.getLogSourcesAndSinks()) {
                 if (!app.getCollectedSources().isEmpty()) {
@@ -705,64 +698,4 @@ public class DroidPermMain {
                 "current workaround is to instrument android.jar and put all the classpath inside");
 
     }
-
-    private static final class MyResultsAvailableHandler implements
-            ResultsAvailableHandler {
-        private final BufferedWriter wr;
-
-        private MyResultsAvailableHandler() {
-            this(null);
-        }
-
-        private MyResultsAvailableHandler(BufferedWriter wr) {
-            this.wr = wr;
-        }
-
-        @Override
-        public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
-            if (results == null) {
-                print("No results found.");
-                return;
-            }
-
-            printResults(cfg, results);
-            if (!Strings.isNullOrEmpty(flowDroidXmlOut)) {
-                printResultsToXml(cfg, results);
-            }
-        }
-
-        private void printResults(IInfoflowCFG cfg, InfoflowResults results) {
-            for (ResultSinkInfo sink : results.getResults().keySet()) {
-                print("Found a flow to sink " + sink + ", from the following sources:");
-                for (ResultSourceInfo source : results.getResults().get(sink)) {
-                    print("\t- " + source.getSource() + " (in "
-                            + cfg.getMethodOf(source.getSource()).getSignature() + ")");
-                    if (source.getPath() != null)
-                        print("\t\ton Path " + Arrays.toString(source.getPath()));
-                }
-            }
-        }
-
-        private void printResultsToXml(IInfoflowCFG cfg, InfoflowResults results) {
-            InfoflowResultsSerializer serializer = new InfoflowResultsSerializer(cfg);
-            try {
-                serializer.serialize(results, flowDroidXmlOut);
-            } catch (FileNotFoundException | XMLStreamException ex) {
-                System.err.println("Could not write data flow results to file: " + ex.getMessage());
-                ex.printStackTrace();
-                throw new RuntimeException(ex);
-            }
-        }
-
-        private void print(String string) {
-            try {
-                System.out.println(string);
-                if (wr != null)
-                    wr.write(string + "\n");
-            } catch (IOException ex) {
-                // ignore
-            }
-        }
-    }
-
 }
