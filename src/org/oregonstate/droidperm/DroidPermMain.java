@@ -8,6 +8,7 @@
 package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
+import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
@@ -17,7 +18,6 @@ import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
-import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
 import soot.jimple.infoflow.data.Abstraction;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
@@ -480,11 +480,11 @@ public class DroidPermMain {
         try {
             initTime = System.nanoTime();
 
-            final SetupApplication app;
+            final DPSetupApplication app;
             if (null == ipcManager) {
-                app = new SetupApplication(androidJar, fileName, additionalClasspath, null);
+                app = new DPSetupApplication(androidJar, fileName, additionalClasspath, null);
             } else {
-                app = new SetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
+                app = new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
             }
 
             // Set configuration object
