@@ -139,7 +139,7 @@ public class CallGraphUtil {
 
                 //case 3 and 4
                 int j = i - 1;
-                while (j >= 0 && result.get(dataflow[j]) != null
+                while (j >= 0 && result.get(dataflow[j]) != null && result.get(dataflow[j]).getO1() != null
                         && !result.get(dataflow[j]).getO1().method().getActiveBody().getUnits().contains(stmt)) {
                     j--;
                 }

@@ -67,8 +67,10 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
                         Pair<MethodOrMethodContext, String> methAndInd = containerMethods.get(stmt);
                         if (i == 0 ||
                                 getTopLevelClass(containerMethods.get(path[i - 1])) != getTopLevelClass(methAndInd)) {
+                            SootClass declaringClass =
+                                    methAndInd.getO1() != null ? methAndInd.getO1().method().getDeclaringClass() : null;
                             System.out.println("\t\t\t\t\t\t\t\t\t\t\t"
-                                    + "[" + methAndInd.getO1().method().getDeclaringClass() + "]");
+                                    + "[" + declaringClass + "]");
                         }
                         System.out.println(
                                 methAndInd.getO2() + stmt + " : " + stmt.getJavaSourceStartLineNumber());
@@ -82,8 +84,9 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
                         Pair<MethodOrMethodContext, String> methAndInd = containerMethods.get(stmt);
                         if (i == 0 ||
                                 containerMethods.get(path[i - 1]).getO2().length() < methAndInd.getO2().length()) {
-                            System.out.println("\t\t\t\t\t\t\t\t\t\t\t" + methAndInd.getO2() +
-                                    getShortString(methAndInd.getO1().method()));
+                            String methShortString = methAndInd.getO1() != null
+                                    ? getShortString(methAndInd.getO1().method()) : "<null>()";
+                            System.out.println("\t\t\t\t\t\t\t\t\t\t\t" + methAndInd.getO2() + methShortString);
                         }
                         System.out.println(
                                 methAndInd.getO2() + stmt + " : " + stmt.getJavaSourceStartLineNumber());
