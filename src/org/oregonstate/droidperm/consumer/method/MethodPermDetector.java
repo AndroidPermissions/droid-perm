@@ -1,7 +1,8 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.jaxb.*;
-import org.oregonstate.droidperm.perm.PermissionDefParser;
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.TxtPermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,17 +85,17 @@ public class MethodPermDetector {
     private void analyze() {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
-        PermissionDefParser permissionDefParser;
+        IPermissionDefProvider permissionDefProvider;
         Set<SootMethod> outflowIgnoreSet;
         try {
-            permissionDefParser = new PermissionDefParser(permissionDefFile);
+            permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        Set<SootMethodAndClass> permCheckerDefs = permissionDefParser.getPermCheckerDefs();
-        Set<AndroidMethod> sensitiveDefs = permissionDefParser.getSensitiveDefs();
+        Set<SootMethodAndClass> permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
+        Set<AndroidMethod> sensitiveDefs = permissionDefProvider.getSensitiveDefs();
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
