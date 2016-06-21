@@ -2,6 +2,7 @@ package org.oregonstate.droidperm.util;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
@@ -41,5 +42,10 @@ public class StreamUtil {
         Set<T> result = new HashSet<>(set1);
         result.addAll(set2);
         return result;
+    }
+
+    public static <T, U> Map<T, U> mutableMapCombiner(Map<T, U> map1, Map<T, U> map2) {
+        map1.putAll(map2);
+        return map1;
     }
 }
