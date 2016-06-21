@@ -167,13 +167,27 @@ public class CallGraphUtil {
     private static void normalizeIndents(Map<Stmt, Pair<MethodOrMethodContext, Integer>> result) {
         int minIndent = result.values().stream().map(Pair::getO2).min(Comparator.naturalOrder()).orElse(0);
 
-        //The same value (method) might repeat several times.
-        //If we don't use distinct() it will be "normalized" more than once.
-        //Stream mutability issue:
-        //If I don't collect to list first, map will be messed up when I try to alter its values, and distinct()
-        // won't work correctly.
-        result.values().stream().distinct().collect(Collectors.toList())
-                .forEach(pair -> pair.setO2(pair.getO2() - minIndent));
+        /*The same value (method) might repeat several times.
+        If we don't use distinct() it will be "normalized" more than once.
+        Stream mutability issue:
+        If I don't collect to list first, map will be messed up when I try to alter its values, and distinct()
+         won't work correctly.
+
+        Cause of this problem: It is prohibited to modify set elements in a way that affects equals()
+         http://stackoverflow.com/questions/19589864/hashset-behavior-when-changing-field-value
+        */
+
+        /*Computing the map of unique values (pairs). It is possible that multiple keys are mapped to the same pair.
+        Also it is possible that 2 keys are mapped to distinct instances of Pair which are nevertheless equal
+         (according to equals()).*/
+        Map<Pair<MethodOrMethodContext, Integer>, Pair<MethodOrMethodContext, Integer>> valuesToValues =
+                result.values().stream().distinct().collect(Collectors.toMap(pair -> pair, pair -> pair));
+
+        //Normalizing result map values. Replacing multiple instances corresponding to same pair with one instance.
+        result.keySet().stream().forEach(key -> result.put(key, valuesToValues.get(result.get(key))));
+
+        //Normalizing indents. Increasing all indents so that the minimal one is always 0.
+        valuesToValues.keySet().forEach(pair -> pair.setO2(pair.getO2() - minIndent));
     }
 
     private static int getNewIndent(int stmtIndex, Stmt[] dataflow,
