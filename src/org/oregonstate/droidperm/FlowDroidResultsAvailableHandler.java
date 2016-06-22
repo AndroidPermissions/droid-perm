@@ -54,37 +54,22 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
             return;
         }
         for (ResultSinkInfo sink : results.getResults().keySet()) {
-            System.out.println("\nFlow to sink " + sink + ", from sources:\n" +
-                    "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            System.out.println("\n" +
+                    "+----------------------------------------------------------------------" +
+                    "\n" +
+                    "| Flows to sink " + sink + ", from sources:\n" +
+                    "+----------------------------------------------------------------------");
             for (ResultSourceInfo source : results.getResults().get(sink)) {
-                System.out.println(source.getSource() + "\n\tin "
-                        + cfg.getMethodOf(source.getSource()).getSignature());
+                System.out.println("| From source " + source.getSource() + "\n" +
+                        "| \tin "
+                        + cfg.getMethodOf(source.getSource()).getSignature() +
+                        "\n+----------------------------------------------------------------------\n");
                 if (source.getPath() != null) {
                     Map<Stmt, Pair<MethodOrMethodContext, Integer>> containerMethods =
                             CallGraphUtil.resolveContainersForDataflow(source.getPath());
                     Stmt[] path = source.getPath();
-
-                    System.out.println("\nPath through statements:");
-                    System.out.println("____________________________________________________________++++");
-                    for (int i = 0; i < path.length; i++) {
-                        Stmt stmt = path[i];
-                        Pair<MethodOrMethodContext, Integer> methAndInd = containerMethods.get(stmt);
-                        if (i == 0 ||
-                                getTopLevelClass(containerMethods.get(path[i - 1])) != getTopLevelClass(methAndInd)) {
-                            SootClass declaringClass =
-                                    methAndInd.getO1() != null ? methAndInd.getO1().method().getDeclaringClass() : null;
-                            System.out.println("\t\t\t\t\t\t\t\t\t\t\t"
-                                    + "[" + declaringClass + "]");
-                        }
-                        String indent = getIndent(methAndInd.getO2(), indentCache);
-                        System.out.println(indent + stmt + " : " + stmt.getJavaSourceStartLineNumber());
-                    }
-                    System.out.println("________________________________________________________________");
-
-                    System.out.println("\nPath through methods and statements:");
-                    System.out.println("____________________________________________________________()()");
-
                     Set<MethodOrMethodContext> coveredMethods = new HashSet<>();
+                    String lastIndent = null;
                     for (Stmt stmt : path) {
                         Pair<MethodOrMethodContext, Integer> methAndInd = containerMethods.get(stmt);
                         MethodOrMethodContext method = methAndInd.getO1();
@@ -95,11 +80,13 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
                                 coveredMethods.add(method);
                             }
                             String methShortString = method != null ? getShortString(method.method()) : "<null>()";
-                            System.out.println("\t\t\t\t\t\t\t\t\t\t\t" + indent + methShortString);
+                            System.out.println("\n" + indent + "________________" + methShortString);
+                        } else if (lastIndent != null && !lastIndent.equals(indent)) {
+                            System.out.println(indent);
                         }
                         System.out.println(indent + stmt + " : " + stmt.getJavaSourceStartLineNumber());
+                        lastIndent = indent;
                     }
-                    System.out.println("________________________________________________________________");
                 }
             }
             System.out.println();
