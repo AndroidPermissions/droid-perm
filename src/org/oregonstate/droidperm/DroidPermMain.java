@@ -496,6 +496,8 @@ public class DroidPermMain {
                 if (noTaintWrapper) {
                     options.set_include_all(true);
                 }
+
+                //options.set_verbose(true);//for low-level debugging of Soot.
             });
 
             final ITaintPropagationWrapper taintWrapper;
