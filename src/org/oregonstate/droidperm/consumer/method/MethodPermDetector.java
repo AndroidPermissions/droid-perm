@@ -76,6 +76,9 @@ public class MethodPermDetector {
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
+        logger.warn("\n\n"
+                + "Start of DroidPerm logs\n"
+                + "===========================================\n");
         analyze();
         printResults();
 
@@ -419,8 +422,9 @@ public class MethodPermDetector {
             for (String perm : callbackCheckerStatusMap.get(callback).keySet()) {
                 CheckerUsageStatus status = callbackCheckerStatusMap.get(callback).get(perm);
                 String statusString = status == CheckerUsageStatus.USED ? "used"
-                        : status == CheckerUsageStatus.UNUSED ? "NOT used"
-                        : "NOT used POSSIBLY ICC";
+                                                                        : status == CheckerUsageStatus.UNUSED
+                                                                          ? "NOT used"
+                                                                          : "NOT used POSSIBLY ICC";
                 System.out.printf("    %-50s  status: %-20s\n", perm, statusString);
             }
         }
