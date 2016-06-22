@@ -403,9 +403,6 @@ public class DroidPermMain {
 
         // Directory handling
         System.out.println("Analyzing file " + apkFile + "...");
-        File flagFile = new File("_Run_" + apkFile.getName());
-        //noinspection ResultOfMethodCallIgnored
-        flagFile.createNewFile();
 
         // Run FlowDroid
         System.gc();
