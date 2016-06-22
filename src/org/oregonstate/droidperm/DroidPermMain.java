@@ -9,6 +9,7 @@ package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
+import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
@@ -480,18 +481,18 @@ public class DroidPermMain {
         try {
             initTime = System.nanoTime();
 
-            final DPSetupApplication app;
+            final DPSetupApplication setupApplication;
             if (null == ipcManager) {
-                app = new DPSetupApplication(androidJar, fileName, additionalClasspath, null);
+                setupApplication = new DPSetupApplication(androidJar, fileName, additionalClasspath, null);
             } else {
-                app = new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
+                setupApplication = new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
             }
 
             // Set configuration object
-            app.setConfig(config);
+            setupApplication.setConfig(config);
 
             //toclean insert additional Soot options here
-            app.setSootConfig(options -> {
+            setupApplication.setSootConfig(options -> {
                 options.set_keep_line_number(true);
                 if (noTaintWrapper) {
                     options.set_include_all(true);
@@ -519,42 +520,47 @@ public class DroidPermMain {
                 easyTaintWrapper.setAggressiveMode(aggressiveTaintWrapper);
                 taintWrapper = easyTaintWrapper;
             }
-            app.setTaintWrapper(taintWrapper);
-            app.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
+            setupApplication.setTaintWrapper(taintWrapper);
+            setupApplication.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
 
             if (DEBUG) {
-                app.printEntrypoints();
-                app.printSinks();
-                app.printSources();
+                setupApplication.printEntrypoints();
+                setupApplication.printSinkDefinitions();
+                setupApplication.printSourceDefinitions();
             }
 
             System.out.println("Running data flow analysis...");
-            final InfoflowResults res = app.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
+            final InfoflowResults res = setupApplication.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
 
-            if (config.getLogSourcesAndSinks()) {
-                if (!app.getCollectedSources().isEmpty()) {
-                    System.out.println("Collected sources:");
-                    for (Stmt s : app.getCollectedSources())
-                        System.out.println("\t" + s);
-                }
-                if (!app.getCollectedSinks().isEmpty()) {
-                    System.out.println("Collected sinks:");
-                    for (Stmt s : app.getCollectedSinks())
-                        System.out.println("\t" + s);
-                }
-            }
-
+            printSourcesAndSinks(setupApplication);
             System.out.println("FlowDroid has run for " + (System.nanoTime() - initTime) / 1E9 + " seconds\n\n");
 
             return res;
         } catch (IOException ex) {
-            System.err.println("Could not read file: " + ex.getMessage());
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Could not read file: " + ex.getMessage(), ex);
         } catch (XmlPullParserException ex) {
-            System.err.println("Could not read Android manifest file: " + ex.getMessage());
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Could not read Android manifest file: " + ex.getMessage(), ex);
+        }
+    }
+
+    private static void printSourcesAndSinks(DPSetupApplication setupApplication) {
+        if (config.getLogSourcesAndSinks()) {
+            if (!setupApplication.getCollectedSources().isEmpty()) {
+                System.out.println("\nCollected sources:");
+                for (Stmt stmt : setupApplication.getCollectedSources()) {
+                    System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
+                    System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
+                    System.out.println("\t\tSourceType: " + setupApplication.getSourceType(stmt));
+                }
+            }
+            if (!setupApplication.getCollectedSinks().isEmpty()) {
+                System.out.println("\nCollected sinks:");
+                for (Stmt stmt : setupApplication.getCollectedSinks()) {
+                    System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
+                    System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
+                }
+            }
+            System.out.println();
         }
     }
 
