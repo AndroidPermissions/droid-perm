@@ -2,10 +2,8 @@ package org.oregonstate.droidperm;
 
 import com.google.common.base.Strings;
 import org.oregonstate.droidperm.util.CallGraphUtil;
-import soot.MethodOrMethodContext;
-import soot.Scene;
-import soot.SootClass;
-import soot.SootMethod;
+import org.oregonstate.droidperm.util.UnitComparator;
+import soot.*;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.results.InfoflowResults;
@@ -17,10 +15,8 @@ import soot.toolkits.scalar.Pair;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 6/10/2016.
@@ -46,6 +42,7 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
      */
     private void printResults(IInfoflowCFG cfg, InfoflowResults results) {
         Map<Integer, String> indentCache = new HashMap<>();
+        Map<Unit, SootMethod> stmtToMethodMap = CallGraphUtil.getStmtToMethodMap();
 
         System.out.println("\n\nFlowDroid: detected flows \n" +
                 "========================================================================\n");
@@ -53,17 +50,27 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
             System.out.println("No flows detected.");
             return;
         }
-        for (ResultSinkInfo sink : results.getResults().keySet()) {
-            System.out.println("\n" +
-                    "+----------------------------------------------------------------------" +
-                    "\n" +
-                    "| Flows to sink " + sink + ", from sources:\n" +
-                    "+----------------------------------------------------------------------");
-            for (ResultSourceInfo source : results.getResults().get(sink)) {
-                System.out.println("| From source " + source.getSource() + "\n" +
-                        "| \tin "
-                        + cfg.getMethodOf(source.getSource()).getSignature() +
-                        "\n+----------------------------------------------------------------------\n");
+        List<ResultSinkInfo> sortedSinks = results.getResults().keySet().stream()
+                .sorted(Comparator.comparing(ResultSinkInfo::getSink, new UnitComparator()))
+                .collect(Collectors.toList());
+        for (ResultSinkInfo sink : sortedSinks) {
+            Stmt sinkStmt = sink.getSink();
+            System.out.println("\n"
+                    + "+----------------------------------------------------------------------\n"
+                    + "| Flows to sink " + sinkStmt + " : " + sinkStmt.getJavaSourceStartLineNumber() + "\n"
+                    + "| \tin " + stmtToMethodMap.get(sinkStmt)
+                    + ", from sources:\n"
+                    + "+----------------------------------------------------------------------");
+            List<ResultSourceInfo> sortedSources = results.getResults().get(sink).stream()
+                    .sorted(Comparator.comparing(ResultSourceInfo::getSource, new UnitComparator()))
+                    .collect(Collectors.toList());
+            for (ResultSourceInfo source : sortedSources) {
+                Stmt sourceStmt = source.getSource();
+                SootMethod sourceContainerMethod = cfg.getMethodOf(sourceStmt);
+                System.out.println(""
+                        + "| From source " + sourceStmt + " : " + sourceStmt.getJavaSourceStartLineNumber() + "\n"
+                        + "| \tin " + sourceContainerMethod
+                        + "\n+----------------------------------------------------------------------\n");
                 if (source.getPath() != null) {
                     Map<Stmt, Pair<MethodOrMethodContext, Integer>> containerMethods =
                             CallGraphUtil.resolveContainersForDataflow(source.getPath());
