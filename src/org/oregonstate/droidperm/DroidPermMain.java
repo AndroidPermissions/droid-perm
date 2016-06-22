@@ -25,7 +25,10 @@ import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -89,12 +92,15 @@ public class DroidPermMain {
         }
 
         // Parse additional command-line arguments
-        if (!parseAdditionalOptions(args))
+        if (!parseAdditionalOptions(args)) {
             return;
-        if (!validateAdditionalOptions())
+        }
+        if (!validateAdditionalOptions()) {
             return;
-        if (repeatCount <= 0)
+        }
+        if (repeatCount <= 0) {
             return;
+        }
 
         //Cleanup
         File outputDir = new File("JimpleOutput");
@@ -124,12 +130,13 @@ public class DroidPermMain {
             if (extension.equalsIgnoreCase(".txt")) {
                 BufferedReader rdr = new BufferedReader(new FileReader(apkFile));
                 String line = null;
-                while ((line = rdr.readLine()) != null)
+                while ((line = rdr.readLine()) != null) {
                     apkFiles.add(line);
+                }
                 rdr.close();
-            } else if (extension.equalsIgnoreCase(".apk"))
+            } else if (extension.equalsIgnoreCase(".apk")) {
                 apkFiles.add(args[0]);
-            else {
+            } else {
                 System.err.println("Invalid input file format: " + extension);
                 return;
             }
@@ -144,26 +151,29 @@ public class DroidPermMain {
 
             // Directory handling
             if (apkFiles.size() > 1) {
-                if (apkFile.isDirectory())
+                if (apkFile.isDirectory()) {
                     fullFilePath = args[0] + File.separator + fileName;
-                else
+                } else {
                     fullFilePath = fileName;
+                }
                 System.out.println("Analyzing file " + fullFilePath + "...");
                 File flagFile = new File("_Run_" + new File(fileName).getName());
                 //noinspection ResultOfMethodCallIgnored
                 flagFile.createNewFile();
-            } else
+            } else {
                 fullFilePath = fileName;
+            }
 
             // Run the analysis
             while (repeatCount > 0) {
                 System.gc();
-                if (timeout > 0)
+                if (timeout > 0) {
                     runAnalysisTimeout(fullFilePath, args[1]);
-                else if (sysTimeout > 0)
+                } else if (sysTimeout > 0) {
                     runAnalysisSysTimeout(fullFilePath, args[1]);
-                else
+                } else {
                     runAnalysis(fullFilePath, args[1]);
+                }
                 repeatCount--;
             }
 
@@ -202,19 +212,19 @@ public class DroidPermMain {
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--cgalgo")) {
                 String algo = args[i + 1];
-                if (algo.equalsIgnoreCase("AUTO"))
+                if (algo.equalsIgnoreCase("AUTO")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.AutomaticSelection);
-                else if (algo.equalsIgnoreCase("CHA"))
+                } else if (algo.equalsIgnoreCase("CHA")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.CHA);
-                else if (algo.equalsIgnoreCase("VTA"))
+                } else if (algo.equalsIgnoreCase("VTA")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.VTA);
-                else if (algo.equalsIgnoreCase("RTA"))
+                } else if (algo.equalsIgnoreCase("RTA")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.RTA);
-                else if (algo.equalsIgnoreCase("SPARK"))
+                } else if (algo.equalsIgnoreCase("SPARK")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.SPARK);
-                else if (algo.equalsIgnoreCase("GEOM"))
+                } else if (algo.equalsIgnoreCase("GEOM")) {
                     config.setCallgraphAlgorithm(CallgraphAlgorithm.GEOM);
-                else {
+                } else {
                     System.err.println("Invalid callgraph algorithm");
                     return false;
                 }
@@ -227,13 +237,13 @@ public class DroidPermMain {
                 i++;
             } else if (args[i].equalsIgnoreCase("--layoutmode")) {
                 String algo = args[i + 1];
-                if (algo.equalsIgnoreCase("NONE"))
+                if (algo.equalsIgnoreCase("NONE")) {
                     config.setLayoutMatchingMode(LayoutMatchingMode.NoMatch);
-                else if (algo.equalsIgnoreCase("PWD"))
+                } else if (algo.equalsIgnoreCase("PWD")) {
                     config.setLayoutMatchingMode(LayoutMatchingMode.MatchSensitiveOnly);
-                else if (algo.equalsIgnoreCase("ALL"))
+                } else if (algo.equalsIgnoreCase("ALL")) {
                     config.setLayoutMatchingMode(LayoutMatchingMode.MatchAll);
-                else {
+                } else {
                     System.err.println("Invalid layout matching mode");
                     return false;
                 }
@@ -252,13 +262,13 @@ public class DroidPermMain {
                 i++;
             } else if (args[i].equalsIgnoreCase("--pathalgo")) {
                 String algo = args[i + 1];
-                if (algo.equalsIgnoreCase("CONTEXTSENSITIVE"))
+                if (algo.equalsIgnoreCase("CONTEXTSENSITIVE")) {
                     config.setPathBuilder(PathBuilder.ContextSensitive);
-                else if (algo.equalsIgnoreCase("CONTEXTINSENSITIVE"))
+                } else if (algo.equalsIgnoreCase("CONTEXTINSENSITIVE")) {
                     config.setPathBuilder(PathBuilder.ContextInsensitive);
-                else if (algo.equalsIgnoreCase("SOURCESONLY"))
+                } else if (algo.equalsIgnoreCase("SOURCESONLY")) {
                     config.setPathBuilder(PathBuilder.ContextInsensitiveSourceFinder);
-                else {
+                } else {
                     System.err.println("Invalid path reconstruction algorithm");
                     return false;
                 }
@@ -313,8 +323,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--XML-OUT")) {
                 xmlOut = new File(args[i + 1]);
                 i += 2;
-            } else
+            } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
+            }
         }
         return true;
     }
@@ -381,35 +392,36 @@ public class DroidPermMain {
         String javaHome = System.getProperty("java.home");
         String executable = "/usr/bin/timeout";
         String[] command = new String[]{executable,
-                "-s", "KILL",
-                sysTimeout + "m",
-                javaHome + "/bin/java",
-                "-cp", classpath,
-                "soot.jimple.infoflow.android.TestApps.Test",
-                fileName,
-                androidJar,
-                config.getStopAfterFirstFlow() ? "--singleflow" : "--nosingleflow",
-                config.getEnableImplicitFlows() ? "--implicit" : "--noimplicit",
-                config.getEnableStaticFieldTracking() ? "--static" : "--nostatic",
-                "--aplength", Integer.toString(InfoflowAndroidConfiguration.getAccessPathLength()),
-                "--cgalgo", callgraphAlgorithmToString(config.getCallgraphAlgorithm()),
-                config.getEnableCallbacks() ? "--callbacks" : "--nocallbacks",
-                config.getEnableExceptionTracking() ? "--exceptions" : "--noexceptions",
-                "--layoutmode", layoutMatchingModeToString(config.getLayoutMatchingMode()),
-                config.getFlowSensitiveAliasing() ? "--aliasflowsens" : "--aliasflowins",
-                config.getComputeResultPaths() ? "--paths" : "--nopaths",
-                aggressiveTaintWrapper ? "--aggressivetw" : "--nonaggressivetw",
-                "--pathalgo", pathAlgorithmToString(config.getPathBuilder()),
-                (summaryPath != null && !summaryPath.isEmpty()) ? "--summarypath" : "",
-                (summaryPath != null && !summaryPath.isEmpty()) ? summaryPath : "",
-                (flowDroidXmlOut != null && !flowDroidXmlOut.isEmpty()) ? "--saveresults" : "",
-                noTaintWrapper ? "--notaintwrapper" : "",
-//				"--repeatCount", Integer.toString(repeatCount),
-                config.getEnableArraySizeTainting() ? "" : "--noarraysize",
-                InfoflowAndroidConfiguration.getUseTypeTightening() ? "" : "--notypetightening",
-                InfoflowAndroidConfiguration.getUseThisChainReduction() ? "" : "--safemode",
-                config.getLogSourcesAndSinks() ? "--logsourcesandsinks" : "",
-        };
+                                        "-s", "KILL",
+                                        sysTimeout + "m",
+                                        javaHome + "/bin/java",
+                                        "-cp", classpath,
+                                        "soot.jimple.infoflow.android.TestApps.Test",
+                                        fileName,
+                                        androidJar,
+                                        config.getStopAfterFirstFlow() ? "--singleflow" : "--nosingleflow",
+                                        config.getEnableImplicitFlows() ? "--implicit" : "--noimplicit",
+                                        config.getEnableStaticFieldTracking() ? "--static" : "--nostatic",
+                                        "--aplength",
+                                        Integer.toString(InfoflowAndroidConfiguration.getAccessPathLength()),
+                                        "--cgalgo", callgraphAlgorithmToString(config.getCallgraphAlgorithm()),
+                                        config.getEnableCallbacks() ? "--callbacks" : "--nocallbacks",
+                                        config.getEnableExceptionTracking() ? "--exceptions" : "--noexceptions",
+                                        "--layoutmode", layoutMatchingModeToString(config.getLayoutMatchingMode()),
+                                        config.getFlowSensitiveAliasing() ? "--aliasflowsens" : "--aliasflowins",
+                                        config.getComputeResultPaths() ? "--paths" : "--nopaths",
+                                        aggressiveTaintWrapper ? "--aggressivetw" : "--nonaggressivetw",
+                                        "--pathalgo", pathAlgorithmToString(config.getPathBuilder()),
+                                        (summaryPath != null && !summaryPath.isEmpty()) ? "--summarypath" : "",
+                                        (summaryPath != null && !summaryPath.isEmpty()) ? summaryPath : "",
+                                        (flowDroidXmlOut != null && !flowDroidXmlOut.isEmpty()) ? "--saveresults" : "",
+                                        noTaintWrapper ? "--notaintwrapper" : "",
+                                        //				"--repeatCount", Integer.toString(repeatCount),
+                                        config.getEnableArraySizeTainting() ? "" : "--noarraysize",
+                                        InfoflowAndroidConfiguration.getUseTypeTightening() ? "" : "--notypetightening",
+                                        InfoflowAndroidConfiguration.getUseThisChainReduction() ? "" : "--safemode",
+                                        config.getLogSourcesAndSinks() ? "--logsourcesandsinks" : "",
+                                        };
         System.out.println("Running command: " + executable + " " + Arrays.toString(command));
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
@@ -517,9 +529,9 @@ public class DroidPermMain {
 
     private static ITaintPropagationWrapper createTaintWrapper() throws IOException {
         final ITaintPropagationWrapper taintWrapper;
-        if (noTaintWrapper)
+        if (noTaintWrapper) {
             taintWrapper = null;
-        else if (summaryPath != null && !summaryPath.isEmpty()) {
+        } else if (summaryPath != null && !summaryPath.isEmpty()) {
             System.out.println("Using the StubDroid taint wrapper");
             taintWrapper = LibrarySummaryTWBuilder.createLibrarySummaryTW(summaryPath);
             if (taintWrapper == null) {
@@ -527,10 +539,11 @@ public class DroidPermMain {
             }
         } else {
             final EasyTaintWrapper easyTaintWrapper;
-            if (new File("../soot-infoflow/EasyTaintWrapperSource.txt").exists())
+            if (new File("../soot-infoflow/EasyTaintWrapperSource.txt").exists()) {
                 easyTaintWrapper = new EasyTaintWrapper("../soot-infoflow/EasyTaintWrapperSource.txt");
-            else
+            } else {
                 easyTaintWrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
+            }
             easyTaintWrapper.setAggressiveMode(aggressiveTaintWrapper);
             taintWrapper = easyTaintWrapper;
         }
