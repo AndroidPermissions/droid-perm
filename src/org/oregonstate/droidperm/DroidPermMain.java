@@ -13,24 +13,18 @@ import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
-import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
-import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
-import soot.jimple.infoflow.data.Abstraction;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
 import soot.jimple.infoflow.ipc.IIPCManager;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
-import soot.jimple.infoflow.util.SystemClassHandler;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -49,7 +43,7 @@ public class DroidPermMain {
 
     private static boolean aggressiveTaintWrapper = false;
     private static boolean noTaintWrapper = false;
-    private static String summaryPath = "";
+    private static String summaryPath;
 
     /**
      * Xml output of FlowDroid. Option "--saveresults {File}".
@@ -481,12 +475,8 @@ public class DroidPermMain {
         try {
             initTime = System.nanoTime();
 
-            final DPSetupApplication setupApplication;
-            if (null == ipcManager) {
-                setupApplication = new DPSetupApplication(androidJar, fileName, additionalClasspath, null);
-            } else {
-                setupApplication = new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
-            }
+            final DPSetupApplication setupApplication =
+                    new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
 
             // Set configuration object
             setupApplication.setConfig(config);
@@ -501,36 +491,18 @@ public class DroidPermMain {
                 //options.set_verbose(true);//for low-level debugging of Soot.
             });
 
-            final ITaintPropagationWrapper taintWrapper;
-            if (noTaintWrapper)
-                taintWrapper = null;
-            else if (summaryPath != null && !summaryPath.isEmpty()) {
-                System.out.println("Using the StubDroid taint wrapper");
-                taintWrapper = createLibrarySummaryTW();
-                if (taintWrapper == null) {
-                    System.err.println("Could not initialize StubDroid");
-                    return null;
-                }
-            } else {
-                final EasyTaintWrapper easyTaintWrapper;
-                if (new File("../soot-infoflow/EasyTaintWrapperSource.txt").exists())
-                    easyTaintWrapper = new EasyTaintWrapper("../soot-infoflow/EasyTaintWrapperSource.txt");
-                else
-                    easyTaintWrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
-                easyTaintWrapper.setAggressiveMode(aggressiveTaintWrapper);
-                taintWrapper = easyTaintWrapper;
-            }
-            setupApplication.setTaintWrapper(taintWrapper);
+            setupApplication.setTaintWrapper(createTaintWrapper());
             setupApplication.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
 
             if (DEBUG) {
                 setupApplication.printEntrypoints();
-                setupApplication.printSinkDefinitions();
                 setupApplication.printSourceDefinitions();
+                setupApplication.printSinkDefinitions();
             }
 
             System.out.println("Running data flow analysis...");
-            final InfoflowResults res = setupApplication.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
+            final InfoflowResults res
+                    = setupApplication.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
 
             printSourcesAndSinks(setupApplication);
             System.out.println("FlowDroid has run for " + (System.nanoTime() - initTime) / 1E9 + " seconds\n\n");
@@ -541,6 +513,28 @@ public class DroidPermMain {
         } catch (XmlPullParserException ex) {
             throw new RuntimeException("Could not read Android manifest file: " + ex.getMessage(), ex);
         }
+    }
+
+    private static ITaintPropagationWrapper createTaintWrapper() throws IOException {
+        final ITaintPropagationWrapper taintWrapper;
+        if (noTaintWrapper)
+            taintWrapper = null;
+        else if (summaryPath != null && !summaryPath.isEmpty()) {
+            System.out.println("Using the StubDroid taint wrapper");
+            taintWrapper = LibrarySummaryTWBuilder.createLibrarySummaryTW(summaryPath);
+            if (taintWrapper == null) {
+                throw new RuntimeException("Could not initialize StubDroid");
+            }
+        } else {
+            final EasyTaintWrapper easyTaintWrapper;
+            if (new File("../soot-infoflow/EasyTaintWrapperSource.txt").exists())
+                easyTaintWrapper = new EasyTaintWrapper("../soot-infoflow/EasyTaintWrapperSource.txt");
+            else
+                easyTaintWrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
+            easyTaintWrapper.setAggressiveMode(aggressiveTaintWrapper);
+            taintWrapper = easyTaintWrapper;
+        }
+        return taintWrapper;
     }
 
     private static void printSourcesAndSinks(DPSetupApplication setupApplication) {
@@ -561,102 +555,6 @@ public class DroidPermMain {
                 }
             }
             System.out.println();
-        }
-    }
-
-    /**
-     * Creates the taint wrapper for using library summaries
-     *
-     * @return The taint wrapper for using library summaries
-     * @throws IOException Thrown if one of the required files could not be read
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static ITaintPropagationWrapper createLibrarySummaryTW()
-            throws IOException {
-        try {
-            Class clzLazySummary = Class.forName("soot.jimple.infoflow.methodSummary.data.summary.LazySummary");
-
-            Object lazySummary = clzLazySummary.getConstructor(File.class).newInstance(new File(summaryPath));
-
-            ITaintPropagationWrapper summaryWrapper = (ITaintPropagationWrapper) Class.forName
-                    ("soot.jimple.infoflow.methodSummary.taintWrappers.SummaryTaintWrapper").getConstructor
-                    (clzLazySummary).newInstance(lazySummary);
-
-            ITaintPropagationWrapper systemClassWrapper = new ITaintPropagationWrapper() {
-
-                private ITaintPropagationWrapper wrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
-
-                private boolean isSystemClass(Stmt stmt) {
-                    return stmt.containsInvokeExpr() && SystemClassHandler
-                            .isClassInSystemPackage(stmt.getInvokeExpr().getMethod().getDeclaringClass().getName());
-                }
-
-                @Override
-                public boolean supportsCallee(Stmt callSite) {
-                    return isSystemClass(callSite) && wrapper.supportsCallee(callSite);
-                }
-
-                @Override
-                public boolean supportsCallee(SootMethod method) {
-                    return SystemClassHandler.isClassInSystemPackage(method.getDeclaringClass().getName())
-                            && wrapper.supportsCallee(method);
-                }
-
-                @Override
-                public boolean isExclusive(Stmt stmt, Abstraction taintedPath) {
-                    return isSystemClass(stmt) && wrapper.isExclusive(stmt, taintedPath);
-                }
-
-                @Override
-                public void initialize(InfoflowManager manager) {
-                    wrapper.initialize(manager);
-                }
-
-                @Override
-                public int getWrapperMisses() {
-                    return 0;
-                }
-
-                @Override
-                public int getWrapperHits() {
-                    return 0;
-                }
-
-                @Override
-                public Set<Abstraction> getTaintsForMethod(Stmt stmt, Abstraction d1,
-                                                           Abstraction taintedPath) {
-                    if (!isSystemClass(stmt))
-                        return null;
-                    return wrapper.getTaintsForMethod(stmt, d1, taintedPath);
-                }
-
-                @Override
-                public Set<Abstraction> getAliasesForMethod(Stmt stmt, Abstraction d1,
-                                                            Abstraction taintedPath) {
-                    if (!isSystemClass(stmt))
-                        return null;
-                    return wrapper.getAliasesForMethod(stmt, d1, taintedPath);
-                }
-
-            };
-
-            Method setFallbackMethod = summaryWrapper.getClass().getMethod("setFallbackTaintWrapper",
-                    ITaintPropagationWrapper.class);
-            setFallbackMethod.invoke(summaryWrapper, systemClassWrapper);
-
-            return summaryWrapper;
-        } catch (ClassNotFoundException | NoSuchMethodException ex) {
-            System.err.println("Could not find library summary classes: " + ex.getMessage());
-            ex.printStackTrace();
-            return null;
-        } catch (InvocationTargetException ex) {
-            System.err.println("Could not initialize library summaries: " + ex.getMessage());
-            ex.printStackTrace();
-            return null;
-        } catch (IllegalAccessException | InstantiationException ex) {
-            System.err.println("Internal error in library summary initialization: " + ex.getMessage());
-            ex.printStackTrace();
-            return null;
         }
     }
 
