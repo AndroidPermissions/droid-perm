@@ -27,7 +27,6 @@ import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -72,43 +71,39 @@ public class DroidPermMain {
 
     private static long initTime;
 
-    public static void setIPCManager(IIPCManager ipcManager) {
-        DroidPermMain.ipcManager = ipcManager;
-    }
-
-    public static IIPCManager getIPCManager() {
-        return DroidPermMain.ipcManager;
-    }
-
     /**
      * @param args Program arguments. args[0] = path to apk-file, args[1] = path to android-dir
      *             (path/android-platforms/)
      */
     public static void main(final String[] args) throws IOException, InterruptedException {
-        //Processing command line options
-        if (args.length < 2) {
+        if (args.length < 2 || !parseAdditionalOptions(args) || !validateAdditionalOptions()) {
             printUsage();
             return;
         }
 
-        // Parse additional command-line arguments
-        if (!parseAdditionalOptions(args)) {
-            return;
-        }
-        if (!validateAdditionalOptions()) {
-            return;
-        }
-        if (repeatCount <= 0) {
-            return;
-        }
+        File inputFileOrDir = new File(args[0]);
+        String androidJarOrSdkDir = args[1];
 
-        //Cleanup
+        //run the analysis
+        cleanupTempDir();
+
+        List<File> apkFiles = gatherApkFiles(inputFileOrDir);
+
+        for (final File apkFile : apkFiles) {
+            runAnalysisForFile(androidJarOrSdkDir, apkFile);
+        }
+    }
+
+    /**
+     * No references to JimpleOutput in the project. Most likely not needed.
+     */
+    private static void cleanupTempDir() {
         File outputDir = new File("JimpleOutput");
         if (outputDir.isDirectory()) {
             boolean success = true;
             //noinspection ConstantConditions
-            for (File f : outputDir.listFiles()) {
-                success = success && f.delete();
+            for (File file : outputDir.listFiles()) {
+                success = success && file.delete();
             }
             if (!success) {
                 System.err.println("Cleanup of output directory " + outputDir + " failed!");
@@ -117,70 +112,32 @@ public class DroidPermMain {
                 System.err.println("Cleanup of output directory " + outputDir + " failed!");
             }
         }
+    }
 
-        //The rest
-        List<String> apkFiles = new ArrayList<String>();
-        File apkFile = new File(args[0]);
-        if (apkFile.isDirectory()) {
-            String[] dirFiles = apkFile.list((dir, name) -> (name.endsWith(".apk")));
-            Collections.addAll(apkFiles, dirFiles);
+    private static List<File> gatherApkFiles(File apkFileOrDir) throws IOException {
+        List<File> apkFiles = new ArrayList<>();
+        if (apkFileOrDir.isDirectory()) {
+            String[] apkFileNames = apkFileOrDir.list((dir, name) -> (name.endsWith(".apk")));
+            for (String dirFile : apkFileNames) {
+                apkFiles.add(new File(dirFile));
+            }
         } else {
             //apk is a file so grab the extension
-            String extension = apkFile.getName().substring(apkFile.getName().lastIndexOf("."));
+            String extension = apkFileOrDir.getName().substring(apkFileOrDir.getName().lastIndexOf("."));
             if (extension.equalsIgnoreCase(".txt")) {
-                BufferedReader rdr = new BufferedReader(new FileReader(apkFile));
-                String line = null;
+                BufferedReader rdr = new BufferedReader(new FileReader(apkFileOrDir));
+                String line;
                 while ((line = rdr.readLine()) != null) {
-                    apkFiles.add(line);
+                    apkFiles.add(new File(line));
                 }
                 rdr.close();
             } else if (extension.equalsIgnoreCase(".apk")) {
-                apkFiles.add(args[0]);
+                apkFiles.add(apkFileOrDir);
             } else {
-                System.err.println("Invalid input file format: " + extension);
-                return;
+                throw new RuntimeException("Invalid input file extension: " + extension);
             }
         }
-
-        int oldRepeatCount = repeatCount;
-        for (final String fileName : apkFiles) {
-            System.gc();
-
-            repeatCount = oldRepeatCount;
-            final String fullFilePath;
-
-            // Directory handling
-            if (apkFiles.size() > 1) {
-                if (apkFile.isDirectory()) {
-                    fullFilePath = args[0] + File.separator + fileName;
-                } else {
-                    fullFilePath = fileName;
-                }
-                System.out.println("Analyzing file " + fullFilePath + "...");
-                File flagFile = new File("_Run_" + new File(fileName).getName());
-                //noinspection ResultOfMethodCallIgnored
-                flagFile.createNewFile();
-            } else {
-                fullFilePath = fileName;
-            }
-
-            // Run the analysis
-            while (repeatCount > 0) {
-                System.gc();
-                if (timeout > 0) {
-                    runAnalysisTimeout(fullFilePath, args[1]);
-                } else if (sysTimeout > 0) {
-                    runAnalysisSysTimeout(fullFilePath, args[1]);
-                } else {
-                    runAnalysis(fullFilePath, args[1]);
-                }
-                repeatCount--;
-            }
-
-            //DroidPerm insertion
-            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
-            System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
-        }
+        return apkFiles;
     }
 
     /**
@@ -349,6 +306,164 @@ public class DroidPermMain {
         return true;
     }
 
+    private static void printUsage() {
+        System.out.println("FlowDroid (c) Secure Software Engineering Group @ EC SPRIDE");
+        System.out.println();
+        System.out.println("Incorrect arguments: [0] = apk-file, [1] = android-jar-directory");
+        System.out.println("Optional further parameters:");
+        System.out.println("\t--TIMEOUT n Time out after n seconds");
+        System.out.println("\t--SYSTIMEOUT n Hard time out (kill process) after n seconds, Unix only");
+        System.out.println("\t--SINGLEFLOW Stop after finding first leak");
+        System.out.println("\t--IMPLICIT Enable implicit flows");
+        System.out.println("\t--NOSTATIC Disable static field tracking");
+        System.out.println("\t--NOEXCEPTIONS Disable exception tracking");
+        System.out.println("\t--APLENGTH n Set access path length to n");
+        System.out.println("\t--CGALGO x Use callgraph algorithm x");
+        System.out.println("\t--NOCALLBACKS Disable callback analysis");
+        System.out.println("\t--LAYOUTMODE x Set UI control analysis mode to x");
+        System.out.println("\t--ALIASFLOWINS Use a flow insensitive alias search");
+        System.out.println("\t--NOPATHS Do not compute result paths");
+        System.out.println("\t--AGGRESSIVETW Use taint wrapper in aggressive mode");
+        System.out.println("\t--PATHALGO Use path reconstruction algorithm x");
+        System.out.println("\t--LIBSUMTW Use library summary taint wrapper");
+        System.out.println("\t--SUMMARYPATH Path to library summaries");
+        System.out.println("\t--SYSFLOWS Also analyze classes in system packages");
+        System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
+        System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
+        System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
+        System.out.println();
+        System.out.println("New in DroidPerm:");
+        System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
+        System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
+        System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
+        System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
+        System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
+        System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
+        System.out.println();
+        System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
+        System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
+        System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
+        System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
+                "RemoveSideEffectFreeCode");
+        System.out.println();
+        System.out.println("Options relevant for DroidPerm:");
+        System.out.println("\t--NOTAINTWRAPPER - required to enable the analysis of framework classes");
+        System.out.println("\t--ADDITIONALCP - doesn't work for now, " +
+                "current workaround is to instrument android.jar and put all the classpath inside");
+
+    }
+
+    private static String callgraphAlgorithmToString(CallgraphAlgorithm algorihm) {
+        switch (algorihm) {
+            case AutomaticSelection:
+                return "AUTO";
+            case CHA:
+                return "CHA";
+            case VTA:
+                return "VTA";
+            case RTA:
+                return "RTA";
+            case SPARK:
+                return "SPARK";
+            case GEOM:
+                return "GEOM";
+            default:
+                return "unknown";
+        }
+    }
+
+    private static String layoutMatchingModeToString(LayoutMatchingMode mode) {
+        switch (mode) {
+            case NoMatch:
+                return "NONE";
+            case MatchSensitiveOnly:
+                return "PWD";
+            case MatchAll:
+                return "ALL";
+            default:
+                return "unknown";
+        }
+    }
+
+    private static String pathAlgorithmToString(PathBuilder pathBuilder) {
+        switch (pathBuilder) {
+            case ContextSensitive:
+                return "CONTEXTSENSITIVE";
+            case ContextInsensitive:
+                return "CONTEXTINSENSITIVE";
+            case ContextInsensitiveSourceFinder:
+                return "SOURCESONLY";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws IOException {
+        initTime = System.nanoTime();
+
+        // Directory handling
+        System.out.println("Analyzing file " + apkFile + "...");
+        File flagFile = new File("_Run_" + apkFile.getName());
+        //noinspection ResultOfMethodCallIgnored
+        flagFile.createNewFile();
+
+        // Run FlowDroid
+        System.gc();
+        if (timeout > 0) {
+            runAnalysisTimeout(apkFile.getAbsolutePath(), androidJarORSdkDir);
+        } else if (sysTimeout > 0) {
+            runAnalysisSysTimeout(apkFile.getAbsolutePath(), androidJarORSdkDir);
+        } else {
+            runAnalysis(apkFile.getAbsolutePath(), androidJarORSdkDir);
+        }
+
+        //Run DroidPerm
+        new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+        System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
+    }
+
+    private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
+        try {
+            final DPSetupApplication setupApplication =
+                    new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
+
+            // Set configuration object
+            setupApplication.setConfig(config);
+
+            //toclean insert additional Soot options here
+            setupApplication.setSootConfig(options -> {
+                options.set_keep_line_number(true);
+                if (noTaintWrapper) {
+                    options.set_include_all(true);
+                }
+
+                //options.set_verbose(true);//for low-level debugging of Soot.
+            });
+
+            setupApplication.setTaintWrapper(createTaintWrapper());
+            setupApplication.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
+
+            if (DEBUG) {
+                setupApplication.printEntrypoints();
+                setupApplication.printSourceDefinitions();
+                setupApplication.printSinkDefinitions();
+            }
+
+            System.out.println("Running data flow analysis...");
+            final InfoflowResults res
+                    = setupApplication.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
+
+            printSourcesAndSinks(setupApplication);
+            System.out.println("FlowDroid has run for " + (System.nanoTime() - initTime) / 1E9 + " seconds\n\n");
+
+            return res;
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not read file: " + ex.getMessage(), ex);
+        } catch (XmlPullParserException ex) {
+            throw new RuntimeException("Could not read Android manifest file: " + ex.getMessage(), ex);
+        }
+    }
+
     private static void runAnalysisTimeout(final String fileName, final String androidJar) {
         FutureTask<InfoflowResults> task = new FutureTask<>(() -> {
 
@@ -438,95 +553,6 @@ public class DroidPermMain {
         }
     }
 
-    private static String callgraphAlgorithmToString(CallgraphAlgorithm algorihm) {
-        switch (algorihm) {
-            case AutomaticSelection:
-                return "AUTO";
-            case CHA:
-                return "CHA";
-            case VTA:
-                return "VTA";
-            case RTA:
-                return "RTA";
-            case SPARK:
-                return "SPARK";
-            case GEOM:
-                return "GEOM";
-            default:
-                return "unknown";
-        }
-    }
-
-    private static String layoutMatchingModeToString(LayoutMatchingMode mode) {
-        switch (mode) {
-            case NoMatch:
-                return "NONE";
-            case MatchSensitiveOnly:
-                return "PWD";
-            case MatchAll:
-                return "ALL";
-            default:
-                return "unknown";
-        }
-    }
-
-    private static String pathAlgorithmToString(PathBuilder pathBuilder) {
-        switch (pathBuilder) {
-            case ContextSensitive:
-                return "CONTEXTSENSITIVE";
-            case ContextInsensitive:
-                return "CONTEXTINSENSITIVE";
-            case ContextInsensitiveSourceFinder:
-                return "SOURCESONLY";
-            default:
-                return "UNKNOWN";
-        }
-    }
-
-    private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
-        try {
-            initTime = System.nanoTime();
-
-            final DPSetupApplication setupApplication =
-                    new DPSetupApplication(androidJar, fileName, additionalClasspath, ipcManager);
-
-            // Set configuration object
-            setupApplication.setConfig(config);
-
-            //toclean insert additional Soot options here
-            setupApplication.setSootConfig(options -> {
-                options.set_keep_line_number(true);
-                if (noTaintWrapper) {
-                    options.set_include_all(true);
-                }
-
-                //options.set_verbose(true);//for low-level debugging of Soot.
-            });
-
-            setupApplication.setTaintWrapper(createTaintWrapper());
-            setupApplication.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
-
-            if (DEBUG) {
-                setupApplication.printEntrypoints();
-                setupApplication.printSourceDefinitions();
-                setupApplication.printSinkDefinitions();
-            }
-
-            System.out.println("Running data flow analysis...");
-            final InfoflowResults res
-                    = setupApplication.runInfoflow(new FlowDroidResultsAvailableHandler(flowDroidXmlOut));
-
-            printSourcesAndSinks(setupApplication);
-            System.out.println("FlowDroid has run for " + (System.nanoTime() - initTime) / 1E9 + " seconds\n\n");
-
-            return res;
-        } catch (IOException ex) {
-            throw new RuntimeException("Could not read file: " + ex.getMessage(), ex);
-        } catch (XmlPullParserException ex) {
-            throw new RuntimeException("Could not read Android manifest file: " + ex.getMessage(), ex);
-        }
-    }
-
     private static ITaintPropagationWrapper createTaintWrapper() throws IOException {
         final ITaintPropagationWrapper taintWrapper;
         if (noTaintWrapper) {
@@ -569,52 +595,5 @@ public class DroidPermMain {
             }
             System.out.println();
         }
-    }
-
-    private static void printUsage() {
-        System.out.println("FlowDroid (c) Secure Software Engineering Group @ EC SPRIDE");
-        System.out.println();
-        System.out.println("Incorrect arguments: [0] = apk-file, [1] = android-jar-directory");
-        System.out.println("Optional further parameters:");
-        System.out.println("\t--TIMEOUT n Time out after n seconds");
-        System.out.println("\t--SYSTIMEOUT n Hard time out (kill process) after n seconds, Unix only");
-        System.out.println("\t--SINGLEFLOW Stop after finding first leak");
-        System.out.println("\t--IMPLICIT Enable implicit flows");
-        System.out.println("\t--NOSTATIC Disable static field tracking");
-        System.out.println("\t--NOEXCEPTIONS Disable exception tracking");
-        System.out.println("\t--APLENGTH n Set access path length to n");
-        System.out.println("\t--CGALGO x Use callgraph algorithm x");
-        System.out.println("\t--NOCALLBACKS Disable callback analysis");
-        System.out.println("\t--LAYOUTMODE x Set UI control analysis mode to x");
-        System.out.println("\t--ALIASFLOWINS Use a flow insensitive alias search");
-        System.out.println("\t--NOPATHS Do not compute result paths");
-        System.out.println("\t--AGGRESSIVETW Use taint wrapper in aggressive mode");
-        System.out.println("\t--PATHALGO Use path reconstruction algorithm x");
-        System.out.println("\t--LIBSUMTW Use library summary taint wrapper");
-        System.out.println("\t--SUMMARYPATH Path to library summaries");
-        System.out.println("\t--SYSFLOWS Also analyze classes in system packages");
-        System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
-        System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
-        System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
-        System.out.println();
-        System.out.println("New in DroidPerm:");
-        System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
-        System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
-        System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
-        System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
-        System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
-        System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
-        System.out.println();
-        System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
-        System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
-        System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
-        System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
-                "RemoveSideEffectFreeCode");
-        System.out.println();
-        System.out.println("Options relevant for DroidPerm:");
-        System.out.println("\t--NOTAINTWRAPPER - required to enable the analysis of framework classes");
-        System.out.println("\t--ADDITIONALCP - doesn't work for now, " +
-                "current workaround is to instrument android.jar and put all the classpath inside");
-
     }
 }
