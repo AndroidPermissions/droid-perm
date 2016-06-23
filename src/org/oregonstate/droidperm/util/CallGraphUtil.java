@@ -5,19 +5,25 @@ import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.ReturnStmt;
+import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/15/2016.
  */
 public class CallGraphUtil {
+
+    private static Map<Unit, SootMethod> stmtToMethodMap;
 
     public static <T extends SootMethodAndClass> Map<T, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
             Collection<T> methodDefs) {
@@ -102,18 +108,20 @@ public class CallGraphUtil {
      * Case 4. If still not container found, return null.
      * <p>
      * In all cases, a method will be considered container for this statement only if its body contains the statement.
+     * <p>
+     * Additional rule for indent: if previous statement was a return, then indent for this statement is one level below
+     * the previous one.
      */
-    public static Map<Stmt, Pair<MethodOrMethodContext, String>> resolveContainersForDataflow(Stmt[] dataflow) {
+    public static Map<Stmt, Pair<MethodOrMethodContext, Integer>> resolveContainersForDataflow(Stmt[] dataflow) {
         CallGraph cg = Scene.v().getCallGraph();
         boolean[] hasEdges = new boolean[dataflow.length];
-        Map<MethodOrMethodContext, String> indent = new HashMap<>();
-        Map<Stmt, Pair<MethodOrMethodContext, String>> result = new HashMap<>();
+        Map<Stmt, Pair<MethodOrMethodContext, Integer>> result = new HashMap<>();
 
         for (int index = 0; index < dataflow.length; index++) {
             Stmt stmt = dataflow[index];
             int i = index;
 
-            Supplier<Pair<MethodOrMethodContext, String>> containerCheckAlg = () -> {
+            Supplier<Pair<MethodOrMethodContext, Integer>> containerCheckAlg = () -> {
                 Iterator<Edge> edgeIterator = cg.edgesOutOf(stmt);
                 hasEdges[i] = edgeIterator.hasNext();
 
@@ -125,15 +133,14 @@ public class CallGraphUtil {
                             .findAny().orElse(null);
                     if (lastCallEdge != null) {
                         MethodOrMethodContext tgt = lastCallEdge.getTgt();
-                        indent.put(tgt, getIndent(lastCallEdge.getSrc(), indent) + "\t");
-                        return new Pair<>(tgt, indent.get(tgt));
+                        return new Pair<>(tgt, getNewIndent(i, dataflow, result, true));
                     }
                 }
 
                 if (hasEdges[i]) { //case 1
                     MethodOrMethodContext possibleCont = edgeIterator.next().getSrc();
                     if (possibleCont.method().getActiveBody().getUnits().contains(stmt)) {
-                        return new Pair<>(possibleCont, getIndent(possibleCont, indent));
+                        return new Pair<>(possibleCont, getNewIndent(i, dataflow, result, false));
                     }
                 }
 
@@ -143,16 +150,94 @@ public class CallGraphUtil {
                         && !result.get(dataflow[j]).getO1().method().getActiveBody().getUnits().contains(stmt)) {
                     j--;
                 }
-                return j >= 0 ? result.get(dataflow[j]) : new Pair<>(null, "");
+                return j >= 0 ? result.get(dataflow[j])
+                        //case 4 - use stmtToMethodMap to infer container method
+                        : new Pair<>(getStmtToMethodMap().get(stmt), getNewIndent(i, dataflow, result, false));
             };
 
             result.put(stmt, containerCheckAlg.get());
         }
+        normalizeIndents(result);
         return result;
     }
 
-    private static String getIndent(MethodOrMethodContext src, Map<MethodOrMethodContext, String> indent) {
-        indent.putIfAbsent(src, "");
-        return indent.get(src);
+    /**
+     * Normalizing all indents so that the minimal will be 0.
+     */
+    private static void normalizeIndents(Map<Stmt, Pair<MethodOrMethodContext, Integer>> result) {
+        int minIndent = result.values().stream().map(Pair::getO2).min(Comparator.naturalOrder()).orElse(0);
+
+        /*The same value (method) might repeat several times.
+        If we don't use distinct() it will be "normalized" more than once.
+        Stream mutability issue:
+        If I don't collect to list first, map will be messed up when I try to alter its values, and distinct()
+         won't work correctly.
+
+        Cause of this problem: It is prohibited to modify set elements in a way that affects equals()
+         http://stackoverflow.com/questions/19589864/hashset-behavior-when-changing-field-value
+        */
+
+        /*Computing the map of unique values (pairs). It is possible that multiple keys are mapped to the same pair.
+        Also it is possible that 2 keys are mapped to distinct instances of Pair which are nevertheless equal
+         (according to equals()).*/
+        Map<Pair<MethodOrMethodContext, Integer>, Pair<MethodOrMethodContext, Integer>> valuesToValues =
+                result.values().stream().distinct().collect(Collectors.toMap(pair -> pair, pair -> pair));
+
+        //Normalizing result map values. Replacing multiple instances corresponding to same pair with one instance.
+        result.keySet().stream().forEach(key -> result.put(key, valuesToValues.get(result.get(key))));
+
+        //Normalizing indents. Increasing all indents so that the minimal one is always 0.
+        valuesToValues.keySet().forEach(pair -> pair.setO2(pair.getO2() - minIndent));
+    }
+
+    private static int getNewIndent(int stmtIndex, Stmt[] dataflow,
+                                    Map<Stmt, Pair<MethodOrMethodContext, Integer>> result, boolean afterMethodCall) {
+        if (stmtIndex == 0) {
+            return 0;
+        } else if (afterMethodCall) {
+            return result.get(dataflow[stmtIndex - 1]).getO2() + 1;
+        } else if (dataflow[stmtIndex - 1] instanceof ReturnStmt || dataflow[stmtIndex - 1] instanceof ReturnVoidStmt) {
+            return result.get(dataflow[stmtIndex - 1]).getO2() - 1;
+        } else {
+            return result.get(dataflow[stmtIndex - 1]).getO2();
+        }
+    }
+
+    /**
+     * Builds a map from all statements in the analysis classpath to their containing methods. Only methods reachable
+     * through the call graph are included in this map.
+     */
+    private static Map<Unit, SootMethod> buildStmtToMethodMap() {
+        try {
+            Class<?> cgClazz = CallGraph.class;
+            Field tgtToEdgeField = cgClazz.getDeclaredField("tgtToEdge");
+            tgtToEdgeField.setAccessible(true);
+
+            //this collection is taken from CallGraph internals.
+            @SuppressWarnings("unchecked")
+            Map<MethodOrMethodContext, Edge> tgtToEdge =
+                    (Map<MethodOrMethodContext, Edge>) tgtToEdgeField.get(Scene.v().getCallGraph());
+
+            Map<Unit, SootMethod> result;
+            result = tgtToEdge.keySet().stream().map(MethodOrMethodContext::method)
+                    .filter(SootMethod::hasActiveBody) //only SootMethod in CG with active body here
+                    .collect(HashMap::new, (Map<Unit, SootMethod> map, SootMethod meth)
+                                    -> meth.getActiveBody().getUnits().forEach(unit -> map.put(unit, meth)),
+                            StreamUtil::mutableMapCombiner);
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns a map from all statements in the analysis classpath to their containing methods. Only methods reachable
+     * through the call graph are included in this map.
+     */
+    public static Map<Unit, SootMethod> getStmtToMethodMap() {
+        if (stmtToMethodMap == null) {
+            stmtToMethodMap = buildStmtToMethodMap();
+        }
+        return stmtToMethodMap;
     }
 }

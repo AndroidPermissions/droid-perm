@@ -1,7 +1,8 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.jaxb.*;
-import org.oregonstate.droidperm.perm.PermissionDefParser;
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.TxtPermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,9 @@ public class MethodPermDetector {
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
+        logger.warn("\n\n"
+                + "Start of DroidPerm logs\n"
+                + "===========================================\n");
         analyze();
         printResults();
 
@@ -84,17 +88,17 @@ public class MethodPermDetector {
     private void analyze() {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
-        PermissionDefParser permissionDefParser;
+        IPermissionDefProvider permissionDefProvider;
         Set<SootMethod> outflowIgnoreSet;
         try {
-            permissionDefParser = new PermissionDefParser(permissionDefFile);
+            permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        Set<SootMethodAndClass> permCheckerDefs = permissionDefParser.getPermCheckerDefs();
-        Set<AndroidMethod> sensitiveDefs = permissionDefParser.getSensitiveDefs();
+        Set<SootMethodAndClass> permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
+        Set<AndroidMethod> sensitiveDefs = permissionDefProvider.getSensitiveDefs();
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
@@ -418,8 +422,9 @@ public class MethodPermDetector {
             for (String perm : callbackCheckerStatusMap.get(callback).keySet()) {
                 CheckerUsageStatus status = callbackCheckerStatusMap.get(callback).get(perm);
                 String statusString = status == CheckerUsageStatus.USED ? "used"
-                        : status == CheckerUsageStatus.UNUSED ? "NOT used"
-                        : "NOT used POSSIBLY ICC";
+                                                                        : status == CheckerUsageStatus.UNUSED
+                                                                          ? "NOT used"
+                                                                          : "NOT used POSSIBLY ICC";
                 System.out.printf("    %-50s  status: %-20s\n", perm, statusString);
             }
         }

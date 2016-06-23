@@ -10,6 +10,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm.infoflow.android;
 
+import heros.InterproceduralCFG;
 import org.oregonstate.droidperm.infoflow.android.source.DPAccessPathBasedSourceSinkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import soot.jimple.infoflow.android.resources.ARSCFileParser.AbstractResource;
 import soot.jimple.infoflow.android.resources.ARSCFileParser.StringResource;
 import soot.jimple.infoflow.android.resources.LayoutControl;
 import soot.jimple.infoflow.android.resources.LayoutFileParser;
+import soot.jimple.infoflow.android.source.AndroidSourceSinkManager;
 import soot.jimple.infoflow.android.source.parsers.xml.XMLSourceSinkParser;
 import soot.jimple.infoflow.cfg.BiDirICFGFactory;
 import soot.jimple.infoflow.config.IInfoflowConfig;
@@ -40,6 +42,7 @@ import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.ipc.IIPCManager;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.rifl.RIFLSourceSinkDefinitionProvider;
+import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.source.data.ISourceSinkDefinitionProvider;
 import soot.jimple.infoflow.source.data.SourceSinkDefinition;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
@@ -48,6 +51,8 @@ import soot.options.Options;
 import javax.activation.UnsupportedDataTypeException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -73,7 +78,7 @@ public class DPSetupApplication {
 	private final String additionalClasspath;
 	private ITaintPropagationWrapper taintWrapper;
 
-	private DPAccessPathBasedSourceSinkManager sourceSinkManager = null;
+	private DPAccessPathBasedSourceSinkManager sourceSinkManager;
 	private AndroidEntryPointCreator entryPointCreator = null;
 
 	private IInfoflowConfig sootConfig = new SootConfigForAndroid();
@@ -85,6 +90,7 @@ public class DPSetupApplication {
 
 	private Set<Stmt> collectedSources = null;
 	private Set<Stmt> collectedSinks = null;
+	private Infoflow infoflow;
 
 	/**
 	 * Creates a new instance of the {@link DPSetupApplication} class
@@ -165,16 +171,16 @@ public class DPSetupApplication {
 	/**
 	 * Prints the list of sinks registered with FlowDroud to stdout
 	 */
-	public void printSinks() {
+	public void printSinkDefinitions() {
 		if (this.sourceSinkProvider == null) {
 			System.err.println("Sinks not calculated yet");
 			return;
 		}
-		System.out.println("Sinks:");
+		System.out.println("Sink definitions:");
 		for (SourceSinkDefinition am : getSinks()) {
 			System.out.println(am.toString());
 		}
-		System.out.println("End of Sinks");
+		System.out.println("End of Sink definitions");
 	}
 
 	/**
@@ -199,18 +205,18 @@ public class DPSetupApplication {
 	}
 
 	/**
-	 * Prints the list of sources registered with FlowDroud to stdout
+	 * Prints the list of sources registered with FlowDroid to stdout
 	 */
-	public void printSources() {
+	public void printSourceDefinitions() {
 		if (this.sourceSinkProvider == null) {
 			System.err.println("Sources not calculated yet");
 			return;
 		}
-		System.out.println("Sources:");
+		System.out.println("Source definitions:");
 		for (SourceSinkDefinition am : getSources()) {
 			System.out.println(am.toString());
 		}
-		System.out.println("End of Sources");
+		System.out.println("End of Source definitions");
 	}
 
 	/**
@@ -711,13 +717,12 @@ public class DPSetupApplication {
 
 		System.out.println("Running data flow analysis on " + apkFileLocation + " with " + getSources().size()
 				+ " sources and " + getSinks().size() + " sinks...");
-		Infoflow info;
 		if (cfgFactory == null)
-			info = new Infoflow(androidJar, forceAndroidJar, null,
+			infoflow = new Infoflow(androidJar, forceAndroidJar, null,
 					new DefaultPathBuilderFactory(config.getPathBuilder(),
 							config.getComputeResultPaths()));
 		else
-			info = new Infoflow(androidJar, forceAndroidJar, cfgFactory,
+			infoflow = new Infoflow(androidJar, forceAndroidJar, cfgFactory,
 					new DefaultPathBuilderFactory(config.getPathBuilder(),
 							config.getComputeResultPaths()));
 
@@ -727,24 +732,24 @@ public class DPSetupApplication {
 		else
 			path = Scene.v().getAndroidJarPath(androidJar, apkFileLocation);
 
-		info.setTaintWrapper(taintWrapper);
+		infoflow.setTaintWrapper(taintWrapper);
 		if (onResultsAvailable != null)
-			info.addResultsAvailableHandler(onResultsAvailable);
+			infoflow.addResultsAvailableHandler(onResultsAvailable);
 
 		System.out.println("Starting infoflow computation...");
-		info.setConfig(config);
-		info.setSootConfig(sootConfig);
+		infoflow.setConfig(config);
+		infoflow.setSootConfig(sootConfig);
 		
 		if (null != ipcManager) {
-			info.setIPCManager(ipcManager);
+			infoflow.setIPCManager(ipcManager);
 		}
 
-		info.computeInfoflow(apkFileLocation, path, entryPointCreator, sourceSinkManager);
-		this.maxMemoryConsumption = info.getMaxMemoryConsumption();
-		this.collectedSources = info.getCollectedSources();
-		this.collectedSinks = info.getCollectedSinks();
+		infoflow.computeInfoflow(apkFileLocation, path, entryPointCreator, sourceSinkManager);
+		this.maxMemoryConsumption = infoflow.getMaxMemoryConsumption();
+		this.collectedSources = infoflow.getCollectedSources();
+		this.collectedSinks = infoflow.getCollectedSinks();
 
-		return info.getResults();
+		return infoflow.getResults();
 	}
 
 	private AndroidEntryPointCreator createEntryPointCreator() {
@@ -825,6 +830,35 @@ public class DPSetupApplication {
 	 */
 	public void setConfig(InfoflowAndroidConfiguration config) {
 		this.config = config;
+	}
+
+	/**
+	 * New in DroidPerm. Returns IInfoflowCFG object required to get source info.
+	 */
+	private IInfoflowCFG getCFG() {
+		try {
+			Field cfgField = Infoflow.class.getDeclaredField("iCfg");
+			cfgField.setAccessible(true);
+			return (IInfoflowCFG) cfgField.get(infoflow);
+
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * New in DroidPerm. Returns SourceInfo of a source.
+	 */
+	public AndroidSourceSinkManager.SourceType getSourceType(Stmt source) {
+		try {
+			Method getSourceTypeMethod = AndroidSourceSinkManager.class
+					.getDeclaredMethod("getSourceType", Stmt.class, InterproceduralCFG.class);
+			getSourceTypeMethod.setAccessible(true);
+			return (AndroidSourceSinkManager.SourceType)
+					getSourceTypeMethod.invoke(sourceSinkManager, source, getCFG());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 }
