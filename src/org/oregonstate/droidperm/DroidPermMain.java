@@ -10,6 +10,7 @@ package org.oregonstate.droidperm;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Adapted from FlowDroid Test class.
@@ -576,16 +578,22 @@ public class DroidPermMain {
     private static void printSourcesAndSinks(DPSetupApplication setupApplication) {
         if (config.getLogSourcesAndSinks()) {
             if (!setupApplication.getCollectedSources().isEmpty()) {
+                List<Stmt> sortedSources = setupApplication.getCollectedSources().stream()
+                        .sorted(new UnitComparator()).collect(Collectors.toList());
+
                 System.out.println("\nCollected sources:");
-                for (Stmt stmt : setupApplication.getCollectedSources()) {
+                for (Stmt stmt : sortedSources) {
                     System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
                     System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
                     System.out.println("\t\tSourceType: " + setupApplication.getSourceType(stmt));
                 }
             }
             if (!setupApplication.getCollectedSinks().isEmpty()) {
+                List<Stmt> sortedSinks = setupApplication.getCollectedSinks().stream()
+                        .sorted(new UnitComparator()).collect(Collectors.toList());
+
                 System.out.println("\nCollected sinks:");
-                for (Stmt stmt : setupApplication.getCollectedSinks()) {
+                for (Stmt stmt : sortedSinks) {
                     System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
                     System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
                 }
