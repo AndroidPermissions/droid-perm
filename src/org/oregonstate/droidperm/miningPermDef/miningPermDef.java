@@ -173,7 +173,7 @@ public class miningPermDef {
 
             String[] tokens = jaxbItem.getName().split(delimiters);
 
-            permissionDef.getTarget().setClassName(tokens[0]);
+            permissionDef.setClassName(tokens[0]);
 
             StringBuilder firstBuilder = new StringBuilder();
             for(int i = 1; i < tokens.length; i++) {
@@ -181,53 +181,76 @@ public class miningPermDef {
             }
 
             if(firstBuilder.toString().contains("<")) {
-                String delims = "[<>]+";
-                String[] token = firstBuilder.toString().split(delims);
-
-                StringBuilder secondBuilder = new StringBuilder();
-                for(int i = 0; i < token.length; i+=2) {
-                    if(i == 0) {
-                        secondBuilder.append(token[i] + " ");
-                    }
-                    else {
-                        secondBuilder.append(token[i]);
-                    }
-                }
-                permissionDef.getTarget().setMethodFieldName(secondBuilder.toString());
+                scrubJavaGenerics(permissionDef, firstBuilder);
             }
             else {
-                permissionDef.getTarget().setMethodFieldName(firstBuilder.toString());
+                permissionDef.setMethodFieldName(firstBuilder.toString().trim());
             }
 
-            if(permissionDef.getTarget().getMethodFieldName().contains("(")
-                    && permissionDef.getTarget().getMethodFieldName().contains(")")) {
-                permissionDef.getTarget().setTargetType(TargetType.Method);
+            if(permissionDef.getMethodFieldName().contains("(")
+                    && permissionDef.getMethodFieldName().contains(")")) {
+                permissionDef.setTargetType(TargetType.Method);
             }
             else {
-                permissionDef.getTarget().setTargetType(TargetType.Field);
+                permissionDef.setTargetType(TargetType.Field);
             }
 
             Iterator<JaxbAnnotation> jaxbAnnotationIterator = jaxbItem.getAnnotations().iterator();
-            while (jaxbAnnotationIterator.hasNext()) {
-                JaxbAnnotation jaxbAnnotation = jaxbAnnotationIterator.next();
-
-                Iterator<JaxbVal> jaxbValIterator = jaxbAnnotation.getVals().iterator();
-                while (jaxbValIterator.hasNext()) {
-                    JaxbVal jaxbVal = jaxbValIterator.next();
-
-                    if(!(jaxbVal.getName().contains("apis"))) {
-                        permissionDef.getTarget().addPermission(jaxbVal.getVal());
-                        if(jaxbVal.getName().contains("anyOf")) {
-                            permissionDef.getTarget().setPermissionRelationship("anyOf");
-                        }
-                        else {
-                            permissionDef.getTarget().setPermissionRelationship("allOf");
-                        }
-                    }
-                }
-            }
+            extractPermissions(permissionDef, jaxbAnnotationIterator);
 
             permissionDefList.addPermissionDef(permissionDef);
         }
+    }
+
+    private void extractPermissions(PermissionDef permissionDef, Iterator<JaxbAnnotation> jaxbAnnotationIterator) {
+        while (jaxbAnnotationIterator.hasNext()) {
+            JaxbAnnotation jaxbAnnotation = jaxbAnnotationIterator.next();
+
+            Iterator<JaxbVal> jaxbValIterator = jaxbAnnotation.getVals().iterator();
+            while (jaxbValIterator.hasNext()) {
+                JaxbVal jaxbVal = jaxbValIterator.next();
+
+                if(!(jaxbVal.getName().contains("apis"))) {
+                    String delims = "[{},\"]+";
+                    String[] tokens = jaxbVal.getVal().split(delims);
+
+                    for(int i = 0; i < tokens.length; i++) {
+                        Permission permission = new Permission();
+                        if(tokens[i].length() > 1) {
+                            permission.setName(tokens[i].toString().trim());
+                            if(jaxbAnnotation.getName().contains("Read")) {
+                                permission.setReadWrite("Read");
+                            }
+                            if(jaxbAnnotation.getName().contains("Write")) {
+                                permission.setReadWrite("Write");
+                            }
+                            permissionDef.addPermission(permission);
+                        }
+                    }
+                    if(jaxbVal.getName().contains("anyOf")) {
+                        permissionDef.setPermissionRelationship("anyOf");
+                    }
+                    else {
+                        permissionDef.setPermissionRelationship("allOf");
+                    }
+                }
+            }
+        }
+    }
+
+    private void scrubJavaGenerics(PermissionDef permissionDef, StringBuilder firstBuilder) {
+        String delims = "[<>]+";
+        String[] token = firstBuilder.toString().split(delims);
+
+        StringBuilder secondBuilder = new StringBuilder();
+        for(int i = 0; i < token.length; i+=2) {
+            if(i == 0) {
+                secondBuilder.append(token[i] + " ");
+            }
+            else {
+                secondBuilder.append(token[i]);
+            }
+        }
+        permissionDef.setMethodFieldName(secondBuilder.toString().trim());
     }
 }

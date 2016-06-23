@@ -160,8 +160,8 @@ public class DPAccessPathBasedSourceSinkManager extends AndroidSourceSinkManager
 			return false;
 				
 		// Get the sink definition
-		final String methodSignature = methodToSignature.getUnchecked(
-				sCallSite.getInvokeExpr().getMethod());
+		SootMethod calledMethodRef = sCallSite.getInvokeExpr().getMethod();
+		final String methodSignature = methodToSignature.getUnchecked(calledMethodRef);
 		SourceSinkDefinition def = sinkMethods.get(methodSignature);
 		if (def == null)
 			return false;
@@ -170,9 +170,8 @@ public class DPAccessPathBasedSourceSinkManager extends AndroidSourceSinkManager
 		// everything is tainted without looking at the access path. Only
 		// exception: separate compilation assumption
 		if (def.isEmpty())
-			return SystemClassHandler.isTaintVisible(sourceAccessPath,
-					sCallSite.getInvokeExpr().getMethod());
-		
+			return SystemClassHandler.isTaintVisible(sourceAccessPath, calledMethodRef);
+
 		// If we are only checking whether this statement can be a sink in
 		// general, we know this by now
 		if (sourceAccessPath == null)

@@ -11,16 +11,19 @@
 % General - don't work yet
 
 <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> _SINK_
-<java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
+% <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
 % <java.io.FileOutputStream: void <init>(java.lang.String)> -> _SINK_
 % <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> _SINK_
-% <java.io.FileOutputStream: void <init>(java.io.File)> -> _SINK_
+
+% When this one is enabled, 4 flows are detected. Otherwise - only one, not with all paths.
+<java.io.FileOutputStream: void <init>(java.io.File)> -> _SINK_
 
 % storage_basic app
 %=======================
 
-<edu.oregonstate.dp.test.BasicStoragePermActivity: java.io.File getExternalCacheDirWrap()> -> _SOURCE_
-<edu.oregonstate.dp.test.BasicStoragePermActivity: void newFileOutputStream(java.io.File)> -> _SINK_
+% Not required when --sysflows is enabled
+% <edu.oregonstate.dp.test.BasicStoragePermActivity: java.io.File getExternalCacheDirWrap()> -> _SOURCE_
+% <edu.oregonstate.dp.test.BasicStoragePermActivity: void newFileOutputStream(java.io.File)> -> _SINK_
 
 % perm-test app
 %=======================
