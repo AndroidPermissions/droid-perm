@@ -1,15 +1,16 @@
 % SOURCES
 %=======================
 
-<android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
+% NOT required both both with and without --sysflows. No effect for non-sysflows, duplicate flows for --sysflows.
+% <android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
 
-% Required when --sysflows is not used
+% Required both with and without --sysflows
 <android.content.ContextWrapper: java.io.File getExternalCacheDir()> -> _SOURCE_
 
 % SINKS
 %=======================
 
-% All 10 have to be registered for proper results, when --sysflows is not used.
+% All 10 required both with and without --sysflows
 
 <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> _SINK_
 <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
