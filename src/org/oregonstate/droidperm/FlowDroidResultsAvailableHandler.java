@@ -64,9 +64,17 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
             List<ResultSourceInfo> sortedSources = results.getResults().get(sink).stream()
                     .sorted(Comparator.comparing(ResultSourceInfo::getSource, new UnitComparator()))
                     .collect(Collectors.toList());
+
+            boolean firstSource = true;
             for (ResultSourceInfo source : sortedSources) {
                 Stmt sourceStmt = source.getSource();
                 SootMethod sourceContainerMethod = cfg.getMethodOf(sourceStmt);
+
+                if (firstSource) {
+                    firstSource = false;
+                } else {
+                    System.out.println("\n\n+----------------------------------------------------------------------");
+                }
                 System.out.println(""
                         + "| From source " + sourceStmt + " : " + sourceStmt.getJavaSourceStartLineNumber() + "\n"
                         + "| \tin " + sourceContainerMethod
