@@ -13,10 +13,6 @@
 % Test apps: perm-test, dp_basic_threads, others
 % ==================================
 
-<edu.oregonstate.dp.test.FileManager: java.lang.String getCachePath(java.net.URL)> -> WRITE_EXTERNAL_STORAGE
-<edu.oregonstate.dp.test.ThreadTestActivity: void sensitive()> -> DIAGNOSTIC
-<edu.oregonstate.dp.test.ExecutorTestActivity: void sensitive()> -> DIAGNOSTIC
-<edu.oregonstate.dp.test.LibCallbackExTestActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.MultiplePermActivity: void sensitive()> -> DIAGNOSTIC
 <edu.oregonstate.dp.test.PropagatedMultiplePermActivity: void sensitive()> -> DIAGNOSTIC
 
