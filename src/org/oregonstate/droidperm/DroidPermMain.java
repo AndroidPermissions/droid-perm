@@ -432,9 +432,10 @@ public class DroidPermMain {
             //toclean insert additional Soot options here
             setupApplication.setSootConfig(options -> {
                 options.set_keep_line_number(true);
-                if (noTaintWrapper) {
+                options.set_include_all(true);
+                /*if (noTaintWrapper) {
                     options.set_include_all(true);
-                }
+                }*/
 
                 //options.set_verbose(true);//for low-level debugging of Soot.
             });
