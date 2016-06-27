@@ -11,7 +11,6 @@
 package org.oregonstate.droidperm.infoflow.android;
 
 import heros.InterproceduralCFG;
-import org.oregonstate.droidperm.infoflow.android.source.DPAccessPathBasedSourceSinkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -31,6 +30,7 @@ import soot.jimple.infoflow.android.resources.ARSCFileParser.AbstractResource;
 import soot.jimple.infoflow.android.resources.ARSCFileParser.StringResource;
 import soot.jimple.infoflow.android.resources.LayoutControl;
 import soot.jimple.infoflow.android.resources.LayoutFileParser;
+import soot.jimple.infoflow.android.source.AccessPathBasedSourceSinkManager;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager;
 import soot.jimple.infoflow.android.source.parsers.xml.XMLSourceSinkParser;
 import soot.jimple.infoflow.cfg.BiDirICFGFactory;
@@ -78,7 +78,7 @@ public class DPSetupApplication {
 	private final String additionalClasspath;
 	private ITaintPropagationWrapper taintWrapper;
 
-	private DPAccessPathBasedSourceSinkManager sourceSinkManager;
+	private AccessPathBasedSourceSinkManager sourceSinkManager;
 	private AndroidEntryPointCreator entryPointCreator = null;
 
 	private IInfoflowConfig sootConfig = new SootConfigForAndroid();
@@ -413,7 +413,7 @@ public class DPSetupApplication {
 			for (Set<SootMethodAndClass> methods : this.callbackMethods.values())
 				callbacks.addAll(methods);
 
-			sourceSinkManager = new DPAccessPathBasedSourceSinkManager(
+			sourceSinkManager = new AccessPathBasedSourceSinkManager(
 					this.sourceSinkProvider.getSources(),
 					this.sourceSinkProvider.getSinks(),
 					callbacks,
@@ -629,7 +629,7 @@ public class DPSetupApplication {
 	 * 
 	 * @return FlowDroid's source/sink manager
 	 */
-	public DPAccessPathBasedSourceSinkManager getSourceSinkManager() {
+	public AccessPathBasedSourceSinkManager getSourceSinkManager() {
 		return sourceSinkManager;
 	}
 	

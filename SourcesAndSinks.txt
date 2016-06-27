@@ -1,29 +1,32 @@
 % SOURCES
 %=======================
 
-% General - don't work yet
+% NOT required both both with and without --sysflows. No effect for non-sysflows, duplicate flows for --sysflows.
+% <android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
 
-<android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
+% Required both with and without --sysflows
+<android.content.ContextWrapper: java.io.File getExternalCacheDir()> -> _SOURCE_
 
 % SINKS
 %=======================
 
-% General - don't work yet
+% All 10 required both with and without --sysflows
 
 <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> _SINK_
-% <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
-% <java.io.FileOutputStream: void <init>(java.lang.String)> -> _SINK_
-% <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> _SINK_
-
-% When this one is enabled, 4 flows are detected. Otherwise - only one, not with all paths.
+<java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> _SINK_
+<java.io.FileOutputStream: void <init>(java.lang.String)> -> _SINK_
+<java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> _SINK_
 <java.io.FileOutputStream: void <init>(java.io.File)> -> _SINK_
 
-% storage_basic app
-%=======================
+<java.io.FileWriter: void <init>(java.io.FileDescriptor)> -> _SINK_
+<java.io.FileWriter: void <init>(java.io.File,boolean)> -> _SINK_
+<java.io.FileWriter: void <init>(java.lang.String)> -> _SINK_
+<java.io.FileWriter: void <init>(java.lang.String,boolean)> -> _SINK_
+<java.io.FileWriter: void <init>(java.io.File)> -> _SINK_
 
-% Not required when --sysflows is enabled
-% <edu.oregonstate.dp.test.BasicStoragePermActivity: java.io.File getExternalCacheDirWrap()> -> _SOURCE_
-% <edu.oregonstate.dp.test.BasicStoragePermActivity: void newFileOutputStream(java.io.File)> -> _SINK_
+% storage_taint_prop app
+%=======================
+<edu.oregonstate.dp.test.StorageTaintPropActivity: java.lang.String source()> -> _SOURCE_
 
 % perm-test app
 %=======================
