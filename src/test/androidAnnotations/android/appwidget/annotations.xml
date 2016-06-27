@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.appwidget.AppWidgetHost void startAppWidgetConfigureActivityForResult(android.app.Activity, int, int, int, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.appwidget.AppWidgetHost void startAppWidgetConfigureActivityForResult(android.app.Activity, int, int, int, android.os.Bundle) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.appwidget.AppWidgetManager java.util.List&lt;android.appwidget.AppWidgetProviderInfo&gt; getInstalledProvidersForProfile(android.os.UserHandle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.appwidget.AppWidgetProviderInfo android.graphics.drawable.Drawable loadIcon(android.content.Context, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.appwidget.AppWidgetProviderInfo android.graphics.drawable.Drawable loadPreviewImage(android.content.Context, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+</root>
+

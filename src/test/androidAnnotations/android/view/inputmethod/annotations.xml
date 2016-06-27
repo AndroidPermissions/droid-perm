@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.view.inputmethod.InputMethodManager boolean setCurrentInputMethodSubtype(android.view.inputmethod.InputMethodSubtype)">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="value" val="&quot;android.permission.WRITE_SECURE_SETTINGS&quot;" />
+    </annotation>
+  </item>
+  <item name="android.view.inputmethod.InputMethodSubtype java.lang.String getLocale()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+</root>
+

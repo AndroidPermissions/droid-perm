@@ -1,4 +1,6 @@
-package org.oregonstate.droidperm.miningPermDef;
+package test;
+
+import org.oregonstate.droidperm.miningPermDef.*;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -17,8 +19,8 @@ public class testMiningPermDef {
     public void testUnmarshallXML() throws JAXBException {
         miningPermDef m = new miningPermDef();
         JaxbItemList jaxbItems = new JaxbItemList();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations.xml");
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations2.xml");
+        File f = new File("src\\test\\annotations\\annotations.xml");
+        File f1 = new File("src\\test\\annotations\\annotations2.xml");
 
         jaxbItems.setItem(m.unmarshallXML(f).getItem());
 
@@ -29,7 +31,7 @@ public class testMiningPermDef {
     public void testMarshallXML() throws JAXBException {
         miningPermDef m = new miningPermDef();
         JaxbItemList jaxbItemList = new JaxbItemList();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations1.xml");
+        File f = new File("src\\test\\annotations\\annotations1.xml");
 
         JaxbItem item = new JaxbItem();
         JaxbAnnotation annotation = new JaxbAnnotation();
@@ -56,8 +58,8 @@ public class testMiningPermDef {
         JaxbItemList filteredJaxbItems = new JaxbItemList();
         JaxbItem jaxbItem = null;
 
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations.xml");
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations3.xml");
+        File f = new File("src\\test\\annotations\\annotations.xml");
+        File f1 = new File("src\\test\\annotations\\annotations3.xml");
 
         jaxbItems.setItem(m.unmarshallXML(f).getItem());
 
@@ -79,7 +81,7 @@ public class testMiningPermDef {
     public void testIterateFiles() {
         miningPermDef m = new miningPermDef();
 
-        m.iterateFiles("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
+        m.iterateFiles("src\\test\\androidAnnotations");
 
         assertEquals(76, m.getAnnotationFiles().size());
     }
@@ -87,9 +89,9 @@ public class testMiningPermDef {
     @Test
     public void testCombineItems() throws JAXBException {
         miningPermDef m = new miningPermDef();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations4.xml");
+        File f = new File("src\\test\\annotations\\annotations4.xml");
 
-        m.combineItems("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
+        m.combineItems("src\\test\\androidAnnotations");
 
         m.marshallXML(m.filterItemList(m.getCombinedItems()), f);
     }
@@ -98,17 +100,17 @@ public class testMiningPermDef {
     public void testMinePermDefs() throws JAXBException {
         miningPermDef m = new miningPermDef();
 
-        m.minePermDefs("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations",
-                "C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\minedpermdefs.xml");
+        m.minePermDefs("src\\test\\androidAnnotations",
+                "src\\test\\annotations\\minedpermdefs.xml");
     }
 
     @Test
     public void testItemToPermDef() throws JAXBException {
         miningPermDef m = new miningPermDef();
         PermissionDefList permissionDefList = new PermissionDefList();
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations5.xml");
+        File f1 = new File("src\\test\\annotations\\annotations5.xml");
 
-        m.combineItems("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
+        m.combineItems("src\\test\\androidAnnotations");
         m.setCombinedItems(m.filterItemList(m.getCombinedItems()));
 
         m.ItemsToPermissionDefs(m.getCombinedItems());

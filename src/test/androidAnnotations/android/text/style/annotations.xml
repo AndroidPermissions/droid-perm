@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.text.style.ForegroundColorSpan ForegroundColorSpan(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.text.style.ForegroundColorSpan int getForegroundColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.text.style.ImageSpan ImageSpan(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.text.style.ImageSpan ImageSpan(android.content.Context, int, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.text.style.QuoteSpan QuoteSpan(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.text.style.QuoteSpan int getColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+</root>
+

@@ -32,7 +32,7 @@ public class miningPermDef {
      * @return A JaxbItemList object
      * @throws JAXBException
      */
-    protected static JaxbItemList unmarshallXML (File file) throws JAXBException {
+    public static JaxbItemList unmarshallXML (File file) throws JAXBException {
 
         JAXBContext jbContext  = JAXBContext.newInstance(JaxbItemList.class);
         Unmarshaller unmarshaller = jbContext.createUnmarshaller();
@@ -46,7 +46,7 @@ public class miningPermDef {
      * @param file file to marshall the data into
      * @throws JAXBException
      */
-    protected static void marshallXML(JaxbItemList data, File file) throws JAXBException {
+    public static void marshallXML(JaxbItemList data, File file) throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(JaxbItemList.class);
         Marshaller jbMarshaller = jaxbContext.createMarshaller();
 
@@ -71,7 +71,7 @@ public class miningPermDef {
      * @return a filtered JaxbItemList
      * @throws JAXBException
      */
-    protected static JaxbItemList filterItemList(JaxbItemList unfilteredItems) throws JAXBException {
+    public static JaxbItemList filterItemList(JaxbItemList unfilteredItems) throws JAXBException {
         JaxbItemList filteredItems = new JaxbItemList();
         JaxbItem jaxbItem;
 
@@ -94,7 +94,7 @@ public class miningPermDef {
      * Helper to look through all of the files in AndroidAnnotations directory
      * @param absolutePath path to the AndroidAnnotations directory
      */
-    protected void iterateFiles(String absolutePath) {
+    public void iterateFiles(String absolutePath) {
         File[] files = new File(absolutePath).listFiles();
         showFiles(files);
     }
@@ -124,7 +124,7 @@ public class miningPermDef {
      * into a single xml file.
      * @throws JAXBException
      */
-    protected void combineItems(String androidAnnotationsLocation) throws JAXBException {
+    public void combineItems(String androidAnnotationsLocation) throws JAXBException {
         List<JaxbItemList> jaxbItemLists = new ArrayList<>();
 
         iterateFiles(androidAnnotationsLocation);

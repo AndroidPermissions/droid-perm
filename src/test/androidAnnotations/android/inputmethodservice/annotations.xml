@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.inputmethodservice.InputMethodService boolean onEvaluateInputViewShown()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.inputmethodservice.InputMethodService void showStatusIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.inputmethodservice.Keyboard Keyboard(android.content.Context, int, int) 1">
+    <annotation name="android.support.annotation.XmlRes" />
+  </item>
+  <item name="android.inputmethodservice.Keyboard Keyboard(android.content.Context, int, int, int, int) 1">
+    <annotation name="android.support.annotation.XmlRes" />
+  </item>
+</root>
+
