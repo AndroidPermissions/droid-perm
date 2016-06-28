@@ -8,7 +8,6 @@ import static org.junit.Assert.*;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
@@ -90,31 +89,25 @@ public class testMiningPermDef {
     public void testCombineItems() throws JAXBException {
         miningPermDef m = new miningPermDef();
         File f = new File("src\\test\\annotations\\annotations4.xml");
+        JaxbItemList jaxbItemList;
 
-        m.combineItems("src\\test\\androidAnnotations");
+        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
 
-        m.marshallXML(m.filterItemList(m.getCombinedItems()), f);
-    }
-
-    @Test
-    public void testMinePermDefs() throws JAXBException {
-        miningPermDef m = new miningPermDef();
-
-        m.minePermDefs("src\\test\\androidAnnotations",
-                "src\\test\\annotations\\minedpermdefs.xml");
+        m.marshallXML(m.filterItemList(jaxbItemList), f);
     }
 
     @Test
     public void testItemToPermDef() throws JAXBException {
         miningPermDef m = new miningPermDef();
-        PermissionDefList permissionDefList = new PermissionDefList();
+        PermissionDefList permissionDefList;
+        JaxbItemList jaxbItemList;
         File f1 = new File("src\\test\\annotations\\annotations5.xml");
 
-        m.combineItems("src\\test\\androidAnnotations");
-        m.setCombinedItems(m.filterItemList(m.getCombinedItems()));
+        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
+        jaxbItemList = m.filterItemList(jaxbItemList);
 
-        m.ItemsToPermissionDefs(m.getCombinedItems());
+        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
 
-        m.marshallPermDef(m.getPermissionDefList(), f1);
+        m.marshallPermDef(permissionDefList, f1);
     }
 }

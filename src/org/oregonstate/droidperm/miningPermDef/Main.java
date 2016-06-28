@@ -1,7 +1,5 @@
 package org.oregonstate.droidperm.miningPermDef;
 
-import soot.JavaClassProvider;
-
 import javax.xml.bind.JAXBException;
 import java.io.File;
 
@@ -13,11 +11,13 @@ public class Main {
     public static void main(final String[] args) throws JAXBException {
         miningPermDef m = new miningPermDef();
         File saveFile = new File(args[1]);
+        JaxbItemList jaxbItemList;
+        PermissionDefList permissionDefList;
 
-        m.combineItems(args[0]);
-        m.setCombinedItems(m.filterItemList(m.getCombinedItems()));
-        m.ItemsToPermissionDefs(m.getCombinedItems());
+        jaxbItemList = m.combineItems(args[0]);
+        jaxbItemList = m.filterItemList(jaxbItemList);
+        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
 
-        m.marshallPermDef(m.getPermissionDefList(), saveFile);
+        m.marshallPermDef(permissionDefList, saveFile);
     }
 }
