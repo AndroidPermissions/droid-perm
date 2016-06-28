@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.widget.AbsListView int getCacheColorHint()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.AbsListView void setCacheColorHint(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.AbsListView void setSelector(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.AbsSeekBar android.content.res.ColorStateList getThumbTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AbsSeekBar android.graphics.PorterDuff.Mode getThumbTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AbsSeekBar void setThumbTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AbsSeekBar void setThumbTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ActionMenuView android.graphics.drawable.Drawable getOverflowIcon()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ActionMenuView void setOverflowIcon(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ActionMenuView void setPopupTheme(int) 0">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.AdapterView android.widget.AdapterView.OnItemClickListener getOnItemClickListener()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AdapterView android.widget.AdapterView.OnItemSelectedListener getOnItemSelectedListener()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AdapterView void setOnItemClickListener(android.widget.AdapterView.OnItemClickListener) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.AdapterView void setOnItemSelectedListener(android.widget.AdapterView.OnItemSelectedListener) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, T[]) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, T[]) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int) 2">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, T[]) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, T[]) 2">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, T[]) 3">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, java.util.List&lt;T&gt;) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, java.util.List&lt;T&gt;) 2">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, int, java.util.List&lt;T&gt;) 3">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, java.util.List&lt;T&gt;) 1">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter ArrayAdapter(android.content.Context, int, java.util.List&lt;T&gt;) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ArrayAdapter android.widget.ArrayAdapter&lt;java.lang.CharSequence&gt; createFromResource(android.content.Context, int, int) 1">
+    <annotation name="android.support.annotation.ArrayRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter android.widget.ArrayAdapter&lt;java.lang.CharSequence&gt; createFromResource(android.content.Context, int, int) 2">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.ArrayAdapter void setDropDownViewResource(int) 0">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.widget.AutoCompleteTextView void setDropDownBackgroundResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.CalendarView int getFocusedMonthDateColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView int getSelectedWeekBackgroundColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView int getUnfocusedMonthDateColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView int getWeekNumberColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView int getWeekSeparatorLineColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView void setFocusedMonthDateColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView void setSelectedDateVerticalBar(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.CalendarView void setSelectedWeekBackgroundColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView void setUnfocusedMonthDateColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView void setWeekNumberColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CalendarView void setWeekSeparatorLineColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.CheckedTextView android.content.res.ColorStateList getCheckMarkTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CheckedTextView android.graphics.PorterDuff.Mode getCheckMarkTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CheckedTextView void setCheckMarkDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CheckedTextView void setCheckMarkDrawable(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.CheckedTextView void setCheckMarkTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CheckedTextView void setCheckMarkTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton android.content.res.ColorStateList getButtonTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton android.graphics.PorterDuff.Mode getButtonTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton android.graphics.drawable.Drawable getButtonDrawable()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton void setButtonDrawable(android.graphics.drawable.Drawable)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton void setButtonDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton void setButtonDrawable(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.CompoundButton void setButtonTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CompoundButton void setButtonTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.CursorAdapter android.database.Cursor runQueryOnBackgroundThread(java.lang.CharSequence)">
+    <annotation name="android.support.annotation.WorkerThread" />
+  </item>
+  <item name="android.widget.EdgeEffect int getColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.EdgeEffect void setColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.FrameLayout FrameLayout(android.content.Context, android.util.AttributeSet) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.FrameLayout FrameLayout(android.content.Context, android.util.AttributeSet, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.FrameLayout FrameLayout(android.content.Context, android.util.AttributeSet, int, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.GridLayout int getAlignmentMode()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridLayout.ALIGN_BOUNDS, android.widget.GridLayout.ALIGN_MARGINS}" />
+    </annotation>
+  </item>
+  <item name="android.widget.GridLayout int getOrientation()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridLayout.HORIZONTAL, android.widget.GridLayout.VERTICAL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.GridLayout void setAlignmentMode(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridLayout.ALIGN_BOUNDS, android.widget.GridLayout.ALIGN_MARGINS}" />
+    </annotation>
+  </item>
+  <item name="android.widget.GridLayout void setOrientation(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridLayout.HORIZONTAL, android.widget.GridLayout.VERTICAL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.GridView int getStretchMode()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridView.NO_STRETCH, android.widget.GridView.STRETCH_SPACING, android.widget.GridView.STRETCH_COLUMN_WIDTH, android.widget.GridView.STRETCH_SPACING_UNIFORM}" />
+    </annotation>
+  </item>
+  <item name="android.widget.GridView void setStretchMode(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.GridView.NO_STRETCH, android.widget.GridView.STRETCH_SPACING, android.widget.GridView.STRETCH_COLUMN_WIDTH, android.widget.GridView.STRETCH_SPACING_UNIFORM}" />
+    </annotation>
+  </item>
+  <item name="android.widget.ImageSwitcher void setImageResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.ImageView ImageView(android.content.Context, android.util.AttributeSet) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView ImageView(android.content.Context, android.util.AttributeSet, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView ImageView(android.content.Context, android.util.AttributeSet, int, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView android.content.res.ColorStateList getImageTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView android.graphics.PorterDuff.Mode getImageTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView void setImageDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView void setImageIcon(android.graphics.drawable.Icon) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView void setImageResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.ImageView void setImageTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView void setImageTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ImageView void setImageURI(android.net.Uri) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.LinearLayout LinearLayout(android.content.Context, android.util.AttributeSet) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.LinearLayout LinearLayout(android.content.Context, android.util.AttributeSet, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.LinearLayout int getOrientation()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.LinearLayout.HORIZONTAL, android.widget.LinearLayout.VERTICAL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.LinearLayout int getShowDividers()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.LinearLayout.SHOW_DIVIDER_NONE, android.widget.LinearLayout.SHOW_DIVIDER_BEGINNING, android.widget.LinearLayout.SHOW_DIVIDER_MIDDLE, android.widget.LinearLayout.SHOW_DIVIDER_END}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.widget.LinearLayout void onRtlPropertiesChanged(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.view.View.LAYOUT_DIRECTION_LTR, android.view.View.LAYOUT_DIRECTION_RTL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.LinearLayout void setOrientation(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.LinearLayout.HORIZONTAL, android.widget.LinearLayout.VERTICAL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.LinearLayout void setShowDividers(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.LinearLayout.SHOW_DIVIDER_NONE, android.widget.LinearLayout.SHOW_DIVIDER_BEGINNING, android.widget.LinearLayout.SHOW_DIVIDER_MIDDLE, android.widget.LinearLayout.SHOW_DIVIDER_END}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.widget.LinearLayout.LayoutParams gravity">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.view.Gravity.NO_GRAVITY, android.view.Gravity.TOP, android.view.Gravity.BOTTOM, android.view.Gravity.LEFT, android.view.Gravity.RIGHT, android.view.Gravity.START, android.view.Gravity.END, android.view.Gravity.CENTER_VERTICAL, android.view.Gravity.FILL_VERTICAL, android.view.Gravity.CENTER_HORIZONTAL, android.view.Gravity.FILL_HORIZONTAL, android.view.Gravity.CENTER, android.view.Gravity.FILL}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.widget.ListView android.graphics.drawable.Drawable getDivider()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ListView android.view.View findViewTraversal(int) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.ListView void setDivider(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.NumberPicker void drawableStateChanged()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.widget.NumberPicker void jumpDrawablesToCurrentState()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.widget.NumberPicker.OnScrollListener void onScrollStateChange(android.widget.NumberPicker, int) 1">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.NumberPicker.OnScrollListener.SCROLL_STATE_IDLE, android.widget.NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL, android.widget.NumberPicker.OnScrollListener.SCROLL_STATE_FLING}" />
+    </annotation>
+  </item>
+  <item name="android.widget.PopupMenu void inflate(int) 0">
+    <annotation name="android.support.annotation.MenuRes" />
+  </item>
+  <item name="android.widget.PopupWindow int getMaxAvailableHeight(android.view.View) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.PopupWindow int getMaxAvailableHeight(android.view.View, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ProgressBar android.content.res.ColorStateList getIndeterminateTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.content.res.ColorStateList getProgressBackgroundTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.content.res.ColorStateList getProgressTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.content.res.ColorStateList getSecondaryProgressTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.graphics.PorterDuff.Mode getIndeterminateTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.graphics.PorterDuff.Mode getProgressBackgroundTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.graphics.PorterDuff.Mode getProgressTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar android.graphics.PorterDuff.Mode getSecondaryProgressTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setIndeterminateTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setIndeterminateTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setInterpolator(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.InterpolatorRes" />
+  </item>
+  <item name="android.widget.ProgressBar void setProgressBackgroundTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setProgressBackgroundTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setProgressTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setProgressTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setSecondaryProgressTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ProgressBar void setSecondaryProgressTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.RadioGroup int getCheckedRadioButtonId()">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.RadioGroup void check(int) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.RadioGroup.OnCheckedChangeListener void onCheckedChanged(android.widget.RadioGroup, int) 1">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.widget.RemoteViews void setTextColor(int, int) 1">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.SearchView java.lang.CharSequence getQueryHint()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.SearchView void setQueryHint(java.lang.CharSequence) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Spinner void setPopupBackgroundResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.Switch android.content.res.ColorStateList getThumbTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch android.content.res.ColorStateList getTrackTintList()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch android.graphics.PorterDuff.Mode getThumbTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch android.graphics.PorterDuff.Mode getTrackTintMode()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch void setSwitchTextAppearance(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.Switch void setThumbResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.Switch void setThumbTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch void setThumbTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch void setTrackResource(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.Switch void setTrackTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Switch void setTrackTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TabWidget void setDividerDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TabWidget void setDividerDrawable(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TabWidget void setLeftStripDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TabWidget void setLeftStripDrawable(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TabWidget void setRightStripDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TabWidget void setRightStripDrawable(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView TextView(android.content.Context, android.util.AttributeSet) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView TextView(android.content.Context, android.util.AttributeSet, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView TextView(android.content.Context, android.util.AttributeSet, int, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView android.graphics.drawable.Drawable[] getCompoundDrawables()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TextView android.graphics.drawable.Drawable[] getCompoundDrawablesRelative()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TextView int getBreakStrategy()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.text.Layout.BREAK_STRATEGY_SIMPLE, android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY, android.text.Layout.BREAK_STRATEGY_BALANCED}" />
+    </annotation>
+  </item>
+  <item name="android.widget.TextView int getCurrentHintTextColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView int getCurrentTextColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView int getHighlightColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView int getHyphenationFrequency()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.text.Layout.HYPHENATION_FREQUENCY_NORMAL, android.text.Layout.HYPHENATION_FREQUENCY_FULL, android.text.Layout.HYPHENATION_FREQUENCY_NONE}" />
+    </annotation>
+  </item>
+  <item name="android.widget.TextView int getShadowColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView java.lang.String getFontFeatureSettings()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView java.util.Locale getTextLocale()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TextView void setBreakStrategy(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.text.Layout.BREAK_STRATEGY_SIMPLE, android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY, android.text.Layout.BREAK_STRATEGY_BALANCED}" />
+    </annotation>
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawableTintList(android.content.res.ColorStateList) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawableTintMode(android.graphics.PorterDuff.Mode) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawables(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawables(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawables(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawables(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelative(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelative(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelative(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelative(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(int, int, int, int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(int, int, int, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(int, int, int, int) 2">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesRelativeWithIntrinsicBounds(int, int, int, int) 3">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable, android.graphics.drawable.Drawable) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(int, int, int, int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(int, int, int, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(int, int, int, int) 2">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setCompoundDrawablesWithIntrinsicBounds(int, int, int, int) 3">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.TextView void setFontFeatureSettings(java.lang.String) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TextView void setHighlightColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView void setHint(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.TextView void setHintTextColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView void setHyphenationFrequency(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.text.Layout.HYPHENATION_FREQUENCY_NORMAL, android.text.Layout.HYPHENATION_FREQUENCY_FULL, android.text.Layout.HYPHENATION_FREQUENCY_NONE}" />
+    </annotation>
+  </item>
+  <item name="android.widget.TextView void setInputExtras(int) 0">
+    <annotation name="android.support.annotation.XmlRes" />
+  </item>
+  <item name="android.widget.TextView void setLinkTextColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView void setText(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.TextView void setText(int, android.widget.TextView.BufferType) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.TextView void setTextAppearance(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.TextView void setTextAppearance(int) 0">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.TextView void setTextColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.TextView void setTextLocale(java.util.Locale) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ThemedSpinnerAdapter android.content.res.Resources.Theme getDropDownViewTheme()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.ThemedSpinnerAdapter void setDropDownViewTheme(android.content.res.Resources.Theme) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.TimePicker java.lang.Integer getCurrentHour()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TimePicker java.lang.Integer getCurrentMinute()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TimePicker void setCurrentHour(java.lang.Integer) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TimePicker void setCurrentMinute(java.lang.Integer) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.TimePicker void setIs24HourView(java.lang.Boolean) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.Toast android.widget.Toast makeText(android.content.Context, int, int) 1">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toast android.widget.Toast makeText(android.content.Context, int, int) 2">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.Toast.LENGTH_SHORT, android.widget.Toast.LENGTH_LONG}" />
+    </annotation>
+  </item>
+  <item name="android.widget.Toast android.widget.Toast makeText(android.content.Context, java.lang.CharSequence, int) 2">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.Toast.LENGTH_SHORT, android.widget.Toast.LENGTH_LONG}" />
+    </annotation>
+  </item>
+  <item name="android.widget.Toast int getDuration()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.Toast.LENGTH_SHORT, android.widget.Toast.LENGTH_LONG}" />
+    </annotation>
+  </item>
+  <item name="android.widget.Toast void setDuration(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.widget.Toast.LENGTH_SHORT, android.widget.Toast.LENGTH_LONG}" />
+    </annotation>
+  </item>
+  <item name="android.widget.Toast void setText(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toolbar android.graphics.drawable.Drawable getNavigationIcon()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar android.graphics.drawable.Drawable getOverflowIcon()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar java.lang.CharSequence getNavigationContentDescription()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar void inflateMenu(int) 0">
+    <annotation name="android.support.annotation.MenuRes" />
+  </item>
+  <item name="android.widget.Toolbar void onRtlPropertiesChanged(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.view.View.LAYOUT_DIRECTION_LTR, android.view.View.LAYOUT_DIRECTION_RTL}" />
+    </annotation>
+  </item>
+  <item name="android.widget.Toolbar void setLogo(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.Toolbar void setLogoDescription(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toolbar void setNavigationContentDescription(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toolbar void setNavigationContentDescription(java.lang.CharSequence) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar void setNavigationIcon(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar void setNavigationIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.widget.Toolbar void setOverflowIcon(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.widget.Toolbar void setPopupTheme(int) 0">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.Toolbar void setSubtitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toolbar void setSubtitleTextAppearance(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.Toolbar void setSubtitleTextColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.Toolbar void setTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.widget.Toolbar void setTitleTextAppearance(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.widget.Toolbar void setTitleTextColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.widget.Toolbar.LayoutParams LayoutParams(android.content.Context, android.util.AttributeSet) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.widget.ViewAnimator void setInAnimation(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.AnimRes" />
+  </item>
+  <item name="android.widget.ViewAnimator void setOutAnimation(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.AnimRes" />
+  </item>
+</root>
+

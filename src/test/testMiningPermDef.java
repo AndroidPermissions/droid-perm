@@ -1,4 +1,6 @@
-package org.oregonstate.droidperm.miningPermDef;
+package test;
+
+import org.oregonstate.droidperm.miningPermDef.*;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -6,7 +8,6 @@ import static org.junit.Assert.*;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
@@ -17,8 +18,8 @@ public class testMiningPermDef {
     public void testUnmarshallXML() throws JAXBException {
         miningPermDef m = new miningPermDef();
         JaxbItemList jaxbItems = new JaxbItemList();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations.xml");
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations2.xml");
+        File f = new File("src\\test\\annotations\\annotations.xml");
+        File f1 = new File("src\\test\\annotations\\annotations2.xml");
 
         jaxbItems.setItem(m.unmarshallXML(f).getItem());
 
@@ -29,7 +30,7 @@ public class testMiningPermDef {
     public void testMarshallXML() throws JAXBException {
         miningPermDef m = new miningPermDef();
         JaxbItemList jaxbItemList = new JaxbItemList();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations1.xml");
+        File f = new File("src\\test\\annotations\\annotations1.xml");
 
         JaxbItem item = new JaxbItem();
         JaxbAnnotation annotation = new JaxbAnnotation();
@@ -56,8 +57,8 @@ public class testMiningPermDef {
         JaxbItemList filteredJaxbItems = new JaxbItemList();
         JaxbItem jaxbItem = null;
 
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations.xml");
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations3.xml");
+        File f = new File("src\\test\\annotations\\annotations.xml");
+        File f1 = new File("src\\test\\annotations\\annotations3.xml");
 
         jaxbItems.setItem(m.unmarshallXML(f).getItem());
 
@@ -79,7 +80,7 @@ public class testMiningPermDef {
     public void testIterateFiles() {
         miningPermDef m = new miningPermDef();
 
-        m.iterateFiles("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
+        m.iterateFiles("src\\test\\androidAnnotations");
 
         assertEquals(76, m.getAnnotationFiles().size());
     }
@@ -87,32 +88,26 @@ public class testMiningPermDef {
     @Test
     public void testCombineItems() throws JAXBException {
         miningPermDef m = new miningPermDef();
-        File f = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations4.xml");
+        File f = new File("src\\test\\annotations\\annotations4.xml");
+        JaxbItemList jaxbItemList;
 
-        m.combineItems("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
+        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
 
-        m.marshallXML(m.filterItemList(m.getCombinedItems()), f);
-    }
-
-    @Test
-    public void testMinePermDefs() throws JAXBException {
-        miningPermDef m = new miningPermDef();
-
-        m.minePermDefs("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations",
-                "C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\minedpermdefs.xml");
+        m.marshallXML(m.filterItemList(jaxbItemList), f);
     }
 
     @Test
     public void testItemToPermDef() throws JAXBException {
         miningPermDef m = new miningPermDef();
-        PermissionDefList permissionDefList = new PermissionDefList();
-        File f1 = new File("C:\\Users\\harde\\DroidPerm\\DroidPerm\\droid-perm\\src\\org\\oregonstate\\droidperm\\miningPermDef\\annotations5.xml");
+        PermissionDefList permissionDefList;
+        JaxbItemList jaxbItemList;
+        File f1 = new File("src\\test\\annotations\\annotations5.xml");
 
-        m.combineItems("C:\\Users\\harde\\Documents\\School Work\\OSU\\2015+2016\\Summer\\Research\\androidAnnotations");
-        m.setCombinedItems(m.filterItemList(m.getCombinedItems()));
+        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
+        jaxbItemList = m.filterItemList(jaxbItemList);
 
-        m.ItemsToPermissionDefs(m.getCombinedItems());
+        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
 
-        m.marshallPermDef(m.getPermissionDefList(), f1);
+        m.marshallPermDef(permissionDefList, f1);
     }
 }

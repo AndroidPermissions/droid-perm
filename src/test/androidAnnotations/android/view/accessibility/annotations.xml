@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.view.accessibility.AccessibilityManager boolean addAccessibilityStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityStateChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.AccessibilityManager boolean addTouchExplorationStateChangeListener(android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.AccessibilityManager boolean removeAccessibilityStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityStateChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.AccessibilityManager boolean removeTouchExplorationStateChangeListener(android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction AccessibilityAction(int, java.lang.CharSequence) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager android.view.accessibility.CaptioningManager.CaptionStyle getUserStyle()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager java.util.Locale getLocale()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager void addCaptioningChangeListener(android.view.accessibility.CaptioningManager.CaptioningChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager void removeCaptioningChangeListener(android.view.accessibility.CaptioningManager.CaptioningChangeListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager.CaptionStyle android.graphics.Typeface getTypeface()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager.CaptioningChangeListener void onLocaleChanged(java.util.Locale) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.view.accessibility.CaptioningManager.CaptioningChangeListener void onUserStyleChanged(android.view.accessibility.CaptioningManager.CaptionStyle) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+</root>
+

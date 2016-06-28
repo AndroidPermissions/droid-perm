@@ -1,0 +1,823 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.app.ActionBar int getNavigationMode()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.ActionBar.NAVIGATION_MODE_STANDARD, android.app.ActionBar.NAVIGATION_MODE_LIST, android.app.ActionBar.NAVIGATION_MODE_TABS}" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar void setBackgroundDrawable(android.graphics.drawable.Drawable) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.ActionBar void setCustomView(int) 0">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.app.ActionBar void setDisplayOptions(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.ActionBar.DISPLAY_USE_LOGO, android.app.ActionBar.DISPLAY_SHOW_HOME, android.app.ActionBar.DISPLAY_HOME_AS_UP, android.app.ActionBar.DISPLAY_SHOW_TITLE, android.app.ActionBar.DISPLAY_SHOW_CUSTOM}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar void setDisplayOptions(int, int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.ActionBar.DISPLAY_USE_LOGO, android.app.ActionBar.DISPLAY_SHOW_HOME, android.app.ActionBar.DISPLAY_HOME_AS_UP, android.app.ActionBar.DISPLAY_SHOW_TITLE, android.app.ActionBar.DISPLAY_SHOW_CUSTOM}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar void setDisplayOptions(int, int) 1">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.ActionBar.DISPLAY_USE_LOGO, android.app.ActionBar.DISPLAY_SHOW_HOME, android.app.ActionBar.DISPLAY_HOME_AS_UP, android.app.ActionBar.DISPLAY_SHOW_TITLE, android.app.ActionBar.DISPLAY_SHOW_CUSTOM}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar void setHomeActionContentDescription(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.ActionBar void setHomeAsUpIndicator(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.ActionBar void setIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.ActionBar void setLogo(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.ActionBar void setNavigationMode(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.ActionBar.NAVIGATION_MODE_STANDARD, android.app.ActionBar.NAVIGATION_MODE_LIST, android.app.ActionBar.NAVIGATION_MODE_TABS}" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar void setSubtitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.ActionBar void setTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.ActionBar.LayoutParams LayoutParams(android.content.Context, android.util.AttributeSet) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.ActionBar.LayoutParams gravity">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.view.Gravity.NO_GRAVITY, android.view.Gravity.TOP, android.view.Gravity.BOTTOM, android.view.Gravity.LEFT, android.view.Gravity.RIGHT, android.view.Gravity.START, android.view.Gravity.END, android.view.Gravity.CENTER_VERTICAL, android.view.Gravity.FILL_VERTICAL, android.view.Gravity.CENTER_HORIZONTAL, android.view.Gravity.FILL_HORIZONTAL, android.view.Gravity.CENTER, android.view.Gravity.FILL}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.ActionBar.Tab android.app.ActionBar.Tab setContentDescription(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.ActionBar.Tab android.app.ActionBar.Tab setCustomView(int) 0">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.app.ActionBar.Tab android.app.ActionBar.Tab setIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.ActionBar.Tab android.app.ActionBar.Tab setText(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Activity android.app.ActionBar getActionBar()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.app.Dialog onCreateDialog(int, android.os.Bundle)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.app.PendingIntent createPendingResult(int, android.content.Intent, int) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity android.app.PendingIntent createPendingResult(int, android.content.Intent, int) 2">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.Activity android.content.ComponentName getCallingActivity()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.content.Intent getParentActivityIntent()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.net.Uri getReferrer()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.ActionMode onWindowStartingActionMode(android.view.ActionMode.Callback)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.ActionMode onWindowStartingActionMode(android.view.ActionMode.Callback, int)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.ActionMode startActionMode(android.view.ActionMode.Callback)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.ActionMode startActionMode(android.view.ActionMode.Callback, int)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.LayoutInflater getLayoutInflater()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity android.view.MenuInflater getMenuInflater()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity android.view.View findViewById(int) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.Activity android.view.View getCurrentFocus()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.View onCreatePanelView(int)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity android.view.View onCreateView(java.lang.String, android.content.Context, android.util.AttributeSet)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity boolean onSearchRequested(android.view.SearchEvent) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity boolean shouldShowRequestPermissionRationale(java.lang.String) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity boolean showDialog(int, android.os.Bundle)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity boolean startActivityIfNeeded(android.content.Intent, int) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity boolean startActivityIfNeeded(android.content.Intent, int, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity boolean startActivityIfNeeded(android.content.Intent, int, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity boolean startNextMatchingActivity(android.content.Intent) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity boolean startNextMatchingActivity(android.content.Intent, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity boolean startNextMatchingActivity(android.content.Intent, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity int getRequestedOrientation()">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_BEHIND, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_NOSENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LOCKED}" />
+    </annotation>
+  </item>
+  <item name="android.app.Activity java.lang.CharSequence onCreateDescription()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity java.lang.Object getLastNonConfigurationInstance()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity java.lang.Object getSystemService(java.lang.String) 0">
+    <annotation name="android.support.annotation.StringDef">
+      <val name="value" val="{android.content.Context.POWER_SERVICE, android.content.Context.WINDOW_SERVICE, android.content.Context.LAYOUT_INFLATER_SERVICE, android.content.Context.ACCOUNT_SERVICE, android.content.Context.ACTIVITY_SERVICE, android.content.Context.ALARM_SERVICE, android.content.Context.NOTIFICATION_SERVICE, android.content.Context.ACCESSIBILITY_SERVICE, android.content.Context.CAPTIONING_SERVICE, android.content.Context.KEYGUARD_SERVICE, android.content.Context.LOCATION_SERVICE, android.content.Context.SEARCH_SERVICE, android.content.Context.SENSOR_SERVICE, android.content.Context.STORAGE_SERVICE, android.content.Context.WALLPAPER_SERVICE, android.content.Context.VIBRATOR_SERVICE, android.content.Context.CONNECTIVITY_SERVICE, android.content.Context.NETWORK_STATS_SERVICE, android.content.Context.WIFI_SERVICE, android.content.Context.WIFI_P2P_SERVICE, android.content.Context.NSD_SERVICE, android.content.Context.AUDIO_SERVICE, android.content.Context.FINGERPRINT_SERVICE, android.content.Context.MEDIA_ROUTER_SERVICE, android.content.Context.TELEPHONY_SERVICE, android.content.Context.TELEPHONY_SUBSCRIPTION_SERVICE, android.content.Context.CARRIER_CONFIG_SERVICE, android.content.Context.TELECOM_SERVICE, android.content.Context.CLIPBOARD_SERVICE, android.content.Context.INPUT_METHOD_SERVICE, android.content.Context.TEXT_SERVICES_MANAGER_SERVICE, android.content.Context.APPWIDGET_SERVICE, android.content.Context.DROPBOX_SERVICE, android.content.Context.DEVICE_POLICY_SERVICE, android.content.Context.UI_MODE_SERVICE, android.content.Context.DOWNLOAD_SERVICE, android.content.Context.NFC_SERVICE, android.content.Context.BLUETOOTH_SERVICE, android.content.Context.USB_SERVICE, android.content.Context.LAUNCHER_APPS_SERVICE, android.content.Context.INPUT_SERVICE, android.content.Context.DISPLAY_SERVICE, android.content.Context.USER_SERVICE, android.content.Context.RESTRICTIONS_SERVICE, android.content.Context.APP_OPS_SERVICE, android.content.Context.CAMERA_SERVICE, android.content.Context.PRINT_SERVICE, android.content.Context.CONSUMER_IR_SERVICE, android.content.Context.TV_INPUT_SERVICE, android.content.Context.USAGE_STATS_SERVICE, android.content.Context.MEDIA_SESSION_SERVICE, android.content.Context.BATTERY_SERVICE, android.content.Context.JOB_SCHEDULER_SERVICE, android.content.Context.MEDIA_PROJECTION_SERVICE, android.content.Context.MIDI_SERVICE}" />
+    </annotation>
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity java.lang.String getCallingPackage()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity java.lang.String getLocalClassName()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void finishActivityFromChild(android.app.Activity, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void onActionModeFinished(android.view.ActionMode)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onActionModeStarted(android.view.ActionMode)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onApplyThemeResource(android.content.res.Resources.Theme, int, boolean) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.app.Activity void onCreate(android.os.Bundle)">
+    <annotation name="android.support.annotation.MainThread" />
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onCreate(android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onCreate(android.os.Bundle, android.os.PersistableBundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onCreate(android.os.Bundle, android.os.PersistableBundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onDestroy()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onPause()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onPostCreate(android.os.Bundle)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onPostCreate(android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onPostCreate(android.os.Bundle, android.os.PersistableBundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onPostCreate(android.os.Bundle, android.os.PersistableBundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void onPostResume()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onRequestPermissionsResult(int, java.lang.String[], int[]) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void onRequestPermissionsResult(int, java.lang.String[], int[]) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void onRestart()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onResume()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onStart()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onStop()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void onVisibleBehindCanceled()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Activity void requestPermissions(java.lang.String[], int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void setActionBar(android.widget.Toolbar) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void setContentView(int) 0">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.app.Activity void setDefaultKeyMode(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.Activity.DEFAULT_KEYS_DISABLE, android.app.Activity.DEFAULT_KEYS_DIALER, android.app.Activity.DEFAULT_KEYS_SHORTCUT, android.app.Activity.DEFAULT_KEYS_SEARCH_LOCAL, android.app.Activity.DEFAULT_KEYS_SEARCH_GLOBAL}" />
+    </annotation>
+  </item>
+  <item name="android.app.Activity void setFeatureDrawableResource(int, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.Activity void setRequestedOrientation(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_BEHIND, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_NOSENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER, android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LOCKED}" />
+    </annotation>
+  </item>
+  <item name="android.app.Activity void startActivities(android.content.Intent[], android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startActivity(android.content.Intent, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startActivityForResult(android.content.Intent, int) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityForResult(android.content.Intent, int, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityForResult(android.content.Intent, int, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startActivityFromChild(android.app.Activity, android.content.Intent, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void startActivityFromChild(android.app.Activity, android.content.Intent, int) 1">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityFromChild(android.app.Activity, android.content.Intent, int, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void startActivityFromChild(android.app.Activity, android.content.Intent, int, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityFromChild(android.app.Activity, android.content.Intent, int, android.os.Bundle) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startActivityFromFragment(android.app.Fragment, android.content.Intent, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void startActivityFromFragment(android.app.Fragment, android.content.Intent, int) 1">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityFromFragment(android.app.Fragment, android.content.Intent, int, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Activity void startActivityFromFragment(android.app.Fragment, android.content.Intent, int, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.RequiresPermission" />
+  </item>
+  <item name="android.app.Activity void startActivityFromFragment(android.app.Fragment, android.content.Intent, int, android.os.Bundle) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startIntentSender(android.content.IntentSender, android.content.Intent, int, int, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startIntentSender(android.content.IntentSender, android.content.Intent, int, int, int, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startIntentSenderForResult(android.content.IntentSender, int, android.content.Intent, int, int, int) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startIntentSenderForResult(android.content.IntentSender, int, android.content.Intent, int, int, int, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startIntentSenderFromChild(android.app.Activity, android.content.IntentSender, int, android.content.Intent, int, int, int, android.os.Bundle) 7">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startSearch(java.lang.String, boolean, android.os.Bundle, boolean) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void startSearch(java.lang.String, boolean, android.os.Bundle, boolean) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Activity void triggerSearch(java.lang.String, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.ActivityManager int addAppTask(android.app.Activity, android.content.Intent, android.app.ActivityManager.TaskDescription, android.graphics.Bitmap) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.ActivityManager int addAppTask(android.app.Activity, android.content.Intent, android.app.ActivityManager.TaskDescription, android.graphics.Bitmap) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.ActivityManager int addAppTask(android.app.Activity, android.content.Intent, android.app.ActivityManager.TaskDescription, android.graphics.Bitmap) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.ActivityManager int addAppTask(android.app.Activity, android.content.Intent, android.app.ActivityManager.TaskDescription, android.graphics.Bitmap) 3">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.AlertDialog AlertDialog(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.app.AlertDialog void setIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.AlertDialog void setIconAttribute(int) 0">
+    <annotation name="android.support.annotation.AttrRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setIconAttribute(int) 0">
+    <annotation name="android.support.annotation.AttrRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setItems(int, android.content.DialogInterface.OnClickListener) 0">
+    <annotation name="android.support.annotation.ArrayRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setMessage(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setMultiChoiceItems(int, boolean[], android.content.DialogInterface.OnMultiChoiceClickListener) 0">
+    <annotation name="android.support.annotation.ArrayRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setNegativeButton(int, android.content.DialogInterface.OnClickListener) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setNeutralButton(int, android.content.DialogInterface.OnClickListener) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setPositiveButton(int, android.content.DialogInterface.OnClickListener) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setSingleChoiceItems(int, int, android.content.DialogInterface.OnClickListener) 0">
+    <annotation name="android.support.annotation.ArrayRes" />
+  </item>
+  <item name="android.app.AlertDialog.Builder android.app.AlertDialog.Builder setTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Application void onConfigurationChanged(android.content.res.Configuration)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Application void onCreate()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Application void onLowMemory()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Application void onTerminate()">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Application void onTrimMemory(int)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.DatePickerDialog DatePickerDialog(android.content.Context, android.app.DatePickerDialog.OnDateSetListener, int, int, int) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.DatePickerDialog DatePickerDialog(android.content.Context, android.app.DatePickerDialog.OnDateSetListener, int, int, int) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.DatePickerDialog DatePickerDialog(android.content.Context, int, android.app.DatePickerDialog.OnDateSetListener, int, int, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.DatePickerDialog DatePickerDialog(android.content.Context, int, android.app.DatePickerDialog.OnDateSetListener, int, int, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.app.DatePickerDialog DatePickerDialog(android.content.Context, int, android.app.DatePickerDialog.OnDateSetListener, int, int, int) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.DatePickerDialog android.widget.DatePicker getDatePicker()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Dialog Dialog(android.content.Context) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Dialog Dialog(android.content.Context, boolean, android.content.DialogInterface.OnCancelListener) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Dialog Dialog(android.content.Context, int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Dialog Dialog(android.content.Context, int) 1">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.app.Dialog android.content.Context getContext()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Dialog android.view.View findViewById(int) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.Dialog void onActionModeFinished(android.view.ActionMode)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Dialog void onActionModeStarted(android.view.ActionMode)">
+    <annotation name="android.support.annotation.CallSuper" />
+  </item>
+  <item name="android.app.Dialog void setContentView(int) 0">
+    <annotation name="android.support.annotation.LayoutRes" />
+  </item>
+  <item name="android.app.Dialog void setFeatureDrawableResource(int, int) 1">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.Dialog void setTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Fragment android.app.Fragment instantiate(android.content.Context, java.lang.String, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment android.view.View getView()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment android.view.View onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment android.view.View onCreateView(android.view.LayoutInflater, android.view.ViewGroup, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment boolean shouldShowRequestPermissionRationale(java.lang.String) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Fragment java.lang.CharSequence getText(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Fragment java.lang.Object getHost()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment java.lang.String getString(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Fragment java.lang.String getString(int, java.lang.Object...) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Fragment void onActivityCreated(android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment void onCreate(android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment void onRequestPermissionsResult(int, java.lang.String[], int[]) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Fragment void onRequestPermissionsResult(int, java.lang.String[], int[]) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.Fragment void onViewCreated(android.view.View, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.Fragment void requestPermissions(java.lang.String[], int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.FragmentContainer android.view.View onFindViewById(int)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.FragmentContainer android.view.View onFindViewById(int) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.FragmentController android.app.Fragment findFragmentByWho(java.lang.String)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.FragmentHostCallback E onGetHost()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.FragmentHostCallback android.view.View onFindViewById(int)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.FragmentHostCallback void onRequestPermissionsFromFragment(android.app.Fragment, java.lang.String[], int) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.FragmentHostCallback void onRequestPermissionsFromFragment(android.app.Fragment, java.lang.String[], int) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction add(int, android.app.Fragment) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction add(int, android.app.Fragment, java.lang.String) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction addToBackStack(java.lang.String) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction replace(int, android.app.Fragment) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction replace(int, android.app.Fragment, java.lang.String) 0">
+    <annotation name="android.support.annotation.IdRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setBreadCrumbShortTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setBreadCrumbTitle(int) 0">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int) 0">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int) 1">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int, int, int) 0">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int, int, int) 1">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int, int, int) 2">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setCustomAnimations(int, int, int, int) 3">
+    <annotation name="android.support.annotation.AnimatorRes" />
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setTransition(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.FragmentTransaction.TRANSIT_NONE, android.app.FragmentTransaction.TRANSIT_FRAGMENT_OPEN, android.app.FragmentTransaction.TRANSIT_FRAGMENT_CLOSE, android.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE}" />
+    </annotation>
+  </item>
+  <item name="android.app.FragmentTransaction android.app.FragmentTransaction setTransitionStyle(int) 0">
+    <annotation name="android.support.annotation.StyleRes" />
+  </item>
+  <item name="android.app.IntentService void onHandleIntent(android.content.Intent)">
+    <annotation name="android.support.annotation.WorkerThread" />
+  </item>
+  <item name="android.app.KeyguardManager void exitKeyguardSecurely(android.app.KeyguardManager.OnKeyguardExitResult)">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="value" val="&quot;android.permission.DISABLE_KEYGUARD&quot;" />
+    </annotation>
+  </item>
+  <item name="android.app.KeyguardManager.KeyguardLock void disableKeyguard()">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="value" val="&quot;android.permission.DISABLE_KEYGUARD&quot;" />
+    </annotation>
+  </item>
+  <item name="android.app.KeyguardManager.KeyguardLock void reenableKeyguard()">
+    <annotation name="android.support.annotation.RequiresPermission">
+      <val name="value" val="&quot;android.permission.DISABLE_KEYGUARD&quot;" />
+    </annotation>
+  </item>
+  <item name="android.app.Notification COLOR_DEFAULT">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification color">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification icon">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.Notification ledARGB">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification priority">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.Notification.PRIORITY_DEFAULT, android.app.Notification.PRIORITY_LOW, android.app.Notification.PRIORITY_MIN, android.app.Notification.PRIORITY_HIGH, android.app.Notification.PRIORITY_MAX}" />
+    </annotation>
+  </item>
+  <item name="android.app.Notification.Builder android.app.Notification.Builder setColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification.Builder android.app.Notification.Builder setLights(int, int, int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification.Builder android.app.Notification.Builder setPriority(int) 0">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.Notification.PRIORITY_DEFAULT, android.app.Notification.PRIORITY_LOW, android.app.Notification.PRIORITY_MIN, android.app.Notification.PRIORITY_HIGH, android.app.Notification.PRIORITY_MAX}" />
+    </annotation>
+  </item>
+  <item name="android.app.Notification.Builder android.app.Notification.Builder setSmallIcon(int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.Notification.Builder android.app.Notification.Builder setSmallIcon(int, int) 0">
+    <annotation name="android.support.annotation.DrawableRes" />
+  </item>
+  <item name="android.app.Notification.CarExtender android.app.Notification.CarExtender setColor(int) 0">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.Notification.CarExtender int getColor()">
+    <annotation name="android.support.annotation.ColorInt" />
+  </item>
+  <item name="android.app.NotificationManager void setNotificationPolicy(android.app.NotificationManager.Policy) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivities(android.content.Context, int, android.content.Intent[], int) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivities(android.content.Context, int, android.content.Intent[], int) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivities(android.content.Context, int, android.content.Intent[], int, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivities(android.content.Context, int, android.content.Intent[], int, android.os.Bundle) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivities(android.content.Context, int, android.content.Intent[], int, android.os.Bundle) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivity(android.content.Context, int, android.content.Intent, int) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivity(android.content.Context, int, android.content.Intent, int, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivity(android.content.Context, int, android.content.Intent, int, android.os.Bundle) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getActivity(android.content.Context, int, android.content.Intent, int, android.os.Bundle) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getBroadcast(android.content.Context, int, android.content.Intent, int) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getService(android.content.Context, int, android.content.Intent, int) 2">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent getService(android.content.Context, int, android.content.Intent, int) 3">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent readPendingIntentOrNullFromParcel(android.os.Parcel)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent android.app.PendingIntent readPendingIntentOrNullFromParcel(android.os.Parcel) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.PendingIntent android.os.UserHandle getCreatorUserHandle()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent java.lang.String getCreatorPackage()">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String) 5">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String, android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String, android.os.Bundle) 3">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String, android.os.Bundle) 4">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String, android.os.Bundle) 5">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(android.content.Context, int, android.content.Intent, android.app.PendingIntent.OnFinished, android.os.Handler, java.lang.String, android.os.Bundle) 6">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(int, android.app.PendingIntent.OnFinished, android.os.Handler) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void send(int, android.app.PendingIntent.OnFinished, android.os.Handler) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void writePendingIntentOrNullToParcel(android.app.PendingIntent, android.os.Parcel) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.PendingIntent void writePendingIntentOrNullToParcel(android.app.PendingIntent, android.os.Parcel) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.SearchableInfo int getVoiceLanguageId()">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.SearchableInfo int getVoiceLanguageModeId()">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.SearchableInfo int getVoicePromptTextId()">
+    <annotation name="android.support.annotation.StringRes" />
+  </item>
+  <item name="android.app.Service android.os.IBinder onBind(android.content.Intent)">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.TaskStackBuilder android.app.PendingIntent getPendingIntent(int, int) 1">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.TaskStackBuilder android.app.PendingIntent getPendingIntent(int, int, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.app.PendingIntent.FLAG_ONE_SHOT, android.app.PendingIntent.FLAG_NO_CREATE, android.app.PendingIntent.FLAG_CANCEL_CURRENT, android.app.PendingIntent.FLAG_UPDATE_CURRENT, android.content.Intent.FILL_IN_ACTION, android.content.Intent.FILL_IN_DATA, android.content.Intent.FILL_IN_CATEGORIES, android.content.Intent.FILL_IN_COMPONENT, android.content.Intent.FILL_IN_PACKAGE, android.content.Intent.FILL_IN_SOURCE_BOUNDS, android.content.Intent.FILL_IN_SELECTOR, android.content.Intent.FILL_IN_CLIP_DATA}" />
+      <val name="flag" val="true" />
+    </annotation>
+  </item>
+  <item name="android.app.TaskStackBuilder android.content.Intent[] getIntents()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.VoiceInteractor.AbortVoiceRequest AbortVoiceRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.AbortVoiceRequest AbortVoiceRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.CompleteVoiceRequest CompleteVoiceRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.CompleteVoiceRequest CompleteVoiceRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.ConfirmationRequest ConfirmationRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.ConfirmationRequest ConfirmationRequest(android.app.VoiceInteractor.Prompt, android.os.Bundle) 1">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.PickOptionRequest PickOptionRequest(android.app.VoiceInteractor.Prompt, android.app.VoiceInteractor.PickOptionRequest.Option[], android.os.Bundle) 0">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.PickOptionRequest PickOptionRequest(android.app.VoiceInteractor.Prompt, android.app.VoiceInteractor.PickOptionRequest.Option[], android.os.Bundle) 2">
+    <annotation name="android.support.annotation.Nullable" />
+  </item>
+  <item name="android.app.VoiceInteractor.Prompt Prompt(java.lang.CharSequence) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.VoiceInteractor.Prompt Prompt(java.lang.CharSequence[], java.lang.CharSequence) 0">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.VoiceInteractor.Prompt Prompt(java.lang.CharSequence[], java.lang.CharSequence) 1">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.VoiceInteractor.Prompt java.lang.CharSequence getVisualPrompt()">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.VoiceInteractor.Prompt java.lang.CharSequence getVoicePromptAt(int)">
+    <annotation name="android.support.annotation.NonNull" />
+  </item>
+  <item name="android.app.WallpaperManager boolean hasResourceWallpaper(int) 0">
+    <annotation name="android.support.annotation.RawRes" />
+  </item>
+  <item name="android.app.WallpaperManager void setResource(int) 0">
+    <annotation name="android.support.annotation.RawRes" />
+  </item>
+</root>
+
