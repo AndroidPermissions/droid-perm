@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 
 /**
@@ -77,33 +78,24 @@ public class testMiningPermDef {
     }
 
     @Test
-    public void testIterateFiles() {
-        miningPermDef m = new miningPermDef();
-
-        m.iterateFiles("src\\test\\androidAnnotations");
-
-        assertEquals(76, m.getAnnotationFiles().size());
-    }
-
-    @Test
-    public void testCombineItems() throws JAXBException {
+    public void testCombineItems() throws JAXBException, IOException {
         miningPermDef m = new miningPermDef();
         File f = new File("src\\test\\annotations\\annotations4.xml");
         JaxbItemList jaxbItemList;
 
-        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
+        jaxbItemList = m.combineItems("src\\test\\annotations\\androidAnnotations.jar");
 
         m.marshallXML(m.filterItemList(jaxbItemList), f);
     }
 
     @Test
-    public void testItemToPermDef() throws JAXBException {
+    public void testItemToPermDef() throws JAXBException, IOException {
         miningPermDef m = new miningPermDef();
         PermissionDefList permissionDefList;
         JaxbItemList jaxbItemList;
         File f1 = new File("src\\test\\annotations\\annotations5.xml");
 
-        jaxbItemList = m.combineItems("src\\test\\androidAnnotations");
+        jaxbItemList = m.combineItems("src\\test\\annotations\\androidAnnotations.jar");
         jaxbItemList = m.filterItemList(jaxbItemList);
 
         permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
