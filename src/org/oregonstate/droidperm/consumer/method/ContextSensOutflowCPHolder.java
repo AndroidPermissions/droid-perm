@@ -286,14 +286,17 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
 
         //points to of the invocation target
-        PointsToSet pointsTo = child != null ?
-                getPointsTo((Stmt) child.getContext(), methodInC.getContext())
-                : null;
-        if (pointsTo != null) {
+        boolean printPointsTo = child != null && isVirtualInvokeStmt((Stmt) child.getContext());
+        if (printPointsTo) {
+            PointsToSet pointsTo = getPointsTo((InvokeStmt) child.getContext(), methodInC.getContext());
             out.append("\n                                                                p-to: ");
-            out.append(pointsTo.possibleTypes().stream()
-                    .map(type -> type.toString().substring(type.toString().lastIndexOf(".") + 1))
-                    .collect(Collectors.toList()));
+            if (pointsTo != null) {
+                out.append(pointsTo.possibleTypes().stream()
+                        .map(type -> type.toString().substring(type.toString().lastIndexOf(".") + 1))
+                        .collect(Collectors.toList()));
+            } else {
+                out.append("exception");
+            }
         }
 
         //shortcutted call, if it's a fake edge
@@ -320,30 +323,36 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return path;
     }
 
-    private PointsToSet getPointsTo(Stmt stmt, Context context) {
+    private PointsToSet getPointsTo(InvokeStmt stmt, Context context) {
         //implementation adapted from getUnitEdgeIterator
-        if (stmt instanceof InvokeStmt) {
-            InvokeExpr invokeExpr = stmt.getInvokeExpr();
-            // only virtual invocations require context sensitivity.
-            if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
-                InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
-                //in Jimple target is always Local, regardless of who is the qualifier in Java.
-                Local target = (Local) invoke.getBase();
+        InvokeExpr invokeExpr = stmt.getInvokeExpr();
+        // only virtual invocations require context sensitivity.
+        if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
+            InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
+            //in Jimple target is always Local, regardless of who is the qualifier in Java.
+            Local target = (Local) invoke.getBase();
 
-                try {
-                    if (context != null) {
-                        return pointsToAnalysis.reachingObjects(context, target);
-                    } else {
-                        //context == null means we are in a top-level method, which is still a valid option
-                        return pointsToAnalysis.reachingObjects(target);
-                    }
-                } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
-                    logger.debug(e.toString());
-                    return null;
+            try {
+                if (context != null) {
+                    return pointsToAnalysis.reachingObjects(context, target);
+                } else {
+                    //context == null means we are in a top-level method, which is still a valid option
+                    return pointsToAnalysis.reachingObjects(target);
                 }
+            } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
+                logger.debug(e.toString());
+                return null;
             }
         }
         return null;
+    }
+
+    private boolean isVirtualInvokeStmt(Stmt stmt) {
+        if (stmt instanceof InvokeStmt) {
+            InvokeExpr invokeExpr = stmt.getInvokeExpr();
+            return invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr;
+        }
+        return false;
     }
 
     private static SootMethod getInvokedMethod(InvokeStmt stmt) {
