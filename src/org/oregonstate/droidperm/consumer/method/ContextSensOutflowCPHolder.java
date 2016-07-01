@@ -141,46 +141,42 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      * Iterator over outbound edges of a particular unit (likely method call).
      */
     private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
-        if (unit instanceof InvokeStmt && context != null) {
-            InvokeStmt invokeStmt = (InvokeStmt) unit;
-            InvokeExpr invokeExpr = invokeStmt.getInvokeExpr();
-            // only virtual invocations require context sensitivity.
-            if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
-                //we canot compute this list if there are no edges, hence the need for a supplier
-                Supplier<List<SootMethod>> pointsToTargetMethods = new CachingSupplier<>(() -> {
-                    PointsToSet pointsToSet = getPointsTo(invokeStmt, context);
-                    if (pointsToSet == null) {
-                        return Collections.emptyList();
-                    }
+        InstanceInvokeExpr virtualInvoke = getVirtualInvokeIfPresent(unit);
+        if (virtualInvoke != null && context != null) {
+            //we canot compute this list if there are no edges, hence the need for a supplier
+            Supplier<List<SootMethod>> pointsToTargetMethods = new CachingSupplier<>(() -> {
+                PointsToSet pointsToSet = getPointsToIfVirtualCall(unit, context);
+                if (pointsToSet == null) {
+                    return Collections.emptyList();
+                }
 
-                    SootMethod staticTargetMethod = invokeExpr.getMethod();
-                    Set<Type> pointsToTargetTypes = pointsToSet.possibleTypes();
-                    return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, pointsToTargetTypes);
-                });
+                SootMethod staticTargetMethod = virtualInvoke.getMethod();
+                Set<Type> pointsToTargetTypes = pointsToSet.possibleTypes();
+                return HierarchyUtil.resolveHybridDispatch(staticTargetMethod, pointsToTargetTypes);
+            });
 
-                //todo: more precise support for fake edges - take into account the changed target.
-                //Fake edges alter the natural mapping between edge.srcStmt() => edge.tgt()
-                //  e.g. the actually invoked method is a different than the one allowed by class hierarchy.
-                //Problems with fake edges:
-                // 1. They alter the invoked method. Ex: Thread.start() => Thread.run().
-                //      edge.srcStmt()...getMethod() != edge.tgt()
-                // 2. They might alter invocation target. Ex: executor.submit(r) => r.run()
-                //      edge.srcStmt()...getBase()
-                //          != actual receiver inside OFCGB.methodToReceivers.get(edge.srcStmt()...getMethod())
-                //      How to get it???
-                //      v1: Get it correctly from OnFlyCallGraphBuilder.
-                //      v2: Hack it for every particular implementation of fake edge.
+            //todo: more precise support for fake edges - take into account the changed target.
+            //Fake edges alter the natural mapping between edge.srcStmt() => edge.tgt()
+            //  e.g. the actually invoked method is a different than the one allowed by class hierarchy.
+            //Problems with fake edges:
+            // 1. They alter the invoked method. Ex: Thread.start() => Thread.run().
+            //      edge.srcStmt()...getMethod() != edge.tgt()
+            // 2. They might alter invocation target. Ex: executor.submit(r) => r.run()
+            //      edge.srcStmt()...getBase()
+            //          != actual receiver inside OFCGB.methodToReceivers.get(edge.srcStmt()...getMethod())
+            //      How to get it???
+            //      v1: Get it correctly from OnFlyCallGraphBuilder.
+            //      v2: Hack it for every particular implementation of fake edge.
 
-                //Why context sensitivity works for Thread.start()?
-                //  Current algorithm won't distinguish between 2 statements Thread.start() within the same method,
-                //  but it doesn't matter for the purpose of DroidPerm.
-                //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
-                //  not through PointsToSet analysis in this class.
-                //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
-                return StreamUtil.asStream(cg.edgesOutOf(unit))
-                        .filter(edge -> isPointsToValidEdge(pointsToTargetMethods, edge))
-                        .iterator();
-            }
+            //Why context sensitivity works for Thread.start()?
+            //  Current algorithm won't distinguish between 2 statements Thread.start() within the same method,
+            //  but it doesn't matter for the purpose of DroidPerm.
+            //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
+            //  not through PointsToSet analysis in this class.
+            //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
+            return StreamUtil.asStream(cg.edgesOutOf(unit))
+                    .filter(edge -> isPointsToValidEdge(pointsToTargetMethods, edge))
+                    .iterator();
         }
 
         //default case, anything except virtual method calls
@@ -286,9 +282,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
 
         //points to of the invocation target
-        boolean printPointsTo = child != null && isVirtualInvokeStmt((Stmt) child.getContext());
+        boolean printPointsTo = child != null && getVirtualInvokeIfPresent((Stmt) child.getContext()) != null;
         if (printPointsTo) {
-            PointsToSet pointsTo = getPointsTo((InvokeStmt) child.getContext(), methodInC.getContext());
+            PointsToSet pointsTo = getPointsToIfVirtualCall((Stmt) child.getContext(), methodInC.getContext());
             out.append("\n                                                                p-to: ");
             if (pointsTo != null) {
                 out.append(pointsTo.possibleTypes().stream()
@@ -323,12 +319,16 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return path;
     }
 
-    private PointsToSet getPointsTo(InvokeStmt stmt, Context context) {
-        //implementation adapted from getUnitEdgeIterator
-        InvokeExpr invokeExpr = stmt.getInvokeExpr();
+    /**
+     * Stmt with virtual calls could either be InvokeStmt or AssignStmt.
+     *
+     * @return points-to set for the call target, if virtual. Value null otherwise.
+     */
+    private PointsToSet getPointsToIfVirtualCall(Unit unit, Context context) {
         // only virtual invocations require context sensitivity.
-        if (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr) {
-            InstanceInvokeExpr invoke = (InstanceInvokeExpr) invokeExpr;
+        InstanceInvokeExpr invoke = getVirtualInvokeIfPresent(unit);
+
+        if (invoke != null) {
             //in Jimple target is always Local, regardless of who is the qualifier in Java.
             Local target = (Local) invoke.getBase();
 
@@ -347,12 +347,17 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return null;
     }
 
-    private boolean isVirtualInvokeStmt(Stmt stmt) {
-        if (stmt instanceof InvokeStmt) {
-            InvokeExpr invokeExpr = stmt.getInvokeExpr();
-            return invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr;
+    private InstanceInvokeExpr getVirtualInvokeIfPresent(Unit unit) {
+        Value possibleInvokeExpr = null;
+        if (unit instanceof InvokeStmt) {
+            possibleInvokeExpr = ((InvokeStmt) unit).getInvokeExpr();
+        } else if (unit instanceof AssignStmt) {
+            possibleInvokeExpr = ((AssignStmt) unit).getRightOp();
         }
-        return false;
+        return possibleInvokeExpr != null
+                       && (possibleInvokeExpr instanceof VirtualInvokeExpr
+                || possibleInvokeExpr instanceof InterfaceInvokeExpr)
+               ? (InstanceInvokeExpr) possibleInvokeExpr : null;
     }
 
     private static SootMethod getInvokedMethod(InvokeStmt stmt) {
