@@ -4,21 +4,18 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
  */
 public class miningPermDef {
-
-    private List<File> annotationFiles = new ArrayList<>();
-
-    public List<File> getAnnotationFiles() {
-        return annotationFiles;
-    }
 
     /**
      * This function takes a .xml and turns it into  list of java objects
@@ -32,6 +29,14 @@ public class miningPermDef {
         Unmarshaller unmarshaller = jbContext.createUnmarshaller();
 
         return (JaxbItemList)unmarshaller.unmarshal(file);
+    }
+
+    public static JaxbItemList unmarshallXMLFromIO(InputStream inputStream) throws JAXBException {
+
+        JAXBContext jbContext  = JAXBContext.newInstance(JaxbItemList.class);
+        Unmarshaller unmarshaller = jbContext.createUnmarshaller();
+
+        return (JaxbItemList)unmarshaller.unmarshal(inputStream);
     }
 
     /**
@@ -92,6 +97,17 @@ public class miningPermDef {
         return filteredItems;
     }
 
+    static void extractPermissionDefs(String androidAnnotationsLocation, File saveFile) throws JAXBException, IOException {
+        miningPermDef m = new miningPermDef();
+        JaxbItemList jaxbItemList;
+        PermissionDefList permissionDefList;
+        jaxbItemList = m.combineItems(androidAnnotationsLocation);
+        jaxbItemList = m.filterItemList(jaxbItemList);
+        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
+
+        m.marshallPermDef(permissionDefList, saveFile);
+    }
+
     /**
      * This functions iterates through each of the annotations.xml files that are in the annotationFiles
      * list and unmarshalls the xml in each of the files thus turning them into JaxbItemList objects. It
@@ -102,16 +118,10 @@ public class miningPermDef {
      * @return JaxbItemList - a single object containing all of the items in the annotations files
      * @throws JAXBException
      */
-    public JaxbItemList combineItems(String androidAnnotationsLocation) throws JAXBException {
-        List<JaxbItemList> jaxbItemLists = new ArrayList<>();
+    public JaxbItemList combineItems(String androidAnnotationsLocation) throws JAXBException, IOException {
         JaxbItemList combinedItems = new JaxbItemList();
 
-        iterateFiles(androidAnnotationsLocation);
-        Iterator<File> fileIterator = annotationFiles.iterator();
-
-        while (fileIterator.hasNext()){
-            jaxbItemLists.add(unmarshallXML(fileIterator.next()));
-        }
+        List<JaxbItemList> jaxbItemLists = getXMLFromIOStream(androidAnnotationsLocation);
 
         Iterator<JaxbItemList> jaxbItemListIterator = jaxbItemLists.iterator();
         Iterator<JaxbItem> jaxbItemIterator;
@@ -253,31 +263,21 @@ public class miningPermDef {
         permissionDef.setMethodFieldName(secondBuilder.toString().trim());
     }
 
-    /**
-     * Helper to look through all of the files in AndroidAnnotations directory
-     * @param absolutePath path to the AndroidAnnotations directory
-     */
-    public void iterateFiles(String absolutePath) {
-        File[] files = new File(absolutePath).listFiles();
-        showFiles(files);
-    }
+    public List<JaxbItemList> getXMLFromIOStream(String pathToJar) throws IOException, JAXBException {
+        ZipFile zipFile = new ZipFile(pathToJar);
+        List<JaxbItemList> jaxbItemLists = new ArrayList<>();
 
-    /**
-     * Recursively search for the annotations.xml files throughout the AndroidAnnotations directory
-     * and add them to the the member variable annotationFiles which is a list of files.
-     * @param files and array of files and directorys from the helper that calls this
-     */
-    private void showFiles(File[] files) {
-        for (File file : files) {
-            if (file.isDirectory()) {
-                showFiles(file.listFiles());
-            } else {
-                //This if block filters out non annotations files
-                if(file.getName().contains("annotations.xml")) {
-                    annotationFiles.add(file);
-                }
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+        while(entries.hasMoreElements()){
+            ZipEntry entry = entries.nextElement();
+            if(entry.getName().contains("annotations.xml")) {
+                InputStream stream = zipFile.getInputStream(entry);
+                jaxbItemLists.add(unmarshallXMLFromIO(stream));
+                stream.close();
             }
         }
+        zipFile.close();
+        return jaxbItemLists;
     }
-
 }
