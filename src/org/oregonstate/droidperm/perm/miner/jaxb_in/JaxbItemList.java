@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.miningPermDef;
+package org.oregonstate.droidperm.perm.miner.jaxb_in;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -14,11 +14,15 @@ public class JaxbItemList {
     private List<JaxbItem> item = new ArrayList<>();
 
     @XmlElement
-    public List<JaxbItem> getItem() { return item; }
+    public List<JaxbItem> getItem() {
+        return item;
+    }
 
     public void setItem(List<JaxbItem> items) {
         this.item = items;
     }
 
-    public void addItem(JaxbItem item) { this.item.add(item); }
+    public void addItem(JaxbItem item) {
+        this.item.add(item);
+    }
 }

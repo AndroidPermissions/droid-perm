@@ -1,10 +1,18 @@
-package org.oregonstate.droidperm.miningPermDef;
+package org.oregonstate.droidperm.perm.miner;
+
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbAnnotation;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItem;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItemList;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbVal;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -15,32 +23,34 @@ import java.util.zip.ZipFile;
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
  */
-public class miningPermDef {
+public class XmlPermDefMiner {
 
     /**
      * This function takes a .xml and turns it into  list of java objects
+     *
      * @param file .xml file to be turned into objects
      * @return A JaxbItemList object
      * @throws JAXBException
      */
-    public static JaxbItemList unmarshallXML (File file) throws JAXBException {
+    public static JaxbItemList unmarshallXML(File file) throws JAXBException {
 
-        JAXBContext jbContext  = JAXBContext.newInstance(JaxbItemList.class);
+        JAXBContext jbContext = JAXBContext.newInstance(JaxbItemList.class);
         Unmarshaller unmarshaller = jbContext.createUnmarshaller();
 
-        return (JaxbItemList)unmarshaller.unmarshal(file);
+        return (JaxbItemList) unmarshaller.unmarshal(file);
     }
 
     public static JaxbItemList unmarshallXMLFromIO(InputStream inputStream) throws JAXBException {
 
-        JAXBContext jbContext  = JAXBContext.newInstance(JaxbItemList.class);
+        JAXBContext jbContext = JAXBContext.newInstance(JaxbItemList.class);
         Unmarshaller unmarshaller = jbContext.createUnmarshaller();
 
-        return (JaxbItemList)unmarshaller.unmarshal(inputStream);
+        return (JaxbItemList) unmarshaller.unmarshal(inputStream);
     }
 
     /**
      * This takes a JaxbItemList object and marshalls it into a .xml file
+     *
      * @param data JaxbItemList to be marshalled
      * @param file file to marshall the data into
      * @throws JAXBException
@@ -56,8 +66,7 @@ public class miningPermDef {
 
     /**
      * This functions marshalls a PermissionDefList object into xml
-     * @param permissionDefList
-     * @param file
+     *
      * @throws JAXBException
      */
     public static void marshallPermDef(PermissionDefList permissionDefList, File file) throws JAXBException {
@@ -70,9 +79,9 @@ public class miningPermDef {
     }
 
     /**
-     * This function takes a JaxbItemList and filters out all of the items that
-     * do not have the RequiresPermission annotation
-     * @param unfilteredItems
+     * This function takes a JaxbItemList and filters out all of the items that do not have the RequiresPermission
+     * annotation
+     *
      * @return a filtered JaxbItemList
      * @throws JAXBException
      */
@@ -89,7 +98,7 @@ public class miningPermDef {
             annotationIterator = jaxbItem.getAnnotations().iterator();
             while (annotationIterator.hasNext()) {
                 //This if does the actual filtering out of items that do do not use permissions
-                if (annotationIterator.next().getName().contains("RequiresPermission")){
+                if (annotationIterator.next().getName().contains("RequiresPermission")) {
                     filteredItems.addItem(jaxbItem);
                 }
             }
@@ -97,24 +106,24 @@ public class miningPermDef {
         return filteredItems;
     }
 
-    static void extractPermissionDefs(String androidAnnotationsLocation, File saveFile) throws JAXBException, IOException {
-        miningPermDef m = new miningPermDef();
+    static void extractPermissionDefs(String androidAnnotationsLocation, File saveFile)
+            throws JAXBException, IOException {
+        XmlPermDefMiner m = new XmlPermDefMiner();
         JaxbItemList jaxbItemList;
         PermissionDefList permissionDefList;
         jaxbItemList = m.combineItems(androidAnnotationsLocation);
-        jaxbItemList = m.filterItemList(jaxbItemList);
+        jaxbItemList = filterItemList(jaxbItemList);
         permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
 
-        m.marshallPermDef(permissionDefList, saveFile);
+        marshallPermDef(permissionDefList, saveFile);
     }
 
     /**
-     * This functions iterates through each of the annotations.xml files that are in the annotationFiles
-     * list and unmarshalls the xml in each of the files thus turning them into JaxbItemList objects. It
-     * store these lists in a List object, then iterates through this list of lists and combines each
-     * JaxbItem in every list into a single combined JaxbItemList. This combined list can then be marshalled
-     * into a single xml file.
-     * @param androidAnnotationsLocation
+     * This functions iterates through each of the annotations.xml files that are in the annotationFiles list and
+     * unmarshalls the xml in each of the files thus turning them into JaxbItemList objects. It store these lists in a
+     * List object, then iterates through this list of lists and combines each JaxbItem in every list into a single
+     * combined JaxbItemList. This combined list can then be marshalled into a single xml file.
+     *
      * @return JaxbItemList - a single object containing all of the items in the annotations files
      * @throws JAXBException
      */
@@ -138,18 +147,15 @@ public class miningPermDef {
     /**
      * This function converts JaxbItems into PermissionDefs. It calls a coule helper functions to extract information
      * from the JaxbItems.
-     * @param items
+     *
      * @return A PermissionDefList object
      */
-    public PermissionDefList ItemsToPermissionDefs (JaxbItemList items) {
+    public PermissionDefList ItemsToPermissionDefs(JaxbItemList items) {
         String delimiters = "[ ]+";
         PermissionDefList permissionDefList = new PermissionDefList();
 
-        Iterator<JaxbItem> jaxbItemIterator = items.getItem().iterator();
-
-        while (jaxbItemIterator.hasNext()) {
+        for (JaxbItem jaxbItem : items.getItem()) {
             PermissionDef permissionDef = new PermissionDef();
-            JaxbItem jaxbItem = jaxbItemIterator.next();
 
             //Break up the string on spaces
             String[] tokens = jaxbItem.getName().split(delimiters);
@@ -159,24 +165,22 @@ public class miningPermDef {
 
             //Here the method or field is rebuilt because it was likely broken by the previous split
             StringBuilder firstBuilder = new StringBuilder();
-            for(int i = 1; i < tokens.length; i++) {
-                firstBuilder.append(tokens[i] + " ");
+            for (int i = 1; i < tokens.length; i++) {
+                firstBuilder.append(tokens[i]).append(" ");
             }
 
             //This check ensure that any Java generics information is removed from the string
-            if(firstBuilder.toString().contains("<")) {
+            if (firstBuilder.toString().contains("<")) {
                 scrubJavaGenerics(permissionDef, firstBuilder);
-            }
-            else {
-                permissionDef.setMethodFieldName(firstBuilder.toString().trim());
+            } else {
+                permissionDef.setTargetName(firstBuilder.toString().trim());
             }
 
             //Here we determine if the target of the permission is a method or a field
-            if(permissionDef.getMethodFieldName().contains("(")
-                    && permissionDef.getMethodFieldName().contains(")")) {
+            if (permissionDef.getTargetName().contains("(")
+                    && permissionDef.getTargetName().contains(")")) {
                 permissionDef.setTargetType(TargetType.Method);
-            }
-            else {
+            } else {
                 permissionDef.setTargetType(TargetType.Field);
             }
 
@@ -192,33 +196,29 @@ public class miningPermDef {
     /**
      * Does the bulk of the work for ItemsToPermissionDefs. It gets the relevant information from a JaxbAnnotation
      * object and gives it to a PermissionDef object.
-     * @param permissionDef
-     * @param jaxbAnnotationIterator
      */
     private void extractPermissions(PermissionDef permissionDef, Iterator<JaxbAnnotation> jaxbAnnotationIterator) {
         while (jaxbAnnotationIterator.hasNext()) {
             JaxbAnnotation jaxbAnnotation = jaxbAnnotationIterator.next();
 
-            Iterator<JaxbVal> jaxbValIterator = jaxbAnnotation.getVals().iterator();
-            while (jaxbValIterator.hasNext()) {
-                JaxbVal jaxbVal = jaxbValIterator.next();
-
+            //noinspection Convert2streamapi
+            for (JaxbVal jaxbVal : jaxbAnnotation.getVals()) {
                 //When a value has the name 'apis' its value is not a permission, so we don't store it
-                if(!(jaxbVal.getName().contains("apis"))) {
+                if (!(jaxbVal.getName().contains("apis"))) {
                     String delims = "[{},\"]+";
                     String[] tokens = jaxbVal.getVal().split(delims);
 
-                    for(int i = 0; i < tokens.length; i++) {
+                    for (String token : tokens) {
                         Permission permission = new Permission();
-                        if(tokens[i].length() > 1) {
-                            permission.setName(tokens[i].toString().trim());
+                        if (token.length() > 1) {
+                            permission.setName(token.trim());
 
                             //This block handles the extra Read or Write tag that may be attached to a permission
-                            if(jaxbAnnotation.getName().contains("Read")) {
-                                permission.setReadWrite("Read");
+                            if (jaxbAnnotation.getName().contains("Read")) {
+                                permission.setOperationType(OperationType.Read);
                             }
-                            if(jaxbAnnotation.getName().contains("Write")) {
-                                permission.setReadWrite("Write");
+                            if (jaxbAnnotation.getName().contains("Write")) {
+                                permission.setOperationType(OperationType.Write);
                             }
 
                             permissionDef.addPermission(permission);
@@ -226,11 +226,10 @@ public class miningPermDef {
                     }
 
                     //This block handles the OR/AND relationship that may exist when an item has multiple permissions
-                    if(jaxbVal.getName().contains("anyOf")) {
-                        permissionDef.setPermissionRelationship("anyOf");
-                    }
-                    else {
-                        permissionDef.setPermissionRelationship("allOf");
+                    if (jaxbVal.getName().contains("anyOf")) {
+                        permissionDef.setPermissionRel(PermissionRel.AnyOf);
+                    } else {
+                        permissionDef.setPermissionRel(PermissionRel.AllOf);
                     }
                 }
             }
@@ -238,10 +237,8 @@ public class miningPermDef {
     }
 
     /**
-     * This function removes any java generics information from the methods that require permissions. It is a helper
-     * the ItemsToPermissionDef function
-     * @param permissionDef
-     * @param firstBuilder
+     * This function removes any java generics information from the methods that require permissions. It is a helper the
+     * ItemsToPermissionDef function
      */
     private void scrubJavaGenerics(PermissionDef permissionDef, StringBuilder firstBuilder) {
 
@@ -251,16 +248,15 @@ public class miningPermDef {
 
         //When the string is broken every other token is java generics info so we skip these when rebuilding the string
         StringBuilder secondBuilder = new StringBuilder();
-        for(int i = 0; i < token.length; i+=2) {
+        for (int i = 0; i < token.length; i += 2) {
             //This check adds a space between the return type and the method signature
-            if(i == 0) {
-                secondBuilder.append(token[i] + " ");
-            }
-            else {
+            if (i == 0) {
+                secondBuilder.append(token[i]).append(" ");
+            } else {
                 secondBuilder.append(token[i]);
             }
         }
-        permissionDef.setMethodFieldName(secondBuilder.toString().trim());
+        permissionDef.setTargetName(secondBuilder.toString().trim());
     }
 
     public List<JaxbItemList> getXMLFromIOStream(String pathToJar) throws IOException, JAXBException {
@@ -269,9 +265,9 @@ public class miningPermDef {
 
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
-        while(entries.hasMoreElements()){
+        while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
-            if(entry.getName().contains("annotations.xml")) {
+            if (entry.getName().contains("annotations.xml")) {
                 InputStream stream = zipFile.getInputStream(entry);
                 jaxbItemLists.add(unmarshallXMLFromIO(stream));
                 stream.close();

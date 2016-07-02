@@ -1,23 +1,28 @@
-package test;
-
-import org.oregonstate.droidperm.miningPermDef.*;
+package edu.oregonstate.droidperm.perm.miner;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbAnnotation;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItem;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItemList;
+import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbVal;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
  */
-public class testMiningPermDef {
+public class TestMiningPermDef {
 
     @Test
     public void testUnmarshallXML() throws JAXBException {
-        miningPermDef m = new miningPermDef();
+        XmlPermDefMiner m = new XmlPermDefMiner();
         JaxbItemList jaxbItems = new JaxbItemList();
         File f = new File("src\\test\\annotations\\annotations.xml");
         File f1 = new File("src\\test\\annotations\\annotations2.xml");
@@ -29,7 +34,7 @@ public class testMiningPermDef {
 
     @Test
     public void testMarshallXML() throws JAXBException {
-        miningPermDef m = new miningPermDef();
+        XmlPermDefMiner m = new XmlPermDefMiner();
         JaxbItemList jaxbItemList = new JaxbItemList();
         File f = new File("src\\test\\annotations\\annotations1.xml");
 
@@ -53,7 +58,7 @@ public class testMiningPermDef {
 
     @Test
     public void testFilterItems() throws JAXBException {
-        miningPermDef m = new miningPermDef();
+        XmlPermDefMiner m = new XmlPermDefMiner();
         JaxbItemList jaxbItems = new JaxbItemList();
         JaxbItemList filteredJaxbItems = new JaxbItemList();
         JaxbItem jaxbItem = null;
@@ -79,7 +84,7 @@ public class testMiningPermDef {
 
     @Test
     public void testCombineItems() throws JAXBException, IOException {
-        miningPermDef m = new miningPermDef();
+        XmlPermDefMiner m = new XmlPermDefMiner();
         File f = new File("src\\test\\annotations\\annotations4.xml");
         JaxbItemList jaxbItemList;
 
@@ -90,7 +95,7 @@ public class testMiningPermDef {
 
     @Test
     public void testItemToPermDef() throws JAXBException, IOException {
-        miningPermDef m = new miningPermDef();
+        XmlPermDefMiner m = new XmlPermDefMiner();
         PermissionDefList permissionDefList;
         JaxbItemList jaxbItemList;
         File f1 = new File("src\\test\\annotations\\annotations5.xml");

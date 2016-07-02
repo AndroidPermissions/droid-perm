@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.miningPermDef;
+package org.oregonstate.droidperm.perm.miner.jaxb_in;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -15,18 +15,26 @@ public class JaxbAnnotation {
     private List<JaxbVal> vals = new ArrayList<>();
 
     @XmlAttribute
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     @XmlElement(name = "val")
-    public List<JaxbVal> getVals() { return vals; }
+    public List<JaxbVal> getVals() {
+        return vals;
+    }
 
     public void setVals(List<JaxbVal> vals) {
         this.vals = vals;
     }
 
-    public void addVal(JaxbVal val) { vals.add(val); }
+    public void addVal(JaxbVal val) {
+        vals.add(val);
+    }
 
     @Override
     public String toString() {
