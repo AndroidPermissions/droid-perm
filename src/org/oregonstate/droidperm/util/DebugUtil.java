@@ -2,7 +2,10 @@ package org.oregonstate.droidperm.util;
 
 import org.oregonstate.droidperm.consumer.method.CallPathHolder;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.*;
+import soot.jimple.DefinitionStmt;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
@@ -11,8 +14,12 @@ import soot.jimple.toolkits.callgraph.Targets;
 import soot.jimple.toolkits.callgraph.TransitiveTargets;
 import soot.util.MultiMap;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +27,8 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/22/2016.
  */
 public class DebugUtil {
+    private static final Logger logger = LoggerFactory.getLogger(DebugUtil.class);
+
     public static void printTransitiveTargets(MethodOrMethodContext meth) {
         System.out.println("\nTransitive targets for " + meth);
         StreamUtil.asStream(new TransitiveTargets(Scene.v().getCallGraph()).iterator(meth))
@@ -121,5 +130,51 @@ public class DebugUtil {
                 System.out.println("        " + edge.src().getDeclaringClass() + ": "
                         + edge.srcStmt().getJavaSourceStartLineNumber())
         );
+    }
+
+    public static void dumpCallGraph(File file) {
+        logger.info("Dumping call graph to " + file);
+        long time = System.currentTimeMillis();
+
+        try {
+            CallGraph cg = Scene.v().getCallGraph();
+            PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+            Map<MethodOrMethodContext, Edge> srcMethodToEdge;
+            Field srcMethodToEdgeField = CallGraph.class.getDeclaredField("srcMethodToEdge");
+            srcMethodToEdgeField.setAccessible(true);
+            //noinspection unchecked
+            srcMethodToEdge = (Map<MethodOrMethodContext, Edge>) srcMethodToEdgeField.get(cg);
+            PrintWriter writer = new PrintWriter(new FileWriter(file));
+
+            for (MethodOrMethodContext method : srcMethodToEdge.keySet()) {
+                writer.println("From " + method);
+                cg.edgesOutOf(method).forEachRemaining(edge -> writer.println("\tTo " + edge.tgt()));
+                writer.println();
+                writer.println("\tPoints-to:");
+
+                method.method().getActiveBody().getUnits().stream().filter(unit -> unit instanceof DefinitionStmt)
+                        .forEach(u -> {
+                            DefinitionStmt assign = (DefinitionStmt) u;
+                            Value leftOp = assign.getLeftOp();
+                            if (leftOp instanceof Local) {
+                                PointsToSet pointsTo;
+                                try {
+                                    pointsTo = pta.reachingObjects((Local) leftOp);
+                                } catch (Exception e) {
+                                    pointsTo = null;
+                                }
+                                writer.println("\t\t" + assign + ": " +
+                                        (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
+                            }
+                        });
+                writer.println();
+            }
+            writer.close();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            logger.info("Call graph dumped in " + (System.currentTimeMillis() - time) / 1000.0 + " sec");
+        }
     }
 }

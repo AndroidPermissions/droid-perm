@@ -10,6 +10,7 @@ package org.oregonstate.droidperm;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,7 @@ public class DroidPermMain {
 
     private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
     private static IIPCManager ipcManager = null;
+    private static File callGraphDumpFile;
 
     static {
         // DroidPerm default config options
@@ -282,6 +284,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--XML-OUT")) {
                 xmlOut = new File(args[i + 1]);
                 i += 2;
+            } else if (args[i].equalsIgnoreCase("--CALL-GRAPH-DUMP-FILE")) {
+                callGraphDumpFile = new File(args[i + 1]);
+                i += 2;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -341,6 +346,7 @@ public class DroidPermMain {
         System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
         System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
         System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
+        System.out.println("\t--CALL-GRAPH-DUMP-FILE <file>: Dump the call graph to a file.");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
@@ -414,6 +420,10 @@ public class DroidPermMain {
             runAnalysisSysTimeout(apkFile.getAbsolutePath(), androidJarORSdkDir);
         } else {
             runAnalysis(apkFile.getAbsolutePath(), androidJarORSdkDir);
+        }
+
+        if (callGraphDumpFile != null) {
+            DebugUtil.dumpCallGraph(callGraphDumpFile);
         }
 
         //Run DroidPerm
