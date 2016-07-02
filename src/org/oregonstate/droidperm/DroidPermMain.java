@@ -433,9 +433,10 @@ public class DroidPermMain {
             setupApplication.setSootConfig(options -> {
                 options.set_keep_line_number(true);
                 options.set_include_all(true);
-                /*if (noTaintWrapper) {
-                    options.set_include_all(true);
-                }*/
+                //options.setPhaseOption("cg.spark", "dump-html"); //output format is unintelligible.
+
+                //just some execution statistics, nothing useful for debugging.
+                options.setPhaseOption("cg.spark", "geom-dump-verbose:sootOutput/geom-dump-verbose");
 
                 //options.set_verbose(true);//for low-level debugging of Soot.
             });
