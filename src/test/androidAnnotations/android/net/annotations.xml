@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<root>
-  <item name="android.net.LinkProperties java.lang.String getInterfaceName()">
-    <annotation name="android.support.annotation.Nullable" />
-  </item>
-</root>
-
