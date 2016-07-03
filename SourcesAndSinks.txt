@@ -5,23 +5,23 @@
 % <android.content.Context: java.io.File getExternalCacheDir()> -> _SOURCE_
 
 % Required both with and without --sysflows
-<android.content.ContextWrapper: java.io.File   getCacheDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getCodeCacheDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getDir(java.lang.String,int)> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getExternalCacheDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File[] getExternalCacheDirs()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getExternalFilesDir(java.lang.String)> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File[] getExternalFilesDirs(java.lang.String)> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File[] getExternalMediaDirs()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getFilesDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getNoBackupFilesDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getObbDir()> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File[] getObbDirs()> -> _SOURCE_
+<android.content.Context: java.io.File   getCacheDir()> -> _SOURCE_
+<android.content.Context: java.io.File   getCodeCacheDir()> -> _SOURCE_
+<android.content.Context: java.io.File   getDir(java.lang.String,int)> -> _SOURCE_
+<android.content.Context: java.io.File   getExternalCacheDir()> -> _SOURCE_
+<android.content.Context: java.io.File[] getExternalCacheDirs()> -> _SOURCE_
+<android.content.Context: java.io.File   getExternalFilesDir(java.lang.String)> -> _SOURCE_
+<android.content.Context: java.io.File[] getExternalFilesDirs(java.lang.String)> -> _SOURCE_
+<android.content.Context: java.io.File[] getExternalMediaDirs()> -> _SOURCE_
+<android.content.Context: java.io.File   getFilesDir()> -> _SOURCE_
+<android.content.Context: java.io.File   getNoBackupFilesDir()> -> _SOURCE_
+<android.content.Context: java.io.File   getObbDir()> -> _SOURCE_
+<android.content.Context: java.io.File[] getObbDirs()> -> _SOURCE_
 
-<android.content.ContextWrapper: java.io.File   getDatabasePath(java.lang.String)> -> _SOURCE_
-<android.content.ContextWrapper: java.io.File   getFileStreamPath(java.lang.String)> -> _SOURCE_
-<android.content.ContextWrapper: java.lang.String getPackageCodePath()> -> _SOURCE_
-<android.content.ContextWrapper: java.lang.String getPackageResourcePath()> -> _SOURCE_
+<android.content.Context: java.io.File   getDatabasePath(java.lang.String)> -> _SOURCE_
+<android.content.Context: java.io.File   getFileStreamPath(java.lang.String)> -> _SOURCE_
+<android.content.Context: java.lang.String getPackageCodePath()> -> _SOURCE_
+<android.content.Context: java.lang.String getPackageResourcePath()> -> _SOURCE_
 
 % SINKS
 %=======================

@@ -71,6 +71,7 @@ public class DroidPermMain {
         // DroidPerm default config options
         //during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
+        config.setEnableCallbackSources(false);
     }
 
     private static long initTime;

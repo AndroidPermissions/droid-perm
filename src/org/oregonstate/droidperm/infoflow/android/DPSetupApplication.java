@@ -4,7 +4,7 @@
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * 
+ *
  * Contributors: Christian Fritz, Steven Arzt, Siegfried Rasthofer, Eric
  * Bodden, and others.
  ******************************************************************************/
@@ -146,18 +146,18 @@ public class DPSetupApplication {
 		this.ipcManager = ipcManager;
 		this.additionalClasspath = additionalClasspath;
 	}
-	
+
 	/**
 	 * Gets the set of sinks loaded into FlowDroid These are the sinks as
 	 * they are defined through the SourceSinkManager.
-	 * 
+	 *
 	 * @return The set of sinks loaded into FlowDroid
 	 */
 	public Set<SourceSinkDefinition> getSinks() {
 		return this.sourceSinkProvider == null ? null
 				: this.sourceSinkProvider.getSinks();
 	}
-	
+
 	/**
 	 * Gets the concrete instances of sinks that have been collected inside
 	 * the app. This method returns null if source and sink logging has not
@@ -186,14 +186,14 @@ public class DPSetupApplication {
 	/**
 	 * Gets the set of sources loaded into FlowDroid. These are the sources as
 	 * they are defined through the SourceSinkManager.
-	 * 
+	 *
 	 * @return The set of sources loaded into FlowDroid
 	 */
 	public Set<SourceSinkDefinition> getSources() {
 		return this.sourceSinkProvider == null ? null
 				: this.sourceSinkProvider.getSources();
 	}
-	
+
 	/**
 	 * Gets the concrete instances of sources that have been collected inside
 	 * the app. This method returns null if source and sink logging has not
@@ -221,7 +221,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Gets the set of classes containing entry point methods for the lifecycle
-	 * 
+	 *
 	 * @return The set of classes containing entry point methods for the lifecycle
 	 */
 	public Set<String> getEntrypointClasses() {
@@ -259,7 +259,7 @@ public class DPSetupApplication {
 	/**
 	 * Sets the taint wrapper to be used for propagating taints over unknown (library) callees. If this value is null,
 	 * no taint wrapping is used.
-	 * 
+	 *
 	 * @param taintWrapper
 	 *            The taint wrapper to use or null to disable taint wrapping
 	 */
@@ -270,7 +270,7 @@ public class DPSetupApplication {
 	/**
 	 * Gets the taint wrapper to be used for propagating taints over unknown (library) callees. If this value is null,
 	 * no taint wrapping is used.
-	 * 
+	 *
 	 * @return The taint wrapper to use or null if taint wrapping is disabled
 	 */
 	public ITaintPropagationWrapper getTaintWrapper() {
@@ -279,7 +279,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Calculates the sets of sources, sinks, entry points, and callbacks methods for the given APK file.
-	 * 
+	 *
 	 * @param sources
 	 *            The methods that shall be considered as sources
 	 * @param sinks
@@ -293,19 +293,19 @@ public class DPSetupApplication {
 			Set<AndroidMethod> sinks) throws IOException, XmlPullParserException {
 		final Set<SourceSinkDefinition> sourceDefs = new HashSet<>(sources.size());
 		final Set<SourceSinkDefinition> sinkDefs = new HashSet<>(sinks.size());
-		
+
 		for (AndroidMethod am : sources)
 			sourceDefs.add(new SourceSinkDefinition(am));
 		for (AndroidMethod am : sinks)
 			sinkDefs.add(new SourceSinkDefinition(am));
-		
+
 		ISourceSinkDefinitionProvider parser = new ISourceSinkDefinitionProvider() {
-			
+
 			@Override
 			public Set<SourceSinkDefinition> getSources() {
 				return sourceDefs;
 			}
-			
+
 			@Override
 			public Set<SourceSinkDefinition> getSinks() {
 				return sinkDefs;
@@ -319,16 +319,16 @@ public class DPSetupApplication {
 				sourcesSinks.addAll(sinkDefs);
 				return sourcesSinks;
 			}
-			
+
 		};
-		
+
 		calculateSourcesSinksEntrypoints(parser);
 	}
-	
+
 	/**
 	 * Calculates the sets of sources, sinks, entry points, and callback methods
 	 * for the given APK file.
-	 * 
+	 *
 	 * @param sourceSinkFile
 	 *            The full path and file name of the file containing the sources and sinks
 	 * @throws IOException
@@ -339,10 +339,10 @@ public class DPSetupApplication {
 	public void calculateSourcesSinksEntrypoints(String sourceSinkFile)
 			throws IOException, XmlPullParserException {
 		ISourceSinkDefinitionProvider parser = null;
-		
+
 		String fileExtension = sourceSinkFile.substring(sourceSinkFile.lastIndexOf("."));
 		fileExtension = fileExtension.toLowerCase();
-		
+
 		try {
 			if (fileExtension.equals(".xml"))
 				parser = XMLSourceSinkParser.fromFile(sourceSinkFile);
@@ -352,7 +352,7 @@ public class DPSetupApplication {
 				parser = new RIFLSourceSinkDefinitionProvider(sourceSinkFile);
 			else
 				throw new UnsupportedDataTypeException("The Inputfile isn't a .txt or .xml file.");
-			
+
 			calculateSourcesSinksEntrypoints(parser);
 		}
 		catch (SAXException ex) {
@@ -362,7 +362,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Calculates the sets of sources, sinks, entry points, and callbacks methods for the given APK file.
-	 * 
+	 *
 	 * @param sourcesAndSinks
 	 *            A provider from which the analysis can obtain the list of
 	 *            sources and sinks
@@ -396,12 +396,12 @@ public class DPSetupApplication {
 			else {
 				lfp = new LayoutFileParser(this.appPackageName, resParser);
 				calculateCallbackMethods(resParser, lfp);
-				
+
 				// Some informational output
 				System.out.println("Found " + lfp.getUserControls() + " layout controls");
 			}
 		}
-		
+
 		System.out.println("Entry point calculation done.");
 
 		// Clean up everything we no longer need
@@ -413,7 +413,7 @@ public class DPSetupApplication {
 			for (Set<SootMethodAndClass> methods : this.callbackMethods.values())
 				callbacks.addAll(methods);
 
-			sourceSinkManager = new AccessPathBasedSourceSinkManager(
+			sourceSinkManager = new DPAccessPathBasedSourceSinkManager(
 					this.sourceSinkProvider.getSources(),
 					this.sourceSinkProvider.getSinks(),
 					callbacks,
@@ -430,7 +430,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Adds a method to the set of callback method
-	 * 
+	 *
 	 * @param layoutClass
 	 *            The layout class for which to register the callback
 	 * @param callbackMethod
@@ -447,7 +447,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Calculates the set of callback methods declared in the XML resource files or the app's source code
-	 * 
+	 *
 	 * @param resParser
 	 *            The binary resource parser containing the app resources
 	 * @param lfp
@@ -498,7 +498,7 @@ public class DPSetupApplication {
 					hasChanged = true;
 				}
 			}
-			
+
 			if (entrypoints.addAll(jimpleClass.getDynamicManifestComponents()))
 				hasChanged = true;
 		}
@@ -558,7 +558,7 @@ public class DPSetupApplication {
 					+ this.callbackMethods.size() + " components");
 		}
 	}
-	
+
 	/**
 	 * Registers the callback methods in the given layout control so that they
 	 * are included in the dummy main method
@@ -573,7 +573,7 @@ public class DPSetupApplication {
 			return;
 		if (lc.getViewClass().getName().startsWith("android."))
 			return;
-		
+
 		// Check whether the current class is actually a view
 		{
 			SootClass sc = lc.getViewClass();
@@ -626,13 +626,13 @@ public class DPSetupApplication {
 	/**
 	 * Gets the source/sink manager constructed for FlowDroid. Make sure to call calculateSourcesSinksEntryPoints()
 	 * first, or you will get a null result.
-	 * 
+	 *
 	 * @return FlowDroid's source/sink manager
 	 */
 	public AccessPathBasedSourceSinkManager getSourceSinkManager() {
 		return sourceSinkManager;
 	}
-	
+
 	/**
 	 * Builds the classpath for this analysis
 	 * @return The classpath to be used for the taint analysis
@@ -697,7 +697,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Runs the data flow analysis
-	 * 
+	 *
 	 * @return The results of the data flow analysis
 	 */
 	public InfoflowResults runInfoflow() {
@@ -706,7 +706,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Runs the data flow analysis. Make sure to populate the sets of sources, sinks, and entry points first.
-	 * 
+	 *
 	 * @param onResultsAvailable
 	 *            The callback to be invoked when data flow results are available
 	 * @return The results of the data flow analysis
@@ -739,7 +739,7 @@ public class DPSetupApplication {
 		System.out.println("Starting infoflow computation...");
 		infoflow.setConfig(config);
 		infoflow.setSootConfig(sootConfig);
-		
+
 		if (null != ipcManager) {
 			infoflow.setIPCManager(ipcManager);
 		}
@@ -769,16 +769,16 @@ public class DPSetupApplication {
 	/**
 	 * Gets the entry point creator used for generating the dummy main method emulating the Android lifecycle and the
 	 * callbacks. Make sure to call calculateSourcesSinksEntryPoints() first, or you will get a null result.
-	 * 
+	 *
 	 * @return The entry point creator
 	 */
 	public AndroidEntryPointCreator getEntryPointCreator() {
 		return entryPointCreator;
 	}
-	
+
 	/**
 	 * Gets the extra Soot configuration options to be used when running the analysis
-	 * 
+	 *
 	 * @return The extra Soot configuration options to be used when running the analysis, null if the defaults shall be
 	 *         used
 	 */
@@ -788,7 +788,7 @@ public class DPSetupApplication {
 
 	/**
 	 * Sets the extra Soot configuration options to be used when running the analysis
-	 * 
+	 *
 	 * @param config
 	 *            The extra Soot configuration options to be used when running the analysis, null if the defaults shall
 	 *            be used
@@ -799,23 +799,23 @@ public class DPSetupApplication {
 
 	/**
 	 * Sets the factory class to be used for constructing interprocedural control flow graphs
-	 * 
+	 *
 	 * @param factory
 	 *            The factory to be used. If null is passed, the default factory is used.
 	 */
 	public void setIcfgFactory(BiDirICFGFactory factory) {
 		this.cfgFactory = factory;
 	}
-	
+
 	/**
 	 * Gets the maximum memory consumption during the last analysis run
-	 * 
+	 *
 	 * @return The maximum memory consumption during the last analysis run if available, otherwise -1
 	 */
 	public long getMaxMemoryConsumption() {
 		return this.maxMemoryConsumption;
 	}
-	
+
 	/**
 	 * Gets the data flow configuration
 	 * @return The current data flow configuration
@@ -823,7 +823,7 @@ public class DPSetupApplication {
 	public InfoflowAndroidConfiguration getConfig() {
 		return this.config;
 	}
-	
+
 	/**
 	 * Sets the data flow configuration
 	 * @param config The new data flow configuration
@@ -860,5 +860,5 @@ public class DPSetupApplication {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 }
