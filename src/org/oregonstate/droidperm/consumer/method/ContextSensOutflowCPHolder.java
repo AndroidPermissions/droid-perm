@@ -142,12 +142,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
         InstanceInvokeExpr virtualInvoke = getVirtualInvokeIfPresent(unit);
+        Iterator<Edge> edgesIterator = cg.edgesOutOf(unit);
         if (virtualInvoke != null && context != null) {
-            //we canot compute this list if there are no edges, hence the need for a supplier
+            //we cannot compute this list if there are no edges, hence the need for a supplier
             Supplier<List<SootMethod>> pointsToTargetMethods = new CachingSupplier<>(() -> {
                 PointsToSet pointsToSet = getPointsToIfVirtualCall(unit, context);
                 if (pointsToSet == null) {
-                    return Collections.emptyList();
+                    //this will disable points-to for this statement in case it cannot be computed.
+                    return null;
                 }
 
                 SootMethod staticTargetMethod = virtualInvoke.getMethod();
@@ -174,18 +176,20 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
             //  not through PointsToSet analysis in this class.
             //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
-            return StreamUtil.asStream(cg.edgesOutOf(unit))
+            return StreamUtil.asStream(edgesIterator)
                     .filter(edge -> isPointsToValidEdge(pointsToTargetMethods, edge))
                     .iterator();
         }
 
         //default case, anything except virtual method calls
-        return cg.edgesOutOf(unit);
+        return edgesIterator;
     }
 
     private boolean isPointsToValidEdge(Supplier<List<SootMethod>> pointsToTargetMethods, Edge edge) {
-        //      this is the main case: real edges
-        return pointsToTargetMethods.get().contains(edge.getTgt().method())
+        //      If there's an exception computing points-to, disable points-to check for this statement.
+        return pointsToTargetMethods.get() == null
+                // This is the main case: real edges
+                || pointsToTargetMethods.get().contains(edge.getTgt().method())
                 //2nd case: fake edges
                 //Fake edges are a hack in Soot for handling async constructs.
                 //If it's a fake edge, include it without comparing to actual targets.
