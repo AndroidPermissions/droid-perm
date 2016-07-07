@@ -37,6 +37,7 @@ public class RunPerm {
         List<File> apkFiles = getFiles(apkPath);
         List<String> apkNames = getAPKNames(apkPath);
 
+        //todo looks like there's no one-to-one relationship between the 2 iterators. Needs re-doing.
         Iterator<File> apkIterator = apkFiles.iterator();
         Iterator<String> nameIterator = apkNames.iterator();
 
@@ -80,6 +81,8 @@ public class RunPerm {
     public static List<File> getFiles(String absolutePath) {
         List<File> apkFiles = new ArrayList<>();
 
+        //todo listFiles() won't get the files recursively:
+        // http://stackoverflow.com/questions/2056221/recursively-list-files-in-java
         File[] files = new File(absolutePath).listFiles();
         apkFiles.addAll(showFiles(files));
 
