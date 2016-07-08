@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import com.google.common.collect.Iterators;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
     protected final PointsToAnalysis pointsToAnalysis;
+    protected final CallGraph callGraph = Scene.v().getCallGraph();
 
     /**
      * Methods ignored by the outflow algorithm
@@ -294,6 +296,8 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             } else {
                 out.append("exception");
             }
+            int edgesCount = Iterators.size(callGraph.edgesOutOf((Unit) child.getContext()));
+            out.append(", edges: ").append(edgesCount);
         }
 
         //shortcutted call, if it's a fake edge
