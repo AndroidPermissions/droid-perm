@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
-    private final PointsToAnalysis pointsToAnalysis;
+    protected final PointsToAnalysis pointsToAnalysis;
 
     /**
      * Methods ignored by the outflow algorithm
@@ -139,13 +139,13 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      * Iterator over outbound edges of a particular unit (likely method call).
      */
     private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
-        InstanceInvokeExpr virtualInvoke = getVirtualInvokeIfPresent(unit);
+        InstanceInvokeExpr virtualInvoke = getVirtualInvokeIfPresent((Stmt) unit);
         Iterator<Edge> edgesIterator = cg.edgesOutOf(unit);
 
         //Points-to is safe to compute only when there is at least one edge present.
         //Also checking for edges presence first is a performance improvement.
         if (edgesIterator.hasNext() && virtualInvoke != null && context != null) {
-            PointsToSet pointsToSet = getPointsToIfVirtualCall(unit, context);
+            PointsToSet pointsToSet = getPointsToForOutflows(unit, context);
             if (pointsToSet == null) {
                 //Computing points-to has thrown an exception. Disabling points-to for this unit.
                 return edgesIterator;
@@ -174,7 +174,6 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             //  but it doesn't matter for the purpose of DroidPerm.
             //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
             //  not through PointsToSet analysis in this class.
-            //todo: write a new version of CSens Outflow that doesn't use PointsTo data, reuse the code.
             return StreamUtil.asStream(edgesIterator)
                     .filter(edge -> edgeMatchesPointsTo(edge, pointsToTargetMethods))
                     .iterator();
@@ -285,7 +284,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         //points to of the invocation target
         boolean printPointsTo = child != null && getVirtualInvokeIfPresent((Stmt) child.getContext()) != null;
         if (printPointsTo) {
-            PointsToSet pointsTo = getPointsToIfVirtualCall((Stmt) child.getContext(), methodInC.getContext());
+            PointsToSet pointsTo = getPointsToForLogging((Stmt) child.getContext(), methodInC.getContext());
             out.append("\n                                                                p-to: ");
             if (pointsTo != null) {
                 out.append(pointsTo.possibleTypes().stream()
@@ -327,38 +326,40 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private PointsToSet getPointsToIfVirtualCall(Unit unit, Context context) {
         // only virtual invocations require context sensitivity.
-        InstanceInvokeExpr invoke = getVirtualInvokeIfPresent(unit);
-
-        if (invoke != null) {
-            //in Jimple target is always Local, regardless of who is the qualifier in Java.
-            Local target = (Local) invoke.getBase();
-
-            try {
-                if (context != null) {
-                    return pointsToAnalysis.reachingObjects(context, target);
-                } else {
-                    //context == null means we are in a top-level method, which is still a valid option
-                    return pointsToAnalysis.reachingObjects(target);
-                }
-            } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
-                logger.debug(e.toString());
-                return null;
-            }
-        }
-        return null;
+        InstanceInvokeExpr invoke = getVirtualInvokeIfPresent((Stmt) unit);
+        return invoke != null ? getPointsTo(invoke, context) : null;
     }
 
-    private InstanceInvokeExpr getVirtualInvokeIfPresent(Unit unit) {
-        Value possibleInvokeExpr = null;
-        if (unit instanceof InvokeStmt) {
-            possibleInvokeExpr = ((InvokeStmt) unit).getInvokeExpr();
-        } else if (unit instanceof AssignStmt) {
-            possibleInvokeExpr = ((AssignStmt) unit).getRightOp();
+    protected PointsToSet getPointsTo(InstanceInvokeExpr invoke, Context context) {
+        //in Jimple target is always Local, regardless of who is the qualifier in Java.
+        Local target = (Local) invoke.getBase();
+
+        try {
+            if (context != null) {
+                return pointsToAnalysis.reachingObjects(context, target);
+            } else {
+                //context == null means we are in a top-level method, which is still a valid option
+                return pointsToAnalysis.reachingObjects(target);
+            }
+        } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
+            logger.debug(e.toString());
+            return null;
         }
-        return possibleInvokeExpr != null
-                       && (possibleInvokeExpr instanceof VirtualInvokeExpr
-                || possibleInvokeExpr instanceof InterfaceInvokeExpr)
-               ? (InstanceInvokeExpr) possibleInvokeExpr : null;
+    }
+
+    protected PointsToSet getPointsToForOutflows(Unit unit, Context context) {
+        return getPointsToIfVirtualCall(unit, context);
+    }
+
+    protected PointsToSet getPointsToForLogging(Unit unit, Context context) {
+        return getPointsToIfVirtualCall(unit, context);
+    }
+
+    private InstanceInvokeExpr getVirtualInvokeIfPresent(Stmt stmt) {
+        InvokeExpr invokeExpr = stmt.containsInvokeExpr() ? stmt.getInvokeExpr() : null;
+        return invokeExpr != null
+                       && (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr)
+               ? (InstanceInvokeExpr) invokeExpr : null;
     }
 
     private static SootMethod getInvokedMethod(InvokeStmt stmt) {
