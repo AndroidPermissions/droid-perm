@@ -147,7 +147,8 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         if (edgesIterator.hasNext() && virtualInvoke != null && context != null) {
             PointsToSet pointsToSet = getPointsToForOutflows(unit, context);
             if (pointsToSet == null) {
-                //Computing points-to has thrown an exception. Disabling points-to for this unit.
+                //Computing points-to has thrown an exception or has beed disabled.
+                //Disabling points-to refinement for this unit.
                 return edgesIterator;
             }
 
