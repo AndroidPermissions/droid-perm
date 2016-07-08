@@ -49,8 +49,13 @@ public class MethodInContext {
 
     public Value getTargetObj() {
         return edge != null && edge.srcStmt() instanceof InvokeStmt &&
-                edge.srcStmt().getInvokeExpr() instanceof InstanceInvokeExpr
-                ? ((InstanceInvokeExpr) edge.srcStmt().getInvokeExpr()).getBase() : null;
+                       edge.srcStmt().getInvokeExpr() instanceof InstanceInvokeExpr
+               ? ((InstanceInvokeExpr) edge.srcStmt().getInvokeExpr()).getBase() : null;
+    }
+
+    public int getLineNumber() {
+        //noinspection ConstantConditions
+        return edge != null && edge.srcStmt() != null ? edge.srcStmt().getJavaSourceStartLineNumber() : null;
     }
 
     /**
@@ -80,7 +85,8 @@ public class MethodInContext {
 
     @Override
     public String toString() {
-        return method + "\n        called from " + getSrcMethod() + "\n        targetObj: " + getTargetObj();
+        return method + "\n        called from " + getSrcMethod() + " : " + getLineNumber()
+                + "\n        targetObj: " + getTargetObj();
     }
 
     public static class SortingComparator implements Comparator<MethodInContext> {
