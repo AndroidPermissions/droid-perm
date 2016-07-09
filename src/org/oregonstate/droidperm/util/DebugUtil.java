@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.DefinitionStmt;
+import soot.jimple.ThisRef;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
@@ -18,10 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -134,6 +132,13 @@ public class DebugUtil {
         );
     }
 
+    /**
+     * For each class, dump points-to of all fields that are of reference type. For Each method in the call graph, dump
+     * all local variables, all the fields in @this, and all the outgoing methods. Calls to class initializer (clinit)
+     * are not printed.
+     *
+     * @param file The output file.
+     */
     public static void dumpPointsToAndCallGraph(File file) {
         logger.info("Dumping call graph to " + file);
         long time = System.currentTimeMillis();
@@ -167,13 +172,16 @@ public class DebugUtil {
         classes.forEach(clazz -> {
             writer.println("Points-to for " + clazz);
             for (SootField field : clazz.getFields()) {
-                PointsToSet pointsTo;
-                try {
-                    pointsTo = pta.reachingObjects(field);
-                } catch (Exception e) {
-                    pointsTo = null;
+                if (field.isStatic() && field.getType() instanceof RefLikeType) {
+                    PointsToSet pointsTo = null;
+                    Exception pte = null;
+                    try {
+                        pointsTo = pta.reachingObjects(field);
+                    } catch (Exception e) {
+                        pte = e;
+                    }
+                    writer.println("\t" + field + ": " + toDisplayString(pointsTo, pte));
                 }
-                writer.println("\t" + field + ": " + (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
             }
         });
     }
@@ -182,26 +190,74 @@ public class DebugUtil {
                                       Map<MethodOrMethodContext, Edge> srcMethodToEdge, PrintWriter writer) {
         for (MethodOrMethodContext method : srcMethodToEdge.keySet()) {
             writer.println("From " + method);
-            cg.edgesOutOf(method).forEachRemaining(edge -> writer.println("\tTo " + edge.tgt()));
+            dumpMethodEdges(method, cg, writer);
             writer.println();
             writer.println("\tPoints-to:");
 
-            method.method().getActiveBody().getUnits().stream().filter(unit -> unit instanceof DefinitionStmt)
-                    .forEach(u -> {
-                        DefinitionStmt assign = (DefinitionStmt) u;
-                        Value leftOp = assign.getLeftOp();
-                        if (leftOp instanceof Local) {
-                            PointsToSet pointsTo;
-                            try {
-                                pointsTo = pta.reachingObjects((Local) leftOp);
-                            } catch (Exception e) {
-                                pointsTo = null;
-                            }
-                            writer.println("\t\t" + assign + ": " +
-                                    (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
-                        }
-                    });
+            dumpMethodPointsTo(method, pta, writer);
             writer.println();
         }
+    }
+
+    private static void dumpMethodEdges(MethodOrMethodContext method, CallGraph cg, PrintWriter writer) {
+        for (Unit unit : method.method().getActiveBody().getUnits()) {
+            Iterator<Edge> edges = cg.edgesOutOf(unit);
+            if (edges.hasNext()) {
+                boolean unitPrinted = false;
+                while (edges.hasNext()) {
+                    Edge edge = edges.next();
+                    if (edge.tgt().getName().contains("<clinit>")) {
+                        continue;
+                    }
+
+                    if (!unitPrinted) {
+                        writer.println("\t" + unit);
+                        unitPrinted = true;
+                    }
+                    writer.println("\t\tTo " + edge.tgt());
+                }
+            }
+        }
+    }
+
+    private static void dumpMethodPointsTo(MethodOrMethodContext method, PointsToAnalysis pta, PrintWriter writer) {
+        for (Unit unit : method.method().getActiveBody().getUnits()) {
+            if (unit instanceof DefinitionStmt) {
+                DefinitionStmt assign = (DefinitionStmt) unit;
+                Value leftOp = assign.getLeftOp();
+                if (leftOp instanceof Local && leftOp.getType() instanceof RefLikeType) {
+                    PointsToSet pointsTo = null;
+                    Exception pte = null;
+                    try {
+                        pointsTo = pta.reachingObjects((Local) leftOp);
+                    } catch (Exception e) {
+                        pte = e;
+                    }
+                    writer.println("\t\t" + assign + ": " + toDisplayString(pointsTo, pte));
+
+                    //Dump instance fields of @this
+                    if (assign.getRightOp() instanceof ThisRef) {
+                        SootClass thisClass = ((RefType) leftOp.getType()).getSootClass();
+                        for (SootField field : thisClass.getFields()) {
+                            if (!field.isStatic() && field.getType() instanceof RefLikeType) {
+                                PointsToSet fieldPointsTo = null;
+                                Exception fpte = null;
+                                try {
+                                    fieldPointsTo = pta.reachingObjects((Local) leftOp, field);
+                                } catch (Exception e) {
+                                    fpte = e;
+                                }
+                                writer.println("\t\t\tthis.<" + field.getSubSignature()
+                                        + ">: " + toDisplayString(fieldPointsTo, fpte));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static String toDisplayString(PointsToSet pointsTo, Exception e) {
+        return "" + (pointsTo != null ? pointsTo.possibleTypes() : "EXCEPTION: " + e);
     }
 }
