@@ -18,10 +18,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/22/2016.
@@ -132,7 +134,7 @@ public class DebugUtil {
         );
     }
 
-    public static void dumpCallGraph(File file) {
+    public static void dumpPointsToAndCallGraph(File file) {
         logger.info("Dumping call graph to " + file);
         long time = System.currentTimeMillis();
 
@@ -146,35 +148,60 @@ public class DebugUtil {
             srcMethodToEdge = (Map<MethodOrMethodContext, Edge>) srcMethodToEdgeField.get(cg);
             PrintWriter writer = new PrintWriter(new FileWriter(file));
 
-            for (MethodOrMethodContext method : srcMethodToEdge.keySet()) {
-                writer.println("From " + method);
-                cg.edgesOutOf(method).forEachRemaining(edge -> writer.println("\tTo " + edge.tgt()));
-                writer.println();
-                writer.println("\tPoints-to:");
-
-                method.method().getActiveBody().getUnits().stream().filter(unit -> unit instanceof DefinitionStmt)
-                        .forEach(u -> {
-                            DefinitionStmt assign = (DefinitionStmt) u;
-                            Value leftOp = assign.getLeftOp();
-                            if (leftOp instanceof Local) {
-                                PointsToSet pointsTo;
-                                try {
-                                    pointsTo = pta.reachingObjects((Local) leftOp);
-                                } catch (Exception e) {
-                                    pointsTo = null;
-                                }
-                                writer.println("\t\t" + assign + ": " +
-                                        (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
-                            }
-                        });
-                writer.println();
-            }
+            dumpPointsTo(pta, srcMethodToEdge, writer);
+            writer.println("\n\n\n======================================");
+            dumpCallGraph(cg, pta, srcMethodToEdge, writer);
             writer.close();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             logger.info("Call graph dumped in " + (System.currentTimeMillis() - time) / 1000.0 + " sec");
+        }
+    }
+
+    private static void dumpPointsTo(PointsToAnalysis pta,
+                                     Map<MethodOrMethodContext, Edge> srcMethodToEdge, PrintWriter writer) {
+        Stream<SootClass> classes = srcMethodToEdge.keySet().stream().map(meth -> meth.method().getDeclaringClass())
+                .distinct().sorted(Comparator.comparing(SootClass::getName));
+        classes.forEach(clazz -> {
+            writer.println("Points-to for " + clazz);
+            for (SootField field : clazz.getFields()) {
+                PointsToSet pointsTo;
+                try {
+                    pointsTo = pta.reachingObjects(field);
+                } catch (Exception e) {
+                    pointsTo = null;
+                }
+                writer.println("\t" + field + ": " + (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
+            }
+        });
+    }
+
+    private static void dumpCallGraph(CallGraph cg, PointsToAnalysis pta,
+                                      Map<MethodOrMethodContext, Edge> srcMethodToEdge, PrintWriter writer) {
+        for (MethodOrMethodContext method : srcMethodToEdge.keySet()) {
+            writer.println("From " + method);
+            cg.edgesOutOf(method).forEachRemaining(edge -> writer.println("\tTo " + edge.tgt()));
+            writer.println();
+            writer.println("\tPoints-to:");
+
+            method.method().getActiveBody().getUnits().stream().filter(unit -> unit instanceof DefinitionStmt)
+                    .forEach(u -> {
+                        DefinitionStmt assign = (DefinitionStmt) u;
+                        Value leftOp = assign.getLeftOp();
+                        if (leftOp instanceof Local) {
+                            PointsToSet pointsTo;
+                            try {
+                                pointsTo = pta.reachingObjects((Local) leftOp);
+                            } catch (Exception e) {
+                                pointsTo = null;
+                            }
+                            writer.println("\t\t" + assign + ": " +
+                                    (pointsTo != null ? pointsTo.possibleTypes() : "exception"));
+                        }
+                    });
+            writer.println();
         }
     }
 }

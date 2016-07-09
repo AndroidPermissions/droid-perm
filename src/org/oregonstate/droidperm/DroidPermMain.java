@@ -424,7 +424,7 @@ public class DroidPermMain {
         }
 
         if (callGraphDumpFile != null) {
-            DebugUtil.dumpCallGraph(callGraphDumpFile);
+            DebugUtil.dumpPointsToAndCallGraph(callGraphDumpFile);
         }
 
         //Run DroidPerm
