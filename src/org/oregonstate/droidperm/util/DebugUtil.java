@@ -137,6 +137,9 @@ public class DebugUtil {
      * For each class, dump points-to of all fields that are of reference type. For Each method in the call graph, dump
      * all local variables, all the fields in @this, and all the outgoing methods. Calls to class initializer (clinit)
      * are not printed.
+     * <p>
+     * For statements that have outgoing edges, an invocation, and empty or null points-to, we have a case of points-to
+     * inconsistency. For them a special message "EMPTY/NULL POINTS-TO" is printed.
      *
      * @param file The output file.
      */
