@@ -151,8 +151,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         //Also checking for edges presence first is a performance improvement.
         if (edgesIterator.hasNext() && virtualInvoke != null && context != null) {
             PointsToSet pointsToSet = getPointsToForOutflows(unit, context);
-            if (pointsToSet == null) {
+            if (pointsToSet == null || pointsToSet.possibleTypes().isEmpty()) {
                 //Computing points-to has thrown an exception or has beed disabled.
+                //Also if possibleTypes() is empty, this might be a case of points-to inconsistency with valid edges.
                 //Disabling points-to refinement for this unit.
                 return edgesIterator;
             }
