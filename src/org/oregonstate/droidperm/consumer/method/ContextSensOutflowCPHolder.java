@@ -2,11 +2,14 @@ package org.oregonstate.droidperm.consumer.method;
 
 import com.google.common.collect.Iterators;
 import org.oregonstate.droidperm.util.HierarchyUtil;
+import org.oregonstate.droidperm.util.PointsToUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
-import soot.jimple.*;
+import soot.jimple.InstanceInvokeExpr;
+import soot.jimple.InvokeStmt;
+import soot.jimple.Stmt;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.spark.ondemand.genericutil.HashSetMultiMap;
 import soot.jimple.spark.ondemand.genericutil.MultiMap;
@@ -141,7 +144,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      * Iterator over outbound edges of a particular unit (likely method call).
      */
     private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
-        InstanceInvokeExpr virtualInvoke = getVirtualInvokeIfPresent((Stmt) unit);
+        InstanceInvokeExpr virtualInvoke = PointsToUtil.getVirtualInvokeIfPresent((Stmt) unit);
         Iterator<Edge> edgesIterator = cg.edgesOutOf(unit);
 
         //Points-to is safe to compute only when there is at least one edge present.
@@ -285,7 +288,8 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
 
         //points to of the invocation target
-        boolean printPointsTo = child != null && getVirtualInvokeIfPresent((Stmt) child.getContext()) != null;
+        boolean printPointsTo =
+                child != null && PointsToUtil.getVirtualInvokeIfPresent((Stmt) child.getContext()) != null;
         if (printPointsTo) {
             PointsToSet pointsTo = getPointsToForLogging((Stmt) child.getContext(), methodInC.getContext());
             out.append("\n                                                                p-to: ");
@@ -324,47 +328,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return path;
     }
 
-    /**
-     * Stmt with virtual calls could either be InvokeStmt or AssignStmt.
-     *
-     * @return points-to set for the call target, if virtual. Value null otherwise.
-     */
-    private PointsToSet getPointsToIfVirtualCall(Unit unit, Context context) {
-        // only virtual invocations require context sensitivity.
-        InstanceInvokeExpr invoke = getVirtualInvokeIfPresent((Stmt) unit);
-        return invoke != null ? getPointsTo(invoke, context) : null;
-    }
-
-    protected PointsToSet getPointsTo(InstanceInvokeExpr invoke, Context context) {
-        //in Jimple target is always Local, regardless of who is the qualifier in Java.
-        Local target = (Local) invoke.getBase();
-
-        try {
-            if (context != null) {
-                return pointsToAnalysis.reachingObjects(context, target);
-            } else {
-                //context == null means we are in a top-level method, which is still a valid option
-                return pointsToAnalysis.reachingObjects(target);
-            }
-        } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
-            logger.debug(e.toString());
-            return null;
-        }
-    }
-
     protected PointsToSet getPointsToForOutflows(Unit unit, Context context) {
-        return getPointsToIfVirtualCall(unit, context);
+        return PointsToUtil.getPointsToIfVirtualCall(unit, context, pointsToAnalysis);
     }
 
     protected PointsToSet getPointsToForLogging(Unit unit, Context context) {
-        return getPointsToIfVirtualCall(unit, context);
-    }
-
-    private InstanceInvokeExpr getVirtualInvokeIfPresent(Stmt stmt) {
-        InvokeExpr invokeExpr = stmt.containsInvokeExpr() ? stmt.getInvokeExpr() : null;
-        return invokeExpr != null
-                       && (invokeExpr instanceof VirtualInvokeExpr || invokeExpr instanceof InterfaceInvokeExpr)
-               ? (InstanceInvokeExpr) invokeExpr : null;
+        return PointsToUtil.getPointsToIfVirtualCall(unit, context, pointsToAnalysis);
     }
 
     private static SootMethod getInvokedMethod(InvokeStmt stmt) {

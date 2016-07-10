@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.DefinitionStmt;
+import soot.jimple.Stmt;
 import soot.jimple.ThisRef;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.internal.JInvokeStmt;
@@ -200,6 +201,7 @@ public class DebugUtil {
     }
 
     private static void dumpMethodEdges(MethodOrMethodContext method, CallGraph cg, PrintWriter writer) {
+        PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
         for (Unit unit : method.method().getActiveBody().getUnits()) {
             Iterator<Edge> edges = cg.edgesOutOf(unit);
             if (edges.hasNext()) {
@@ -213,6 +215,16 @@ public class DebugUtil {
                     if (!unitPrinted) {
                         writer.println("\t" + unit);
                         unitPrinted = true;
+
+                        //Check if this unit is an invocation with empty points-to. If yes, print.
+                        if (PointsToUtil.getVirtualInvokeIfPresent((Stmt) unit) != null) {
+                            PointsToSet pointsTo = PointsToUtil.getPointsToIfVirtualCall(unit, null, pta);
+                            if (pointsTo == null) {
+                                writer.println("\t\t\t\tNULL POINTS-TO!!!");
+                            } else if (pointsTo.possibleTypes().isEmpty()) {
+                                writer.println("\t\t\t\tEMPTY POINTS-TO!!!");
+                            }
+                        }
                     }
                     writer.println("\t\tTo " + edge.tgt());
                 }
