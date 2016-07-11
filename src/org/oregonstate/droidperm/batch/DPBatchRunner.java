@@ -16,43 +16,40 @@ public class DPBatchRunner {
 
 
     /**
-     * This main runs droid perm on a list of apk files that are found within a directory.
-     * Command line arguments:
-     * args[0] = path/to/directory/with/apks
-     * args[1] = path/to/output/location
-     * args[2] = path/to/droidperm/run/directory
+     * This main runs droid perm on a list of apk files that are found within a directory. Command line arguments:
+     * args[0] = path/to/directory/with/apks args[1] = path/to/output/location args[2] =
+     * path/to/droidperm/run/directory
      */
     public static void main(final String[] args) throws IOException, InterruptedException {
-
-        batchRunner(args[0], args[1], args[2]);
-
+        batchRun(args[0], args[1], args[2]);
     }
 
-    private static void batchRunner(String apkPath, String outputPath, String droidPermHome) throws IOException {
+    private static void batchRun(String appReposPath, String outputLogsPath, String droidPermHome) throws IOException {
 
         String droidPermClassPath = droidPermHome + "\\droid-perm.jar";
         String androidClassPath = droidPermHome + "\\android-23-cr+util_io.zip";
         List<String> processBuilderArgs = new ArrayList<>();
 
-        List<File> apkFiles = getFiles(apkPath);
-        List<String> apkNames = getAPKNames(apkPath);
+        List<File> apkFiles = getApkFiles(appReposPath);
+        List<String> appPaths = getAppPaths(appReposPath);
 
         //todo The one-to-one relationship between the 2 iterators will only exist in the ideal case:
-        // when there's exactly one apk for each directory inside apkPath.
-        Iterator<File> apkIterator = apkFiles.iterator();
-        Iterator<String> nameIterator = apkNames.iterator();
+        // when there's exactly one apk for each directory inside appReposPath.
+        Iterator<File> apkFilesIterator = apkFiles.iterator();
+        Iterator<String> appPathIterator = appPaths.iterator();
 
-        while (apkIterator.hasNext()) {
+        while (apkFilesIterator.hasNext()) {
 
-            String name = nameIterator.next();
-            File xmlFile = new File(outputPath + "\\" + name + ".xml");
-            File logFile = new File(outputPath + "\\" + name + ".log");
-            File errorFile = new File (outputPath + "\\" + name + ".error.log");
+            String name = appPathIterator.next();
+            File xmlFile = new File(outputLogsPath + "\\" + name + ".xml");
+            File logFile = new File(outputLogsPath + "\\" + name + ".log");
+            File errorFile = new File(outputLogsPath + "\\" + name + ".error.log");
 
             processBuilderArgs.clear();
 
             processBuilderArgs.addAll(Arrays
-                    .asList("java", "-jar", droidPermClassPath, apkIterator.next().getAbsolutePath(), androidClassPath,
+                    .asList("java", "-jar", droidPermClassPath, apkFilesIterator.next().getAbsolutePath(),
+                            androidClassPath,
                             "--xml-out", xmlFile.getAbsolutePath()));
             processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
 
@@ -78,23 +75,22 @@ public class DPBatchRunner {
         }
     }
 
-
-    public static List<File> getFiles(String absolutePath) {
+    public static List<File> getApkFiles(String absolutePath) {
         List<File> apkFiles = new ArrayList<>();
         File[] files = new File(absolutePath).listFiles();
-        apkFiles.addAll(showFiles(files));
+        apkFiles.addAll(getApkFilesRecursively(files));
 
         return apkFiles;
     }
 
-    private static List<File> showFiles(File[] files) {
+    private static List<File> getApkFilesRecursively(File[] files) {
         List<File> apkFiles = new ArrayList<>();
 
         for (File file : files) {
             if (file.isDirectory()) {
-                apkFiles.addAll(showFiles(file.listFiles()));
+                apkFiles.addAll(getApkFilesRecursively(file.listFiles()));
             } else {
-                if(file.getName().endsWith("debug.apk")) {
+                if (file.getName().endsWith("debug.apk")) {
                     apkFiles.add(file);
                 }
             }
@@ -102,13 +98,13 @@ public class DPBatchRunner {
         return apkFiles;
     }
 
-    private static List<String> getAPKNames (String rootPath) {
+    private static List<String> getAppPaths(String rootPath) {
         List<String> containerFiles = new ArrayList<>();
 
         File[] files = new File(rootPath).listFiles();
 
-        for(File file : files) {
-            if(file.isDirectory()) {
+        for (File file : files) {
+            if (file.isDirectory()) {
                 containerFiles.add(file.getName());
             }
         }
