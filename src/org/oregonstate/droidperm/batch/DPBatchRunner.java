@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.rundroidperm;
+package org.oregonstate.droidperm.batch;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/5/2016.
  */
-public class RunPerm {
+public class DPBatchRunner {
     private static final String[] EXTRA_OPTS = new String[]{"--pathalgo", "CONTEXTSENSITIVE", "--notaintwrapper",
                                                             "--cgalgo", "GEOM", "--taint-analysis-enabled", "false"};
 
