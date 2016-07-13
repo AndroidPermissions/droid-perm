@@ -134,7 +134,7 @@ Add the following program arguments:
 
 -   Use the following program arguments:
 
-    --pathalgo CONTEXTSENSITIVE --notaintwrapper
+    \--pathalgo CONTEXTSENSITIVE --notaintwrapper
 
  
 
@@ -149,6 +149,8 @@ Updating DroidPerm inside DroidPerm plugin
 
 ### Steps
 
+-   git update modules droid-perm and android-23-api-crafted.
+
 -   Build the droid-perm jar: Build -\> Build Artifacts -\> droid-perm:jar
     -\>Build
 
@@ -158,7 +160,7 @@ Updating DroidPerm inside DroidPerm plugin
 
 -   Also open DroidPerm\\run-dir\\lib\\android-23-cr-stubs.zip
 
--   Copy the contet of the production dir ito the zip
+-   Copy the content of the production dir above into the zip above
 
 -   Copy droid-perm.jar and android-23-cr-stubs.zip to their respective
     locations in droid-perm plugin
@@ -169,9 +171,32 @@ Updating DroidPerm inside DroidPerm plugin
 
 ### Troubleshooting
 
--   If runnign result is empty & droid-perm runs successfully, check the last
+-   If running result is empty & droid-perm runs successfully, check the last
     modification date of jaxb classes, maybe the format has changed.
 
 -   Also check the xml putput.
+
+ 
+
+Updating DroidPerm inside Intellij
+----------------------------------
+
+### Prerequisites
+
+-   droid-perm project with all modules from my stick
+
+ 
+
+### Steps
+
+-   git update modules droid-perm and android-23-api-crafted
+
+-   Build the project
+
+-   Go to DroidPerm\\android-23-api-crafted\\out\\production
+
+-   Also open DroidPerm\\run-dir\\lib\\android-23-cr-stubs.zip
+
+-   Copy the content of the production dir above into the zip above
 
  
