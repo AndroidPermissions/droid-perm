@@ -191,6 +191,9 @@ Updating DroidPerm inside Intellij
 
 -   git update modules droid-perm and android-23-api-crafted
 
+-   When getting the project from my stick for the first time, please also
+    update: soot, soot-infoflow, soot-infoflow-android.
+
 -   Build the project
 
 -   Go to DroidPerm\\android-23-api-crafted\\out\\production
