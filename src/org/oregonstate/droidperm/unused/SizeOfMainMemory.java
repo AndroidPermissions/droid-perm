@@ -3,7 +3,7 @@ package org.oregonstate.droidperm.unused;
 import java.io.File;
 
 /**
- * Get resources availableto Java. Source: http://stackoverflow.com/a/12807848/4182868
+ * Get resources available to Java. Source: http://stackoverflow.com/a/12807848/4182868
  *
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 7/14/2016.
  */
