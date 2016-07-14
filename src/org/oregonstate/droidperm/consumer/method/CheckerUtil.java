@@ -38,6 +38,8 @@ public class CheckerUtil {
             return Collections.singleton(((StringConstant) lastArg).value);
         } else if (lastArg instanceof Local) {
             PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+            //todo get points-to context-sensitively for GEOM, context-insens for SPARK.
+            //Likely won't affect results in real apps anyway.
             Set<String> permSet = pta.reachingObjects((Local) lastArg).possibleStringConstants();
             if (permSet != null) {
                 if (permSet.size() != 1) {

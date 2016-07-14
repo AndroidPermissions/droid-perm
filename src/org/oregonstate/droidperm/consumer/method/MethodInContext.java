@@ -85,7 +85,7 @@ public class MethodInContext {
 
     @Override
     public String toString() {
-        return method + "\n        called from " + getSrcMethod() + " : " + getLineNumber()
+        return method + "\n        calling context " + getSrcMethod() + " : " + getLineNumber()
                 + "\n        targetObj: " + getTargetObj();
     }
 
