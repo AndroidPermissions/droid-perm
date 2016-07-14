@@ -119,21 +119,6 @@ public class DebugUtil {
     }
 
     /**
-     * For the given pair sensitive-callback, print all locations that call the sensitive. For each location, print
-     * class name and line number.
-     */
-    public static void printCallClassesAndLineNumbers(MethodOrMethodContext sensitive, MethodOrMethodContext callback,
-                                                      CallPathHolder sensitivePathsHolder) {
-        System.out.println("        Sensitive calls: ");
-        //from bytecode we can only get line numbers, not column numbers.
-        //noinspection ConstantConditions
-        sensitivePathsHolder.getCallsToMeth(sensitive, callback).forEach(edge ->
-                System.out.println("        " + edge.src().getDeclaringClass() + ": "
-                        + edge.srcStmt().getJavaSourceStartLineNumber())
-        );
-    }
-
-    /**
      * For each class, dump points-to of all fields that are of reference type. For Each method in the call graph, dump
      * all local variables, all the fields in @this, and all the outgoing methods. Calls to class initializer (clinit)
      * are not printed.
