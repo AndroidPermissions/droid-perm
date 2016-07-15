@@ -42,22 +42,28 @@ public class MethodPermDetector {
     private Set<MethodOrMethodContext> permCheckers;
 
     //toperf holders for checkers and sensitives could be combined into one. One traversal could produce both.
+    //this is actually required for flow-sensitive analysis.
     @SuppressWarnings("FieldCanBeLocal")
     private CallPathHolder checkerPathsHolder;
     private Map<MethodOrMethodContext, Set<String>> callbackToCheckedPermsMap;
 
     private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
     private Map<MethodOrMethodContext, AndroidMethod> sensitiveToSensitiveDefMap;
-    private Set<MethodOrMethodContext> sensitives;
+
+    /**
+     * This set is sorted.
+     */
+    private LinkedHashSet<MethodOrMethodContext> sensitives;
 
     /**
      * A map from permission sets to sets of resolved sensitive method definitions requiring this permission set.
      */
     private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
-    private Map<Set<String>, Set<MethodOrMethodContext>> permsToSensitivesMap;
-    private Map<MethodOrMethodContext, Set<String>> sensitiveToPermsMap;
 
-    private CallPathHolder sensitivePathsHolder;
+    private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> permsToSensitivesMap;
+    private LinkedHashMap<MethodOrMethodContext, List<MethodInContext>> sensitiveToSensInContextMap;
+
+    private ContextSensOutflowCPHolder sensitivePathsHolder;
 
     private Map<MethodOrMethodContext, Set<String>> callbackToRequiredPermsMap;
     private Set<String> sometimesNotCheckedPerms;
@@ -85,7 +91,8 @@ public class MethodPermDetector {
         analyze();
         printResults();
 
-        System.out.println("DroidPerm execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
+        System.out.println("\nDroidPerm execution time: "
+                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
     private void analyze() {
@@ -106,7 +113,9 @@ public class MethodPermDetector {
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
-        sensitives = resolvedSensitiveDefs.values().stream().collect(MyCollectors.toFlatSet());
+        sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
+                .sorted(new MethodOrMCSortingComparator())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         //sensitives should be added to ignore method list, to prevent their body from being analyzed
         outflowIgnoreSet.addAll(
@@ -122,7 +131,6 @@ public class MethodPermDetector {
         sensitiveToSensitiveDefMap = buildSensitiveToSensitiveDefMap();
         permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
         permsToSensitivesMap = buildPermsToSensitivesMap();
-        sensitiveToPermsMap = buildSensitiveToPermsMap();
 
         //select one of the call path algorithms.
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
@@ -130,6 +138,7 @@ public class MethodPermDetector {
         //sensitivePathsHolder = new PartialPointsToCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
 
+        sensitiveToSensInContextMap = buildSensitiveToSensInContextMap();
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
         callbackCheckerStatusMap = buildCheckerStatusMap();
@@ -137,19 +146,32 @@ public class MethodPermDetector {
         //DebugUtil.printTargets(sensitives);
     }
 
+    private LinkedHashMap<MethodOrMethodContext, List<MethodInContext>> buildSensitiveToSensInContextMap() {
+        return sensitives.stream().collect(Collectors.toMap(
+                meth -> meth,
+                meth -> sensitivePathsHolder.getSensitivesInContext().stream()
+                        .filter(sensInC -> sensInC.method == meth)
+                        .sorted(new MethodInContext.SortingComparator())
+                        .collect(Collectors.toList()),
+                StreamUtil.throwingMerger(),
+                LinkedHashMap::new
+        ));
+    }
+
     private void printResults() {
         //setupApp.printProducerDefs();
         //setupApp.printConsumerDefs();
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
-        printSensitivesInContext();
-        printCheckersInContext();
         if (sensitivePathsHolder instanceof ContextSensOutflowCPHolder) {
             printSensitivesInContextToCallbacks();
         }
         printUnusedChecks();
 
-        //Print main results tu System.out and optionally to a file
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
+        printCheckersInContext();
+        printSensitivesInContext();
+
+        //Printing to files
         if (txtOut != null) {
             try (PrintStream summaryOut = new PrintStream(new FileOutputStream(txtOut))) {
                 printReachableSensitivesInCallbackStmts(jaxbData, summaryOut);
@@ -168,12 +190,9 @@ public class MethodPermDetector {
         //DebugUtil.pointsToTest();
     }
 
-    private Map<Set<String>, Set<MethodOrMethodContext>> buildPermsToSensitivesMap() {
-        return sensitives.stream().collect(Collectors.groupingBy(this::getPermissionsFor, Collectors.toSet()));
-    }
-
-    private Map<MethodOrMethodContext, Set<String>> buildSensitiveToPermsMap() {
-        return sensitives.stream().collect(Collectors.toMap(sens -> sens, this::getPermissionsFor));
+    private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> buildPermsToSensitivesMap() {
+        return sensitives.stream().collect(
+                Collectors.groupingBy(this::getPermissionsFor, Collectors.toCollection(LinkedHashSet::new)));
     }
 
     private Set<String> getPermissionsFor(MethodOrMethodContext sensitive) {
@@ -206,18 +225,13 @@ public class MethodPermDetector {
     }
 
     private void printSensitivesInContextToCallbacks() {
-        ContextSensOutflowCPHolder cpHolder = (ContextSensOutflowCPHolder) sensitivePathsHolder;
-
         System.out.println("\n\nFor each sensitive in context, reaching callbacks" +
                 "\n====================================");
 
         for (Set<String> permSet : permissionToSensitiveDefMap.keySet()) {
             //sorting methods by toString() efficiently, without computing toString() each time.
-            Collection<MethodInContext> sortedSensitives
-                    = cpHolder.getSensitiveInCToCallbacksMap().keySet().stream()
-                    .filter(sensInC -> permSet.equals(sensitiveToPermsMap.get(sensInC.method)))
-                    .sorted(new MethodInContext.SortingComparator())
-                    .collect(Collectors.toList());
+            List<MethodInContext> sortedSensitives = permsToSensitivesMap.get(permSet).stream()
+                    .flatMap(meth -> sensitiveToSensInContextMap.get(meth).stream()).collect(Collectors.toList());
 
             if (!sortedSensitives.isEmpty()) {
                 System.out.println("\n" + permSet + "\n------------------------------------");
@@ -226,7 +240,8 @@ public class MethodPermDetector {
             for (MethodInContext sensInC : sortedSensitives) {
                 System.out.println("\nSensitive: " + sensInC);
 
-                Set<MethodOrMethodContext> reachableCallbacks = cpHolder.getSensitiveInCToCallbacksMap().get(sensInC);
+                Set<MethodOrMethodContext> reachableCallbacks =
+                        sensitivePathsHolder.getSensitiveInCToCallbacksMap().get(sensInC);
                 Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                         reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
                                 .collect(Collectors.groupingBy(

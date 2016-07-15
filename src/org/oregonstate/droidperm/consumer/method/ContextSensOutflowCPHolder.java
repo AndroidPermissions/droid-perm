@@ -375,4 +375,8 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
         return sensitiveInCToCallbacksMap;
     }
+
+    public Set<MethodInContext> getSensitivesInContext() {
+        return sensitivesInContext;
+    }
 }
