@@ -19,7 +19,10 @@ public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
     private static final String[] EXTRA_OPTS =
-            new String[]{"--pathalgo", "CONTEXTSENSITIVE", "--cgalgo", "GEOM", "--logsourcesandsinks"};
+            new String[]{"--pathalgo", "CONTEXTSENSITIVE", "--cgalgo", "GEOM"};
+    private static final String[] TAINT_ENABLED_OPTS =
+            new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks"};
+    private static final String[] TAINT_DISABLED_OPTS = new String[]{"--taint-analysis-enabled", "false"};
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -71,7 +74,7 @@ public class DPBatchRunner {
                                                 .endsWith("-debug.apk"))
                                         .collect(Collectors.toList());
                             } catch (IOException e) {
-                                //Looks like Java 8 streams don't like this exception.
+                                //Looks like Java 8 lambdas don't like to throw checked exceptions.
                                 throw new RuntimeException(e);
                             }
                         },
@@ -110,8 +113,11 @@ public class DPBatchRunner {
                 androidClassPath,
                 "--xml-out", xmlFile.toAbsolutePath().toString()));
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
-        processBuilderArgs.add("--taint-analysis-enabled");
-        processBuilderArgs.add(String.valueOf(taintAnalysisEnabled));
+        if (taintAnalysisEnabled) {
+            processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
+        } else {
+            processBuilderArgs.addAll(Arrays.asList(TAINT_DISABLED_OPTS));
+        }
 
         ProcessBuilder processBuilder = new ProcessBuilder(processBuilderArgs)
                 .directory(new File(droidPermHomeDir))
@@ -128,7 +134,7 @@ public class DPBatchRunner {
             long newTime = System.currentTimeMillis();
             logger.info(appName + " analyzed: " + (newTime - time) / 1E3 + " sec");
             if (exitCode != 0) {
-                logger.warn(appName + " analysis returned exit code " + exitCode);
+                logger.error(appName + " analysis returned exit code " + exitCode);
             }
 
         } catch (InterruptedException e) {
