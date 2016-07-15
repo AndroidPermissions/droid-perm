@@ -35,11 +35,6 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
     }
 
     @Override
-    public Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive) {
-        return getSensitiveToCallbacksMap().get(sensitive);
-    }
-
-    @Override
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
         throw new UnsupportedOperationException();//can be done for each implementation, but differently
     }

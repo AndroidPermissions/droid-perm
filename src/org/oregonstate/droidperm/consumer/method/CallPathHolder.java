@@ -12,8 +12,6 @@ import java.util.Set;
  */
 public interface CallPathHolder {
 
-    Set<MethodOrMethodContext> getReachableCallbacks(MethodOrMethodContext sensitive);
-
     /**
      * We also sort the callbacks by their class name followed by method declaration line number.
      */
