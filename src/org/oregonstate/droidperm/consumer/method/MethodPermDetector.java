@@ -114,7 +114,7 @@ public class MethodPermDetector {
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
         sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
-                .sorted(new MethodOrMCSortingComparator())
+                .sorted(SortUtil.getSootMethodPrettyPrintComparator())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         //sensitives should be added to ignore method list, to prevent their body from being analyzed
@@ -240,12 +240,8 @@ public class MethodPermDetector {
             for (MethodInContext sensInC : sortedSensitives) {
                 System.out.println("\nSensitive: " + sensInC);
 
-                Set<MethodOrMethodContext> reachableCallbacks =
-                        sensitivePathsHolder.getSensitiveInCToCallbacksMap().get(sensInC);
                 Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
-                        reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
-                                .collect(Collectors.groupingBy(
-                                        callback -> getPermCheckStatusForAny(permSet, callback)));
+                        getPermCheckStatusToCallbacksMap(sensInC, permSet);
 
                 System.out.println("From callbacks:");
                 for (PermCheckStatus status : PermCheckStatus.values()) {
@@ -260,6 +256,18 @@ public class MethodPermDetector {
             System.out.println();
         }
         System.out.println();
+    }
+
+    private Map<PermCheckStatus, List<MethodOrMethodContext>> getPermCheckStatusToCallbacksMap(
+            MethodInContext sensInC, Set<String> permSet) {
+        Set<MethodOrMethodContext> reachableCallbacks =
+                sensitivePathsHolder.getSensitiveInCToCallbacksMap().get(sensInC);
+        if (reachableCallbacks == null) {
+            reachableCallbacks = new HashSet<>();
+        }
+        return reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
+                .collect(Collectors.groupingBy(
+                        callback -> getPermCheckStatusForAny(permSet, callback)));
     }
 
     /**
@@ -329,6 +337,7 @@ public class MethodPermDetector {
                 Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
 
                 for (Edge edgeInto : edgesInto) {
+                    MethodInContext sensInC = new MethodInContext(edgeInto);
                     //We don't print sensitives whose context is another sensitive.
                     //noinspection ConstantConditions
                     if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
@@ -337,6 +346,19 @@ public class MethodPermDetector {
                             printed = true;
                         }
                         System.out.println("\tfrom " + edgeInto.getSrc());
+
+                        Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
+                                getPermCheckStatusToCallbacksMap(sensInC, permSet);
+                        if (!permCheckStatusToCallbacks.isEmpty()) {
+                            for (PermCheckStatus status : PermCheckStatus.values()) {
+                                if (permCheckStatusToCallbacks.get(status) != null) {
+                                    System.out.println("\t\tCallbacks where " + status + ": "
+                                            + permCheckStatusToCallbacks.get(status).size());
+                                }
+                            }
+                        } else {
+                            System.out.println("\t\tCallbacks: NONE !");
+                        }
                     }
                 }
             }
