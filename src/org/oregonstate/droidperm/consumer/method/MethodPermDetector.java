@@ -47,6 +47,15 @@ public class MethodPermDetector {
     private ContextSensOutflowCPHolder checkerPathsHolder;
     private Map<MethodOrMethodContext, Set<String>> callbackToCheckedPermsMap;
 
+    /**
+     * Map from permissions to checkers that check for that permission.
+     * <p>
+     * 2nd level map: from checker to safety status. True means safe, the checker described by this edge only checks for
+     * one permission. False means unsafe: multiple contexts use this checker to check for multiple permissions, so not
+     * all contexts check for all permissions.
+     */
+    private Map<String, LinkedHashMap<Edge, Boolean>> permsToCheckersMap;
+
     private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
     private Map<MethodOrMethodContext, AndroidMethod> sensitiveToSensitiveDefMap;
 
@@ -114,7 +123,7 @@ public class MethodPermDetector {
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
         sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
-                .sorted(SortUtil.getSootMethodPrettyPrintComparator())
+                .sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         //sensitives should be added to ignore method list, to prevent their body from being analyzed
@@ -126,6 +135,7 @@ public class MethodPermDetector {
 
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
+        permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         //sensitives
         sensitiveToSensitiveDefMap = buildSensitiveToSensitiveDefMap();
@@ -265,9 +275,8 @@ public class MethodPermDetector {
         if (reachableCallbacks == null) {
             reachableCallbacks = new HashSet<>();
         }
-        return reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
-                .collect(Collectors.groupingBy(
-                        callback -> getPermCheckStatusForAny(permSet, callback)));
+        return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator).collect(
+                Collectors.groupingBy(callback -> getPermCheckStatusForAny(permSet, callback)));
     }
 
     /**
@@ -282,11 +291,23 @@ public class MethodPermDetector {
             reachableCallbacks = new HashSet<>();
         }
         Set<String> possiblePerm = CheckerUtil.getPossiblePermissionsFromChecker(edgeInto);
-        return reachableCallbacks.stream().sorted(SortUtil.getSootMethodPrettyPrintComparator())
+        return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.groupingBy(
                         callback -> getCheckUsageStatusSet(callback, possiblePerm),
                         //LinkedHashMap is to preserve the same order of statuses as of permissions
                         LinkedHashMap::new, Collectors.toList()));
+    }
+
+    private Map<CheckerUsageStatus, List<MethodOrMethodContext>> getCheckerUsageStatusToCallbacksMap(
+            Edge edgeInto, String perm) {
+        MethodInContext checkerInC = new MethodInContext(edgeInto);
+        Set<MethodOrMethodContext> reachableCallbacks =
+                checkerPathsHolder.getSensitiveInCToCallbacksMap().get(checkerInC);
+        if (reachableCallbacks == null) {
+            reachableCallbacks = new HashSet<>();
+        }
+        return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator).collect(
+                Collectors.groupingBy(callback -> getCheckUsageStatus(callback, perm)));
     }
 
     /**
@@ -347,10 +368,10 @@ public class MethodPermDetector {
      */
     public void printSensitivesInContext() {
         System.out.println("\n\nSensitives in context in the call graph: \n====================================");
+        CallGraph cg = Scene.v().getCallGraph();
         for (Set<String> permSet : permsToSensitivesMap.keySet()) {
             System.out.println("\n" + permSet + "\n------------------------------------");
 
-            CallGraph cg = Scene.v().getCallGraph();
             for (MethodOrMethodContext sens : permsToSensitivesMap.get(permSet)) {
                 boolean printed = false;
                 Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
@@ -389,27 +410,29 @@ public class MethodPermDetector {
      */
     public void printCheckersInContext() {
         System.out.println("\n\nCheckers in context in the call graph: \n====================================");
-        CallGraph cg = Scene.v().getCallGraph();
-        for (MethodOrMethodContext sens : permCheckers) {
-            boolean printed = false;
-            Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
-
-            for (Edge edgeInto : edgesInto) {
+        for (String perm : permsToCheckersMap.keySet()) {
+            System.out.println("\n" + perm + "\n------------------------------------");
+            MethodOrMethodContext oldSens = null;
+            for (Edge edgeInto : permsToCheckersMap.get(perm).keySet()) {
+                MethodOrMethodContext sens = edgeInto.getTgt();
                 //We don't print checkers whose context is another checker.
                 //noinspection ConstantConditions
                 if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
-                    if (!printed) {
+                    if (sens != oldSens) {
                         System.out.println(sens);
-                        printed = true;
+                        oldSens = sens;
                     }
                     System.out.println("\tfrom " + edgeInto.getSrc());
-                    System.out.println("\t\tPermissions: " + CheckerUtil.getPossiblePermissionsFromChecker(edgeInto));
-                    Map<Set<CheckerUsageStatus>, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
-                            getCheckerUsageStatusToCallbacksMap(edgeInto);
+                    if (!permsToCheckersMap.get(perm).get(edgeInto)) {
+                        System.out.println("\t\tPoints-to certainty: UNCERTAIN");
+                    }
+
+                    Map<CheckerUsageStatus, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
+                            getCheckerUsageStatusToCallbacksMap(edgeInto, perm);
                     if (!checkerUsageStatusToCallbacks.isEmpty()) {
-                        for (Set<CheckerUsageStatus> statusSet : checkerUsageStatusToCallbacks.keySet()) {
-                            System.out.println("\t\tCallbacks where " + statusSet + ": "
-                                    + checkerUsageStatusToCallbacks.get(statusSet).size());
+                        for (CheckerUsageStatus status : checkerUsageStatusToCallbacks.keySet()) {
+                            System.out.println("\t\tCallbacks where " + status + ": "
+                                    + checkerUsageStatusToCallbacks.get(status).size());
                         }
                     } else {
                         System.out.println("\t\tCallbacks: NONE !");

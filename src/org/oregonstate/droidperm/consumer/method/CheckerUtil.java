@@ -1,16 +1,18 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import org.oregonstate.droidperm.util.IteratorUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.SortUtil;
+import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InvokeExpr;
 import soot.jimple.StringConstant;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,5 +53,26 @@ public class CheckerUtil {
         }
         logger.warn("Permission checkers not supported for: " + invoke);
         return Collections.emptySet();
+    }
+
+    public static Map<String, LinkedHashMap<Edge, Boolean>> buildPermsToCheckersMap(
+            Set<MethodOrMethodContext> permCheckers) {
+        CallGraph cg = Scene.v().getCallGraph();
+        Map<String, LinkedHashMap<Edge, Boolean>> result = new HashMap<>();
+        for (MethodOrMethodContext sens : permCheckers) {
+            Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
+            for (Edge edgeInto
+                    : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
+                Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto);
+                for (String perm : possiblePerm) {
+                    if (!result.containsKey(perm)) {
+                        result.put(perm, new LinkedHashMap<>());
+                    }
+                    // if size == 1 then it's a safe check
+                    result.get(perm).put(edgeInto, possiblePerm.size() == 1);
+                }
+            }
+        }
+        return result;
     }
 }

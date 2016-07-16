@@ -29,7 +29,7 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
     public List<MethodOrMethodContext> getReachableCallbacks() {
         if (reachableCallbacks == null) {
             reachableCallbacks = getSensitiveToCallbacksMap().values().stream().flatMap(Collection::stream)
-                    .distinct().sorted(SortUtil.getSootMethodPrettyPrintComparator()).collect(Collectors.toList());
+                    .distinct().sorted(SortUtil.methodOrMCComparator).collect(Collectors.toList());
         }
         return reachableCallbacks;
     }
