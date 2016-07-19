@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.consumer.method;
 import com.google.common.collect.Iterators;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.PointsToUtil;
+import org.oregonstate.droidperm.util.SortUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     private Map<MethodInContext, Set<MethodOrMethodContext>> sensitiveInCToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
-                                      Set<SootMethod> outflowIgnoreSet) {
+                                      Set<SootMethod> outflowIgnoreSet, boolean logClassesWithCallbacks) {
         super(dummyMainMethod, sensitives);
         this.outflowIgnoreSet = outflowIgnoreSet;
 
@@ -71,14 +72,17 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             logger.warn("ContextSensOutflowCPHolder is slow with PointsTo algorithms other than GEOM");
         }
 
-        callbackToOutflowMap = buildCallbackToOutflowMap();
+        callbackToOutflowMap = buildCallbackToOutflowMap(logClassesWithCallbacks);
         sensitiveInCToCallbacksMap = buildSensitiveToCallbacksMap();
         buildReachableSensitives();
     }
 
-    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
+    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap(
+            boolean logClassesWithCallbacks) {
         Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> map = new HashMap<>();
-        for (MethodOrMethodContext callback : getUICallbacks()) {
+        Set<MethodOrMethodContext> uiCallbacks = getUICallbacks();
+        logger.info("\n\nTotal callbacks: " + uiCallbacks.size() + "\n");
+        for (MethodOrMethodContext callback : uiCallbacks) {
             Map<MethodInContext, MethodInContext> outflow = getBreadthFirstOutflow(callback);
 
             Collection<MethodOrMethodContext> outflowNodes =
@@ -91,7 +95,24 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             logger.info("DP: Callback processed: " + callback + " in " + (newTime - time) / 1E3 + " sec");
             time = newTime;
         }
+        if (logClassesWithCallbacks) {
+            logClassesWithCallbacks(uiCallbacks);
+        }
+
         return map;
+    }
+
+    private void logClassesWithCallbacks(Set<MethodOrMethodContext> uiCallbacks) {
+        Set<SootClass> classesWithCallbacks = uiCallbacks.stream()
+                //classes that only have constructors and static initializers as "callbacks" are filtered out.
+                .filter(meth -> !(meth.method().isConstructor() || meth.method().isStaticInitializer()))
+
+                .map(meth -> meth.method().getDeclaringClass())
+                .sorted(SortUtil.classComparator).collect(Collectors.toCollection(LinkedHashSet::new));
+        System.err.println("\nTotal classes with callbacks: " + classesWithCallbacks.size() + "\n"
+                + "========================================================================");
+        classesWithCallbacks.forEach(System.err::println);
+        System.err.println();
     }
 
     private Set<MethodOrMethodContext> getUICallbacks() {

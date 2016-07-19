@@ -132,7 +132,8 @@ public class MethodPermDetector {
 
         //checkers
 
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
+        logger.info("Processing checkers");
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet, false);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
@@ -141,11 +142,12 @@ public class MethodPermDetector {
         permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
         permsToSensitivesMap = buildPermsToSensitivesMap();
 
+        logger.info("Processing sensitives");
         //select one of the call path algorithms.
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new PartialPointsToCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet, true);
 
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
@@ -253,10 +255,10 @@ public class MethodPermDetector {
     private PermCheckStatus getPermCheckStatusForAny(Set<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
             if (!Collections.disjoint(permSet, callbackToCheckedPermsMap.get(callback))) {
-                return PermCheckStatus.DETECTED;
+                return PermCheckStatus.CHECK_DETECTED;
             }
         }
-        return PermCheckStatus.NOT_DETECTED;
+        return PermCheckStatus.CHECK_NOT_DETECTED;
     }
 
     /**
@@ -266,10 +268,10 @@ public class MethodPermDetector {
     public PermCheckStatus getPermCheckStatusForAll(Collection<String> permSet, MethodOrMethodContext callback) {
         if (callbackToCheckedPermsMap.get(callback) != null) {
             if (callbackToCheckedPermsMap.get(callback).containsAll(permSet)) {
-                return PermCheckStatus.DETECTED;
+                return PermCheckStatus.CHECK_DETECTED;
             }
         }
-        return PermCheckStatus.NOT_DETECTED;
+        return PermCheckStatus.CHECK_NOT_DETECTED;
     }
 
     public Map<String, CheckerUsageStatus> getCheckerStatusMap(MethodOrMethodContext callback) {
@@ -308,6 +310,7 @@ public class MethodPermDetector {
         for (Set<String> permSet : permsToSensitivesMap.keySet()) {
             System.out.println("\n" + permSet + "\n------------------------------------");
 
+            Map<Set<PermCheckStatus>, Integer> sensitivesCountByStatus = new HashMap<>();
             for (MethodOrMethodContext sens : permsToSensitivesMap.get(permSet)) {
                 boolean printed = false;
                 Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
@@ -339,8 +342,24 @@ public class MethodPermDetector {
                         } else {
                             System.out.println("\t\tCallbacks: NONE !");
                         }
+
+                        //count by status
+                        Set<PermCheckStatus> statuses = permCheckStatusToCallbacks.keySet();
+                        int oldCount =
+                                sensitivesCountByStatus.containsKey(statuses) ? sensitivesCountByStatus.get(statuses)
+                                                                              : 0;
+                        sensitivesCountByStatus.put(statuses, oldCount + 1);
                     }
                 }
+            }
+
+            if (!printCallbacks) {
+                System.out.println();
+                sensitivesCountByStatus.keySet().forEach(statuses
+                        -> System.out.println(
+                        "Total sensitives+context with status " + statuses
+                                + " : " + sensitivesCountByStatus.get(statuses))
+                );
             }
         }
     }
@@ -357,6 +376,8 @@ public class MethodPermDetector {
 
         for (String perm : permsToCheckersMap.keySet()) {
             System.out.println("\n" + perm + "\n------------------------------------");
+
+            Map<Set<CheckerUsageStatus>, Integer> checkersCountByStatus = new HashMap<>();
             MethodOrMethodContext oldSens = null;
             for (Edge edgeInto : permsToCheckersMap.get(perm).keySet()) {
                 MethodOrMethodContext sens = edgeInto.getTgt();
@@ -386,7 +407,22 @@ public class MethodPermDetector {
                     } else {
                         System.out.println("\t\tCallbacks: NONE !");
                     }
+
+                    //count by status
+                    Set<CheckerUsageStatus> statuses = checkerUsageStatusToCallbacks.keySet();
+                    int oldCount =
+                            checkersCountByStatus.containsKey(statuses) ? checkersCountByStatus.get(statuses)
+                                                                        : 0;
+                    checkersCountByStatus.put(statuses, oldCount + 1);
                 }
+            }
+
+            if (!printCallbacks) {
+                System.out.println();
+                checkersCountByStatus.keySet().forEach(statuses
+                        -> System.out.println(
+                        "Total checkers+context with status " + statuses + " : " + checkersCountByStatus.get(statuses))
+                );
             }
         }
     }
@@ -396,8 +432,8 @@ public class MethodPermDetector {
     }
 
     public enum PermCheckStatus {
-        DETECTED("Permission check detected"),
-        NOT_DETECTED("No permission check detected");
+        CHECK_DETECTED("Permission check detected"),
+        CHECK_NOT_DETECTED("No permission check detected");
 
         private String description;
 

@@ -46,7 +46,7 @@ public class JaxbUtil {
                             .collect(Collectors.toMap(perm -> perm,
                                     perm -> detector
                                             .getPermCheckStatusForAll(Collections.singletonList(perm), callback) ==
-                                            MethodPermDetector.PermCheckStatus.DETECTED));
+                                            MethodPermDetector.PermCheckStatus.CHECK_DETECTED));
 
                     JaxbStmt jaxbStmt = new JaxbStmt((Stmt) unit, permGaurdedMap);
                     jaxbCallback.addStmt(jaxbStmt);

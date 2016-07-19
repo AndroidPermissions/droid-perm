@@ -17,7 +17,7 @@ public class PartialPointsToCPHolder extends ContextSensOutflowCPHolder {
     public PartialPointsToCPHolder(MethodOrMethodContext dummyMainMethod,
                                    Set<MethodOrMethodContext> sensitives,
                                    Set<SootMethod> outflowIgnoreSet) {
-        super(dummyMainMethod, sensitives, outflowIgnoreSet);
+        super(dummyMainMethod, sensitives, outflowIgnoreSet, true);
     }
 
     @Override

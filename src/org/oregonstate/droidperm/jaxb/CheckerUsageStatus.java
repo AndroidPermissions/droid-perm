@@ -6,5 +6,5 @@ package org.oregonstate.droidperm.jaxb;
 public enum CheckerUsageStatus {
     USED,
     UNUSED,
-    UNUSED_POSSIBLY_ICC;
+    UNUSED_POSSIBLY_ICC
 }
