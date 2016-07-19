@@ -71,8 +71,6 @@ public class MethodPermDetector {
     private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
 
     private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> permsToSensitivesMap;
-    private LinkedHashMap<MethodOrMethodContext, List<MethodInContext>> sensitiveToSensInContextMap;
-
     private ContextSensOutflowCPHolder sensitivePathsHolder;
 
     private Map<MethodOrMethodContext, Set<String>> callbackToRequiredPermsMap;
@@ -97,7 +95,7 @@ public class MethodPermDetector {
         long startTime = System.currentTimeMillis();
         logger.warn("\n\n"
                 + "Start of DroidPerm logs\n"
-                + "===========================================\n");
+                + "========================================================================\n");
         analyze();
         printResults();
 
@@ -149,7 +147,6 @@ public class MethodPermDetector {
         //sensitivePathsHolder = new PartialPointsToCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
 
-        sensitiveToSensInContextMap = buildSensitiveToSensInContextMap();
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
         callbackCheckerStatusMap = buildCheckerStatusMap();
@@ -165,12 +162,10 @@ public class MethodPermDetector {
 
         //printPermCheckStatusPerCallbacks();
         printCheckersInContext(true);
-        if (sensitivePathsHolder instanceof ContextSensOutflowCPHolder) {
-            printSensitivesInContextToCallbacks();
-        }
+        printSensitivesInContext(true);
 
         printCheckersInContext(false);
-        printSensitivesInContext();
+        printSensitivesInContext(false);
 
         //Printing to files
         if (txtOut != null) {
@@ -189,18 +184,6 @@ public class MethodPermDetector {
             }
         }
         //DebugUtil.pointsToTest();
-    }
-
-    private LinkedHashMap<MethodOrMethodContext, List<MethodInContext>> buildSensitiveToSensInContextMap() {
-        return sensitives.stream().collect(Collectors.toMap(
-                meth -> meth,
-                meth -> sensitivePathsHolder.getSensitivesInContext().stream()
-                        .filter(sensInC -> sensInC.method == meth)
-                        .sorted(new MethodInContext.SortingComparator())
-                        .collect(Collectors.toList()),
-                StreamUtil.throwingMerger(),
-                LinkedHashMap::new
-        ));
     }
 
     private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> buildPermsToSensitivesMap() {
@@ -235,39 +218,6 @@ public class MethodPermDetector {
     private static MethodOrMethodContext getDummyMain() {
         String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
         return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
-    }
-
-    private void printSensitivesInContextToCallbacks() {
-        System.out.println("\n\nFor each sensitive in context, reaching callbacks" +
-                "\n====================================");
-
-        for (Set<String> permSet : permissionToSensitiveDefMap.keySet()) {
-            //sorting methods by toString() efficiently, without computing toString() each time.
-            List<MethodInContext> sortedSensitives = permsToSensitivesMap.get(permSet).stream()
-                    .flatMap(meth -> sensitiveToSensInContextMap.get(meth).stream()).collect(Collectors.toList());
-
-            if (!sortedSensitives.isEmpty()) {
-                System.out.println("\n" + permSet + "\n------------------------------------");
-            }
-
-            for (MethodInContext sensInC : sortedSensitives) {
-                System.out.println("\nSensitive: " + sensInC);
-
-                Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
-                        getPermCheckStatusToCallbacksMap(sensInC, permSet);
-
-                System.out.println("From callbacks:");
-                for (PermCheckStatus status : PermCheckStatus.values()) {
-                    if (permCheckStatusToCallbacks.get(status) != null) {
-                        System.out.println("\tPerm check " + status + ":");
-                        for (MethodOrMethodContext callback : permCheckStatusToCallbacks.get(status)) {
-                            System.out.println("\t\t" + callback);
-                        }
-                    }
-                }
-            }
-            System.out.println();
-        }
     }
 
     private Map<PermCheckStatus, List<MethodOrMethodContext>> getPermCheckStatusToCallbacksMap(
@@ -327,7 +277,7 @@ public class MethodPermDetector {
     }
 
     private static void printReachableSensitivesInCallbackStmts(JaxbCallbackList data, PrintStream out) {
-        out.println("\nRequired permissions for code inside each callback:");
+        out.println("\nOutput for droid-perm-plugin, required permissions for statements directly inside callbacks:");
         out.println("========================================================================");
 
         for (JaxbCallback callback : data.getCallbacks()) {
@@ -348,8 +298,12 @@ public class MethodPermDetector {
     /**
      * All sensitives in context are printed here, including those that are not reachable from callbacks.
      */
-    public void printSensitivesInContext() {
-        System.out.println("\n\nSensitives in context in the call graph: \n====================================");
+    public void printSensitivesInContext(boolean printCallbacks) {
+        String noCallbacksHeader = "Sensitives in context in the call graph:";
+        String callbacksHeader = "Sensitives in context in the call graph, with reaching callbacks:";
+        String header = printCallbacks ? callbacksHeader : noCallbacksHeader;
+        System.out.println(
+                "\n\n" + header + " \n========================================================================");
         CallGraph cg = Scene.v().getCallGraph();
         for (Set<String> permSet : permsToSensitivesMap.keySet()) {
             System.out.println("\n" + permSet + "\n------------------------------------");
@@ -363,7 +317,7 @@ public class MethodPermDetector {
                     //noinspection ConstantConditions
                     if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
                         if (!printed) {
-                            System.out.println("\n" + sens);
+                            System.out.println("\nSensitive " + sens);
                             printed = true;
                         }
                         System.out.println("\tfrom " + edgeInto.getSrc());
@@ -376,6 +330,10 @@ public class MethodPermDetector {
                                 if (permCheckStatusToCallbacks.get(status) != null) {
                                     System.out.println("\t\tCallbacks where " + status + ": "
                                             + permCheckStatusToCallbacks.get(status).size());
+                                    if (printCallbacks) {
+                                        permCheckStatusToCallbacks.get(status).forEach(
+                                                meth -> System.out.println("\t\t\t" + meth));
+                                    }
                                 }
                             }
                         } else {
@@ -392,9 +350,10 @@ public class MethodPermDetector {
      */
     public void printCheckersInContext(boolean printCallbacks) {
         String noCallbacksHeader = "Checkers in context in the call graph:";
-        String callbacksHeader = "For each checker in context, reaching callbacks:";
+        String callbacksHeader = "Checkers in context in the call graph, with reaching callbacks:";
         String header = printCallbacks ? callbacksHeader : noCallbacksHeader;
-        System.out.println("\n\n" + header + " \n====================================");
+        System.out.println(
+                "\n\n" + header + " \n========================================================================");
 
         for (String perm : permsToCheckersMap.keySet()) {
             System.out.println("\n" + perm + "\n------------------------------------");
@@ -405,7 +364,7 @@ public class MethodPermDetector {
                 //noinspection ConstantConditions
                 if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
                     if (sens != oldSens) {
-                        System.out.println("\n" + sens);
+                        System.out.println("\nChecker " + sens);
                         oldSens = sens;
                     }
                     System.out.println("\tfrom " + edgeInto.getSrc());

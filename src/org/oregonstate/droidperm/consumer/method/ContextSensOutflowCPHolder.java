@@ -241,8 +241,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     @Override
     public void printPathsFromCallbackToSensitive() {
         System.out.println("\nPaths from each callback to each sensitive");
-        System.out.println("============================================\n");
-
+        System.out.println("========================================================================\n");
 
         for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
