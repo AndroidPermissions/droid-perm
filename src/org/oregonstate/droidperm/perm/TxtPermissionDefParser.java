@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2012 Secure Software Engineering Group at EC SPRIDE. All rights reserved. This program and the
  * accompanying materials are made available under the terms of the GNU Lesser Public License v2.1 which accompanies
  * this distribution, and is available at http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -55,16 +55,18 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
         try (FileReader fr = new FileReader(file)) {
             try (BufferedReader br = new BufferedReader(fr)) {
                 String line;
-                while ((line = br.readLine()) != null)
+                while ((line = br.readLine()) != null) {
                     lines.add(line);
+                }
             }
         }
     }
 
     private void parseLines() {
         for (String line : lines) {
-            if (line.isEmpty() || line.startsWith("%"))
+            if (line.isEmpty() || line.startsWith("%")) {
                 continue;
+            }
 
             Matcher matcher = pattern.matcher(line);
             if (matcher.find()) {
@@ -86,8 +88,8 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
         String returnType = matcher.group(2).trim();
         String methodName = matcher.group(3).trim();
         String paramsSource = matcher.group(4).trim();
-        List<String> methodParameters = Arrays.asList(paramsSource.split(","))
-                .stream().map(String::trim).collect(Collectors.toList());
+        List<String> methodParameters =
+                Arrays.stream(paramsSource.split(",")).map(String::trim).collect(Collectors.toList());
 
         //either CONST_PERM_CHECKER, or a list of permission defs separated by ","
         String checkerOrPermList = matcher.group(5).trim();
@@ -98,7 +100,7 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
                     new AndroidMethod(methodName, methodParameters, returnType, className, Collections.emptySet());
             androidMethodDef.setSource(true);
         } else {
-            Set<String> permissions = Arrays.asList(checkerOrPermList.split(",")).stream()
+            Set<String> permissions = Arrays.stream(checkerOrPermList.split(","))
                     .map(String::trim)
                     .map(TxtPermissionDefParser::parsePermission).collect(Collectors.toSet());
             androidMethodDef =
