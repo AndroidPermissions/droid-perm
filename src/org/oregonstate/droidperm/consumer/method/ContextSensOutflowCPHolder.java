@@ -121,7 +121,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             if (srcMeth.method().hasActiveBody() &&
                     //do not pass through methods in the ignore list
                     !outflowIgnoreSet.contains(srcMeth.method())) {
-                srcMeth.method().getActiveBody().getUnits().stream().forEach(
+                srcMeth.method().getActiveBody().getUnits().forEach(
                         (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.getContext(), cg)
                                 .forEachRemaining((Edge edge) -> {
                                     MethodInContext tgtInContext = new MethodInContext(edge);
@@ -373,9 +373,5 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
         return sensitiveInCToCallbacksMap;
-    }
-
-    public Set<MethodInContext> getSensitivesInContext() {
-        return sensitivesInContext;
     }
 }
