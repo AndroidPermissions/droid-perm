@@ -164,7 +164,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     /**
      * Iterator over outbound edges of a particular unit (likely method call).
      */
-    private Iterator<Edge> getUnitEdgeIterator(Unit unit, Context context, CallGraph cg) {
+    private Iterator<Edge> getUnitEdgeIterator(Unit unit, Stmt context, CallGraph cg) {
         InstanceInvokeExpr virtualInvoke = PointsToUtil.getVirtualInvokeIfPresent((Stmt) unit);
         Iterator<Edge> edgesIterator = cg.edgesOutOf(unit);
 
@@ -305,14 +305,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
         //invocation line number in parent method
         if (child != null && child.getContext() != null) {
-            out.append(" : ").append(((Stmt) child.getContext()).getJavaSourceStartLineNumber());
+            out.append(" : ").append(child.getContext().getJavaSourceStartLineNumber());
         }
 
         //points to of the invocation target
         boolean printPointsTo =
-                child != null && PointsToUtil.getVirtualInvokeIfPresent((Stmt) child.getContext()) != null;
+                child != null && PointsToUtil.getVirtualInvokeIfPresent(child.getContext()) != null;
         if (printPointsTo) {
-            PointsToSet pointsTo = getPointsToForLogging((Stmt) child.getContext(), methodInC.getContext());
+            PointsToSet pointsTo = getPointsToForLogging(child.getContext(), methodInC.getContext());
             out.append("\n                                                                p-to: ");
             if (pointsTo != null) {
                 out.append(pointsTo.possibleTypes().stream()
@@ -321,7 +321,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             } else {
                 out.append("exception");
             }
-            int edgesCount = Iterators.size(callGraph.edgesOutOf((Unit) child.getContext()));
+            int edgesCount = Iterators.size(callGraph.edgesOutOf(child.getContext()));
             out.append(", edges: ").append(edgesCount);
         }
 
@@ -349,12 +349,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return path;
     }
 
-    protected PointsToSet getPointsToForOutflows(Unit unit, Context context) {
+    protected PointsToSet getPointsToForOutflows(Unit unit, Stmt context) {
         return PointsToUtil.getPointsToIfVirtualCall(unit, context, pointsToAnalysis);
     }
 
-    protected PointsToSet getPointsToForLogging(Unit unit, Context context) {
-        return PointsToUtil.getPointsToIfVirtualCall(unit, context, pointsToAnalysis);
+    protected PointsToSet getPointsToForLogging(Stmt stmt, Stmt context) {
+        return PointsToUtil.getPointsToIfVirtualCall(stmt, context, pointsToAnalysis);
     }
 
     private static SootMethod getInvokedMethod(InvokeStmt stmt) {
@@ -371,7 +371,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         //toperf cg.findEdge() is potentially expensive. Better keep edges in the outflow.
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(sensitivesInContext::contains)
-                .map(methInCt -> cg.findEdge((Unit) methInCt.getContext(), methInCt.method.method()))
+                .map(methInCt -> cg.findEdge(methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toSet());
     }
 
@@ -379,7 +379,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
-                .map(methInCt -> cg.findEdge((Unit) methInCt.getContext(), methInCt.method.method()))
+                .map(methInCt -> cg.findEdge(methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toList());
     }
 

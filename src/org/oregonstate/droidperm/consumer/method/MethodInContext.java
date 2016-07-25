@@ -6,11 +6,11 @@ package org.oregonstate.droidperm.consumer.method;
  * Source: http://stackoverflow.com/a/18586688/4182868
  */
 
-import soot.Context;
 import soot.MethodOrMethodContext;
 import soot.Value;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeStmt;
+import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.Comparator;
@@ -39,7 +39,7 @@ public class MethodInContext {
         this.edge = edge;
     }
 
-    public Context getContext() {
+    public Stmt getContext() {
         return edge != null ? edge.srcStmt() : null;
     }
 
