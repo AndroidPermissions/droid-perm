@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InstanceInvokeExpr;
-import soot.jimple.InvokeStmt;
 import soot.jimple.Stmt;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.spark.ondemand.genericutil.HashSetMultiMap;
@@ -328,7 +327,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         //shortcutted call, if it's a fake edge
         if (child != null && child.edge.kind().isFake()) { //child edge is always != null
             out.append("\n    ");
-            out.append(getInvokedMethod((InvokeStmt) child.getContext()));
+            out.append(child.getContext().getInvokeExpr().getMethod());
             out.append(
                     "\n                                                                FAKE edge: call shortcutted");
         }
@@ -355,10 +354,6 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     protected PointsToSet getPointsToForLogging(Stmt stmt, Stmt context) {
         return PointsToUtil.getPointsToIfVirtualCall(stmt, context, pointsToAnalysis);
-    }
-
-    private static SootMethod getInvokedMethod(InvokeStmt stmt) {
-        return stmt.getInvokeExpr().getMethod();
     }
 
     @Override
