@@ -18,6 +18,10 @@ public class JaxbStmt {
 
     private String callClass;
     private String callSignature;
+
+    @XmlAttribute
+    private String stmt;
+
     private int line;
 
     /**
@@ -31,9 +35,15 @@ public class JaxbStmt {
     }
 
     public JaxbStmt(Stmt stmt, Map<String, Boolean> permissionStatusMap) {
-        SootMethod sootMethod = stmt.getInvokeExpr().getMethod();
-        callClass = sootMethod.getDeclaringClass().getName();
-        callSignature = sootMethod.getSubSignature();
+        if (stmt.containsInvokeExpr()) {
+            SootMethod sootMethod = stmt.getInvokeExpr().getMethod();
+            callClass = sootMethod.getDeclaringClass().getName();
+            callSignature = sootMethod.getSubSignature();
+        } else {
+            //Could happen if <clinit> requires sensitives.
+            //Example app: Bitcoin-Wallet
+            this.stmt = stmt.toString();
+        }
         line = stmt.getJavaSourceStartLineNumber();
         this.permissionStatusMap = permissionStatusMap;
     }
@@ -53,12 +63,9 @@ public class JaxbStmt {
     }
 
     public String getCallFullSignature() {
-        return ("<" +
-                callClass +
-                ": " +
-                callSignature +
-                ">")
-                .intern();
+        return callClass != null
+               ? ("<" + callClass + ": " + callSignature + ">").intern()
+               : "[" + stmt + "]";
     }
 
     public void setCallSignature(String callSignature) {

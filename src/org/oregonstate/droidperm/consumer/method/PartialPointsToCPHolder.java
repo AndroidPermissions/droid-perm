@@ -1,7 +1,11 @@
 package org.oregonstate.droidperm.consumer.method;
 
-import soot.*;
+import soot.MethodOrMethodContext;
+import soot.PointsToSet;
+import soot.SootMethod;
+import soot.Unit;
 import soot.jimple.InvokeStmt;
+import soot.jimple.Stmt;
 
 import java.util.Set;
 
@@ -21,7 +25,7 @@ public class PartialPointsToCPHolder extends ContextSensOutflowCPHolder {
     }
 
     @Override
-    protected PointsToSet getPointsToForOutflows(Unit unit, Context context) {
+    protected PointsToSet getPointsToForOutflows(Unit unit, Stmt context) {
         return unit instanceof InvokeStmt ? super.getPointsToForOutflows(unit, context) : null;
     }
 }

@@ -2,7 +2,10 @@ package org.oregonstate.droidperm.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soot.*;
+import soot.Local;
+import soot.PointsToAnalysis;
+import soot.PointsToSet;
+import soot.Unit;
 import soot.jimple.*;
 
 /**
@@ -16,7 +19,7 @@ public class PointsToUtil {
      *
      * @return points-to set for the call target, if virtual. Value null otherwise.
      */
-    public static PointsToSet getPointsToIfVirtualCall(Unit unit, Context context, PointsToAnalysis pta) {
+    public static PointsToSet getPointsToIfVirtualCall(Unit unit, Stmt context, PointsToAnalysis pta) {
         // only virtual invocations require context sensitivity.
         InstanceInvokeExpr invoke = getVirtualInvokeIfPresent((Stmt) unit);
         return invoke != null ? getPointsTo(invoke, context, pta) : null;
@@ -29,7 +32,7 @@ public class PointsToUtil {
                ? (InstanceInvokeExpr) invokeExpr : null;
     }
 
-    public static PointsToSet getPointsTo(InstanceInvokeExpr invoke, Context context, PointsToAnalysis pta) {
+    public static PointsToSet getPointsTo(InstanceInvokeExpr invoke, Stmt context, PointsToAnalysis pta) {
         //in Jimple target is always Local, regardless of who is the qualifier in Java.
         Local target = (Local) invoke.getBase();
 

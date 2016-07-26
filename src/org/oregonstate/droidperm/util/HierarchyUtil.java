@@ -102,9 +102,15 @@ public class HierarchyUtil {
         Hierarchy hierarchy = Scene.v().getActiveHierarchy();
         Set<SootMethod> set = new ArraySet<>();
         for (Type cls : new ArrayList<>(targetPossibleTypes)) {
-            if (cls instanceof RefType)
-                set.add(hierarchy.resolveConcreteDispatch(((RefType) cls).getSootClass(), staticTargetMethod));
-            else if (cls instanceof ArrayType) {
+            if (cls instanceof RefType) {
+                try {
+                    set.add(hierarchy.resolveConcreteDispatch(((RefType) cls).getSootClass(), staticTargetMethod));
+                } catch (Exception e) {
+                    //Exceptions here might happen for Object.equals(), Object.hashCode() and other classes
+                    // probably when they are phantom.
+                    logger.error("Exception", e);
+                }
+            } else if (cls instanceof ArrayType) {
                 set.add(hierarchy
                         .resolveConcreteDispatch((RefType.v("java.lang.Object")).getSootClass(), staticTargetMethod));
             } else if (cls instanceof AnySubType) {
@@ -129,7 +135,9 @@ public class HierarchyUtil {
                     default:
                         throw new RuntimeException("Unable to resolve hybrid dispatch, AnySubType not allowed: " + cls);
                 }
-            } else throw new RuntimeException("Unable to resolve hybrid dispatch, unknown type: " + cls);
+            } else {
+                throw new RuntimeException("Unable to resolve hybrid dispatch, unknown type: " + cls);
+            }
         }
 
         return Collections.unmodifiableList(new ArrayList<>(set));

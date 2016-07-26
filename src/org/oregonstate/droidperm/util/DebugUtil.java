@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.util;
 
-import org.oregonstate.droidperm.consumer.method.CallPathHolder;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +8,6 @@ import soot.jimple.DefinitionStmt;
 import soot.jimple.Stmt;
 import soot.jimple.ThisRef;
 import soot.jimple.VirtualInvokeExpr;
-import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.jimple.toolkits.callgraph.Targets;
@@ -62,8 +60,7 @@ public class DebugUtil {
         List<Edge> edges = StreamUtil.asStream(cg.edgesInto(threadStart)).collect(Collectors.toList());
         for (Edge edge : edges) {
             MethodOrMethodContext context = edge.getSrc();
-            JInvokeStmt srcStmt = (JInvokeStmt) edge.srcStmt();
-            Value threadExpr = ((VirtualInvokeExpr) srcStmt.getInvokeExpr()).getBase();
+            Value threadExpr = ((VirtualInvokeExpr) edge.srcStmt().getInvokeExpr()).getBase();
             if (threadExpr instanceof Local) {
                 Local threadLocal = (Local) threadExpr;
                 PointsToSet reachingObjects = pointsTo.reachingObjects(threadLocal, threadTarget);
