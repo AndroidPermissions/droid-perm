@@ -58,3 +58,8 @@
 % DEBUG: Iosched - storage
 % ==================================
 % <android.content.ContextWrapper: java.io.File   getCacheDir()> -> DIAGNOSTIC
+
+% UNDETECTED PERMS-ADDED FROM EVALUATIONS
+% ================================================
+
+<com.google.android.gms.maps.GoogleMap: void setMyLocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
