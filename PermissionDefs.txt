@@ -63,6 +63,7 @@
 % ================================================
 
 <com.google.android.gms.maps.GoogleMap: void setMyLocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<android.os.Vibrator: void vibrate(long)> -> VIBRATE
 
 %JACOB'S SENSITIVES:
 <android.webkit.WebSettings: void setGeoLocationEnabled(boolean)> -> ACCESS_FINE_LOCATION
