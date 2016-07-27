@@ -156,14 +156,16 @@ Updating DroidPerm inside DroidPerm plugin
 
 -   Build the project
 
--   Go to DroidPerm\\android-23-api-crafted\\out\\production
+-   Open DroidPerm\\android-23-api-crafted\\out\\production\\android-23-api-crafted
 
 -   Also open DroidPerm\\run-dir\\lib\\android-23-cr-stubs.zip
 
--   Copy the content of the production dir above into the zip above
+-   Copy the content of the production\\android-23-api-crafted directory into the android-23-cr-stubs.zip
 
 -   Copy droid-perm.jar and android-23-cr-stubs.zip to their respective
     locations in droid-perm plugin
+
+-   Rename the copied android-23-cr-stubs.zip to android-23-cr+util_io.zip
 
 -   Also copy all the config files from directly inside droid-perm.
 
