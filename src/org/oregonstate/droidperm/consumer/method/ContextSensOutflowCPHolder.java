@@ -412,4 +412,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
         return sensitiveInCToCallbacksMap;
     }
+
+    public Set<MethodOrMethodContext> getReachingCallbacks(MethodInContext meth) {
+        return callbackToOutflowMap.keySet().stream()
+                .filter(callback -> callbackToOutflowMap.get(callback).containsKey(meth)).collect(Collectors.toSet());
+    }
 }

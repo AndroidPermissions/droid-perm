@@ -14,6 +14,7 @@ import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
+import soot.toolkits.scalar.Pair;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
@@ -51,11 +52,11 @@ public class MethodPermDetector {
     /**
      * Map from permissions to checkers that check for that permission.
      * <p>
-     * 2nd level map: from checker to safety status. True means safe, the checker described by this edge only checks for
-     * one permission. False means unsafe: multiple contexts use this checker to check for multiple permissions, so not
-     * all contexts check for all permissions.
+     * 2nd level map: from checker ( Pair[Edge, ParentEdge] ) to safety status. True means safe, the checker described
+     * by this edge only checks for one permission. False means unsafe: multiple contexts use this checker to check for
+     * multiple permissions, so not all contexts check for all permissions.
      */
-    private Map<String, LinkedHashMap<Edge, Boolean>> permsToCheckersMap;
+    private Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> permsToCheckersMap;
 
     private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
     private Map<MethodOrMethodContext, AndroidMethod> sensitiveToSensitiveDefMap;
@@ -224,8 +225,7 @@ public class MethodPermDetector {
 
     private Map<PermCheckStatus, List<MethodOrMethodContext>> getPermCheckStatusToCallbacksMap(
             MethodInContext sensInC, Set<String> permSet) {
-        Set<MethodOrMethodContext> reachableCallbacks =
-                sensitivePathsHolder.getSensitiveInCToCallbacksMap().get(sensInC);
+        Set<MethodOrMethodContext> reachableCallbacks = getReachingCallbacks(sensInC, sensitivePathsHolder);
         if (reachableCallbacks == null) {
             reachableCallbacks = new HashSet<>();
         }
@@ -233,16 +233,9 @@ public class MethodPermDetector {
                 Collectors.groupingBy(callback -> getPermCheckStatusForAny(permSet, callback)));
     }
 
-    private Map<CheckerUsageStatus, List<MethodOrMethodContext>> getCheckerUsageStatusToCallbacksMap(
-            Edge edgeInto, String perm) {
-        MethodInContext checkerInC = new MethodInContext(edgeInto);
-        Set<MethodOrMethodContext> reachableCallbacks =
-                checkerPathsHolder.getSensitiveInCToCallbacksMap().get(checkerInC);
-        if (reachableCallbacks == null) {
-            reachableCallbacks = new HashSet<>();
-        }
-        return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator).collect(
-                Collectors.groupingBy(callback -> getCheckUsageStatus(callback, perm)));
+    private Set<MethodOrMethodContext> getReachingCallbacks(MethodInContext methInC,
+                                                            ContextSensOutflowCPHolder pathsHolder) {
+        return pathsHolder.getSensitiveInCToCallbacksMap().get(methInC);
     }
 
     /**
@@ -379,22 +372,25 @@ public class MethodPermDetector {
 
             Map<Set<CheckerUsageStatus>, Integer> checkersCountByStatus = new HashMap<>();
             MethodOrMethodContext oldSens = null;
-            for (Edge edgeInto : permsToCheckersMap.get(perm).keySet()) {
-                MethodOrMethodContext sens = edgeInto.getTgt();
+            for (Pair<Edge, Edge> checkerPair : permsToCheckersMap.get(perm).keySet()) {
+                Edge checkerEdge = checkerPair.getO1();
+                Edge parent = checkerPair.getO2();
+                MethodOrMethodContext checkerMeth = checkerEdge.getTgt();
                 //We don't print checkers whose context is another checker.
                 //noinspection ConstantConditions
-                if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
-                    if (sens != oldSens) {
-                        System.out.println("\nChecker " + sens);
-                        oldSens = sens;
+                if (checkerMeth.method().getDeclaringClass() != checkerEdge.src().getDeclaringClass()) {
+                    if (checkerMeth != oldSens) {
+                        System.out.println("\nChecker " + checkerMeth);
+                        oldSens = checkerMeth;
                     }
-                    System.out.println("\tfrom " + edgeInto.getSrc());
-                    if (!permsToCheckersMap.get(perm).get(edgeInto)) {
+                    System.out.println("\tfrom lvl1 " + checkerEdge.getSrc());
+                    System.out.println("\tfrom lvl2 " + parent.getSrc());
+                    if (!permsToCheckersMap.get(perm).get(checkerPair)) {
                         System.out.println("\t\tPoints-to certainty: UNCERTAIN");
                     }
 
                     Map<CheckerUsageStatus, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
-                            getCheckerUsageStatusToCallbacksMap(edgeInto, perm);
+                            getCheckerUsageStatusToCallbacksMap(checkerPair, perm);
                     if (!checkerUsageStatusToCallbacks.isEmpty()) {
                         for (CheckerUsageStatus status : checkerUsageStatusToCallbacks.keySet()) {
                             System.out.println("\t\tCallbacks where " + status + ": "
@@ -425,6 +421,33 @@ public class MethodPermDetector {
                 );
             }
         }
+    }
+
+    /**
+     * @return map from CheckerUsageStatus to callbacks with this status
+     */
+    private Map<CheckerUsageStatus, List<MethodOrMethodContext>> getCheckerUsageStatusToCallbacksMap(
+            Pair<Edge, Edge> checkerPair, String perm) {
+        Set<MethodOrMethodContext> reachableCallbacks = getReachingCallbacks(checkerPair, checkerPathsHolder);
+        if (reachableCallbacks == null) {
+            reachableCallbacks = new HashSet<>();
+        }
+        return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator).collect(
+                Collectors.groupingBy(callback -> getCheckUsageStatus(callback, perm)));
+    }
+
+    /**
+     * If parent edge doesn't come directly from dummy main, we'll get callbacks for the parent. Otherwise - callbacks
+     * for the child.
+     * <p>
+     * Limitation: This implementation doesn't account for parent-child points-to consistency. Only for checkers.
+     */
+    private Set<MethodOrMethodContext> getReachingCallbacks(Pair<Edge, Edge> methParentPair,
+                                                            ContextSensOutflowCPHolder pathsHolder) {
+        Edge meth = methParentPair.getO1();
+        Edge parent = methParentPair.getO2();
+        Edge target = parent.getSrc() != dummyMainMethod ? parent : meth;
+        return pathsHolder.getReachingCallbacks(new MethodInContext(target));
     }
 
     public CallPathHolder getSensitivePathsHolder() {

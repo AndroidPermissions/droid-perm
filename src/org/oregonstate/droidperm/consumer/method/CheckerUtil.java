@@ -8,6 +8,7 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
+import soot.toolkits.scalar.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,22 +60,28 @@ public class CheckerUtil {
         return Collections.emptySet();
     }
 
-    public static Map<String, LinkedHashMap<Edge, Boolean>> buildPermsToCheckersMap(
+    /**
+     * 1st level map: key = permission, values = checkers that check this permission.
+     * <p>
+     * 2nd level map: key = Pair[Edge, ParentEdge], value = whether cerain or not.
+     */
+    public static Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> buildPermsToCheckersMap(
             Set<MethodOrMethodContext> permCheckers) {
         CallGraph cg = Scene.v().getCallGraph();
-        Map<String, LinkedHashMap<Edge, Boolean>> result = new HashMap<>();
+        Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> result = new HashMap<>();
         for (MethodOrMethodContext checker : permCheckers) {
             Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(checker));
             for (Edge edgeInto
                     : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
-                //todo 1-CFA points-to
-                Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, (Edge) null);
-                for (String perm : possiblePerm) {
-                    if (!result.containsKey(perm)) {
-                        result.put(perm, new LinkedHashMap<>());
+                for (Edge parent : (Iterable<Edge>) () -> cg.edgesInto(edgeInto.getSrc())) {
+                    Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, parent);
+                    for (String perm : possiblePerm) {
+                        if (!result.containsKey(perm)) {
+                            result.put(perm, new LinkedHashMap<>());
+                        }
+                        // if size == 1 then it's a safe check
+                        result.get(perm).put(new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
                     }
-                    // if size == 1 then it's a safe check
-                    result.get(perm).put(edgeInto, possiblePerm.size() == 1);
                 }
             }
         }
