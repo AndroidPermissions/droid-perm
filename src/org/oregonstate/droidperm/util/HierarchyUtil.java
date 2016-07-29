@@ -76,6 +76,8 @@ public class HierarchyUtil {
 
     private static final AnySubTypeTreatment ANY_SUBTYPE_TREATMENT = AnySubTypeTreatment.ALLOW_VALID;
 
+    private static boolean dispatchExceptionLogged = false;
+
     public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs) {
         return methodDefs.stream().map(HierarchyUtil::resolveAbstractDispatch)
                 .flatMap(Collection::stream).collect(Collectors.toList());
@@ -108,7 +110,11 @@ public class HierarchyUtil {
                 } catch (Exception e) {
                     //Exceptions here might happen for Object.equals(), Object.hashCode() and other classes
                     // probably when they are phantom.
-                    logger.error("Exception", e);
+                    if (!dispatchExceptionLogged) {
+                        logger.error("Exception in resolveConcreteDispatch(). "
+                                + "Other exceptions of this type won't be logged.", e);
+                        dispatchExceptionLogged = true;
+                    }
                 }
             } else if (cls instanceof ArrayType) {
                 set.add(hierarchy
