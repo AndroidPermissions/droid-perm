@@ -19,11 +19,139 @@
 %   See: Twidere app, "Corpus tests 3 - checks & CSens ES.md"
 <android.support.v4.app.FragmentActivity: void onSaveInstanceState(android.os.Bundle)>
 
-% All methods inside android.support.v4.app.Fragment
-% Cause: FragmentActivity often touches them in an unfeasible way.
+% All methods inside a few android.support.v4.app classes:
+% FragmentActivity, FragmentManagerImpl, Fragment.
+% Reason: They all produce unfeasible paths that touch all fragments in the app from most activities.
 %================================
-? extends <android.support.v4.app.Fragment: void <clinit>()>
-? extends <android.support.v4.app.Fragment: void <init>()>
+
+<android.support.v4.app.FragmentActivity: void dumpViewHierarchy(java.lang.String,java.io.PrintWriter,android.view.View)>
+<android.support.v4.app.FragmentActivity: void requestPermissionsFromFragment(android.support.v4.app.Fragment,java.lang.String[],int)>
+<android.support.v4.app.FragmentActivity: java.lang.String viewToString(android.view.View)>
+<android.support.v4.app.FragmentActivity: android.view.View dispatchFragmentsOnCreateView(android.view.View,java.lang.String,android.content.Context,android.util.AttributeSet)>
+<android.support.v4.app.FragmentActivity: void doReallyStop(boolean)>
+<android.support.v4.app.FragmentActivity: void dump(java.lang.String,java.io.FileDescriptor,java.io.PrintWriter,java.lang.String[])>
+<android.support.v4.app.FragmentActivity: java.lang.Object getLastCustomNonConfigurationInstance()>
+<android.support.v4.app.FragmentActivity: android.support.v4.app.FragmentManager getSupportFragmentManager()>
+<android.support.v4.app.FragmentActivity: android.support.v4.app.LoaderManager getSupportLoaderManager()>
+<android.support.v4.app.FragmentActivity: android.support.v4.media.session.MediaControllerCompat getSupportMediaController()>
+<android.support.v4.app.FragmentActivity: void onActivityResult(int,int,android.content.Intent)>
+<android.support.v4.app.FragmentActivity: void onAttachFragment(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentActivity: void onBackPressed()>
+<android.support.v4.app.FragmentActivity: void onConfigurationChanged(android.content.res.Configuration)>
+<android.support.v4.app.FragmentActivity: void onCreate(android.os.Bundle)>
+<android.support.v4.app.FragmentActivity: boolean onCreatePanelMenu(int,android.view.Menu)>
+<android.support.v4.app.FragmentActivity: android.view.View onCreateView(android.view.View,java.lang.String,android.content.Context,android.util.AttributeSet)>
+<android.support.v4.app.FragmentActivity: android.view.View onCreateView(java.lang.String,android.content.Context,android.util.AttributeSet)>
+<android.support.v4.app.FragmentActivity: void onDestroy()>
+<android.support.v4.app.FragmentActivity: boolean onKeyDown(int,android.view.KeyEvent)>
+<android.support.v4.app.FragmentActivity: void onLowMemory()>
+<android.support.v4.app.FragmentActivity: boolean onMenuItemSelected(int,android.view.MenuItem)>
+<android.support.v4.app.FragmentActivity: void onNewIntent(android.content.Intent)>
+<android.support.v4.app.FragmentActivity: void onPanelClosed(int,android.view.Menu)>
+<android.support.v4.app.FragmentActivity: void onPause()>
+<android.support.v4.app.FragmentActivity: void onPostResume()>
+<android.support.v4.app.FragmentActivity: boolean onPrepareOptionsPanel(android.view.View,android.view.Menu)>
+<android.support.v4.app.FragmentActivity: boolean onPreparePanel(int,android.view.View,android.view.Menu)>
+<android.support.v4.app.FragmentActivity: void onReallyStop()>
+<android.support.v4.app.FragmentActivity: void onRequestPermissionsResult(int,java.lang.String[],int[])>
+<android.support.v4.app.FragmentActivity: void onResume()>
+<android.support.v4.app.FragmentActivity: void onResumeFragments()>
+<android.support.v4.app.FragmentActivity: java.lang.Object onRetainCustomNonConfigurationInstance()>
+<android.support.v4.app.FragmentActivity: java.lang.Object onRetainNonConfigurationInstance()>
+<android.support.v4.app.FragmentActivity: void onSaveInstanceState(android.os.Bundle)>
+<android.support.v4.app.FragmentActivity: void onStart()>
+<android.support.v4.app.FragmentActivity: void onStateNotSaved()>
+<android.support.v4.app.FragmentActivity: void onStop()>
+<android.support.v4.app.FragmentActivity: void setEnterSharedElementCallback(android.support.v4.app.SharedElementCallback)>
+<android.support.v4.app.FragmentActivity: void setExitSharedElementCallback(android.support.v4.app.SharedElementCallback)>
+<android.support.v4.app.FragmentActivity: void setSupportMediaController(android.support.v4.media.session.MediaControllerCompat)>
+<android.support.v4.app.FragmentActivity: void startActivityForResult(android.content.Intent,int)>
+<android.support.v4.app.FragmentActivity: void startActivityFromFragment(android.support.v4.app.Fragment,android.content.Intent,int)>
+<android.support.v4.app.FragmentActivity: void supportFinishAfterTransition()>
+<android.support.v4.app.FragmentActivity: void supportInvalidateOptionsMenu()>
+<android.support.v4.app.FragmentActivity: void supportPostponeEnterTransition()>
+<android.support.v4.app.FragmentActivity: void supportStartPostponedEnterTransition()>
+<android.support.v4.app.FragmentActivity: void validateRequestPermissionsRequestCode(int)>
+
+<android.support.v4.app.FragmentManagerImpl: void checkStateLoss()>
+<android.support.v4.app.FragmentManagerImpl: android.view.animation.Animation makeFadeAnimation(android.content.Context,float,float)>
+<android.support.v4.app.FragmentManagerImpl: android.view.animation.Animation makeOpenCloseAnimation(android.content.Context,float,float,float,float)>
+<android.support.v4.app.FragmentManagerImpl: boolean modifiesAlpha(android.view.animation.Animation)>
+<android.support.v4.app.FragmentManagerImpl: int reverseTransit(int)>
+<android.support.v4.app.FragmentManagerImpl: void setHWLayerAnimListenerIfAlpha(android.view.View,android.view.animation.Animation)>
+<android.support.v4.app.FragmentManagerImpl: boolean shouldRunOnHWLayer(android.view.View,android.view.animation.Animation)>
+<android.support.v4.app.FragmentManagerImpl: void throwException(java.lang.RuntimeException)>
+<android.support.v4.app.FragmentManagerImpl: int transitToStyleIndex(int,boolean)>
+<android.support.v4.app.FragmentManagerImpl: void addBackStackState(android.support.v4.app.BackStackRecord)>
+<android.support.v4.app.FragmentManagerImpl: void addFragment(android.support.v4.app.Fragment,boolean)>
+<android.support.v4.app.FragmentManagerImpl: void addOnBackStackChangedListener(android.support.v4.app.FragmentManager$OnBackStackChangedListener)>
+<android.support.v4.app.FragmentManagerImpl: int allocBackStackIndex(android.support.v4.app.BackStackRecord)>
+<android.support.v4.app.FragmentManagerImpl: void attachController(android.support.v4.app.FragmentHostCallback,android.support.v4.app.FragmentContainer,android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void attachFragment(android.support.v4.app.Fragment,int,int)>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.FragmentTransaction beginTransaction()>
+<android.support.v4.app.FragmentManagerImpl: void detachFragment(android.support.v4.app.Fragment,int,int)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchActivityCreated()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchConfigurationChanged(android.content.res.Configuration)>
+<android.support.v4.app.FragmentManagerImpl: boolean dispatchContextItemSelected(android.view.MenuItem)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchCreate()>
+<android.support.v4.app.FragmentManagerImpl: boolean dispatchCreateOptionsMenu(android.view.Menu,android.view.MenuInflater)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchDestroy()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchDestroyView()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchLowMemory()>
+<android.support.v4.app.FragmentManagerImpl: boolean dispatchOptionsItemSelected(android.view.MenuItem)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchOptionsMenuClosed(android.view.Menu)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchPause()>
+<android.support.v4.app.FragmentManagerImpl: boolean dispatchPrepareOptionsMenu(android.view.Menu)>
+<android.support.v4.app.FragmentManagerImpl: void dispatchReallyStop()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchResume()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchStart()>
+<android.support.v4.app.FragmentManagerImpl: void dispatchStop()>
+<android.support.v4.app.FragmentManagerImpl: void dump(java.lang.String,java.io.FileDescriptor,java.io.PrintWriter,java.lang.String[])>
+<android.support.v4.app.FragmentManagerImpl: void enqueueAction(java.lang.Runnable,boolean)>
+<android.support.v4.app.FragmentManagerImpl: boolean execPendingActions()>
+<android.support.v4.app.FragmentManagerImpl: boolean executePendingTransactions()>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.Fragment findFragmentById(int)>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.Fragment findFragmentByTag(java.lang.String)>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.Fragment findFragmentByWho(java.lang.String)>
+<android.support.v4.app.FragmentManagerImpl: void freeBackStackIndex(int)>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.FragmentManager$BackStackEntry getBackStackEntryAt(int)>
+<android.support.v4.app.FragmentManagerImpl: int getBackStackEntryCount()>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.Fragment getFragment(android.os.Bundle,java.lang.String)>
+<android.support.v4.app.FragmentManagerImpl: java.util.List getFragments()>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.view.LayoutInflaterFactory getLayoutInflaterFactory()>
+<android.support.v4.app.FragmentManagerImpl: void hideFragment(android.support.v4.app.Fragment,int,int)>
+<android.support.v4.app.FragmentManagerImpl: boolean isDestroyed()>
+<android.support.v4.app.FragmentManagerImpl: android.view.animation.Animation loadAnimation(android.support.v4.app.Fragment,int,boolean,int)>
+<android.support.v4.app.FragmentManagerImpl: void makeActive(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void makeInactive(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void moveToState(int,int,int,boolean)>
+<android.support.v4.app.FragmentManagerImpl: void moveToState(int,boolean)>
+<android.support.v4.app.FragmentManagerImpl: void moveToState(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void moveToState(android.support.v4.app.Fragment,int,int,int,boolean)>
+<android.support.v4.app.FragmentManagerImpl: void noteStateNotSaved()>
+<android.support.v4.app.FragmentManagerImpl: android.view.View onCreateView(android.view.View,java.lang.String,android.content.Context,android.util.AttributeSet)>
+<android.support.v4.app.FragmentManagerImpl: void performPendingDeferredStart(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void popBackStack()>
+<android.support.v4.app.FragmentManagerImpl: void popBackStack(int,int)>
+<android.support.v4.app.FragmentManagerImpl: void popBackStack(java.lang.String,int)>
+<android.support.v4.app.FragmentManagerImpl: boolean popBackStackImmediate()>
+<android.support.v4.app.FragmentManagerImpl: boolean popBackStackImmediate(int,int)>
+<android.support.v4.app.FragmentManagerImpl: boolean popBackStackImmediate(java.lang.String,int)>
+<android.support.v4.app.FragmentManagerImpl: boolean popBackStackState(android.os.Handler,java.lang.String,int,int)>
+<android.support.v4.app.FragmentManagerImpl: void putFragment(android.os.Bundle,java.lang.String,android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void removeFragment(android.support.v4.app.Fragment,int,int)>
+<android.support.v4.app.FragmentManagerImpl: void removeOnBackStackChangedListener(android.support.v4.app.FragmentManager$OnBackStackChangedListener)>
+<android.support.v4.app.FragmentManagerImpl: void reportBackStackChanged()>
+<android.support.v4.app.FragmentManagerImpl: void restoreAllState(android.os.Parcelable,java.util.List)>
+<android.support.v4.app.FragmentManagerImpl: java.util.ArrayList retainNonConfig()>
+<android.support.v4.app.FragmentManagerImpl: android.os.Parcelable saveAllState()>
+<android.support.v4.app.FragmentManagerImpl: android.os.Bundle saveFragmentBasicState(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: android.support.v4.app.Fragment$SavedState saveFragmentInstanceState(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void saveFragmentViewState(android.support.v4.app.Fragment)>
+<android.support.v4.app.FragmentManagerImpl: void setBackStackIndex(int,android.support.v4.app.BackStackRecord)>
+<android.support.v4.app.FragmentManagerImpl: void showFragment(android.support.v4.app.Fragment,int,int)>
+<android.support.v4.app.FragmentManagerImpl: void startPendingDeferredFragments()>
+
 ? extends <android.support.v4.app.Fragment: android.support.v4.app.Fragment instantiate(android.content.Context,java.lang.String)>
 ? extends <android.support.v4.app.Fragment: android.support.v4.app.Fragment instantiate(android.content.Context,java.lang.String,android.os.Bundle)>
 ? extends <android.support.v4.app.Fragment: boolean isSupportFragmentClass(android.content.Context,java.lang.String)>
