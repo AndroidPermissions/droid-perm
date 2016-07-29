@@ -589,7 +589,7 @@ public class DroidPermMain {
     }
 
     private static void printSourcesAndSinks(DPSetupApplication setupApplication) {
-        if (config.getLogSourcesAndSinks()) {
+        if (config.isTaintAnalysisEnabled() && config.getLogSourcesAndSinks()) {
             if (!setupApplication.getCollectedSources().isEmpty()) {
                 List<Stmt> sortedSources = setupApplication.getCollectedSources().stream()
                         .sorted(new UnitComparator()).collect(Collectors.toList());
