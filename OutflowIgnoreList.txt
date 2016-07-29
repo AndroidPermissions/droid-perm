@@ -13,15 +13,11 @@
 %   Contains checks for LOCATION. Risks polluting the analysis with false positive checks.
 <android.support.v7.app.TwilightManager: android.location.Location getLastKnownLocation()>
 
-%   Causes an untractable mess that touches all fragments in the app.
-%   Full context sensitivity is likely not enough to solve this.
-%   Unlikely to touch any permissions that were not granted before.
-%   See: Twidere app, "Corpus tests 3 - checks & CSens ES.md"
-<android.support.v4.app.FragmentActivity: void onSaveInstanceState(android.os.Bundle)>
 
 % All methods inside a few android.support.v4.app classes:
 % FragmentActivity, FragmentManagerImpl, Fragment.
 % Reason: They all produce unfeasible paths that touch all fragments in the app from most activities.
+% Full context sensitivity is likely not enough to solve this.
 %================================
 
 <android.support.v4.app.FragmentActivity: void dumpViewHierarchy(java.lang.String,java.io.PrintWriter,android.view.View)>
