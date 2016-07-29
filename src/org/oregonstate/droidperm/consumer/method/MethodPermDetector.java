@@ -31,11 +31,12 @@ public class MethodPermDetector {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
+    private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
 
     private File permissionDefFile;
-    private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
     private File txtOut;
     private File xmlOut;
+    private Set<SootMethod> outflowIgnoreSet;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -108,7 +109,6 @@ public class MethodPermDetector {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         IPermissionDefProvider permissionDefProvider;
-        Set<SootMethod> outflowIgnoreSet;
         try {
             permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
@@ -321,7 +321,9 @@ public class MethodPermDetector {
                         MethodInContext sensInC = new MethodInContext(edgeInto);
                         Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                                 getPermCheckStatusToCallbacksMap(sensInC, permSet);
-                        if (!permCheckStatusToCallbacks.isEmpty()) {
+                        if (outflowIgnoreSet.contains(edgeInto.src())) {
+                            System.out.println("\t\tCallbacks: BLOCKED");
+                        } else if (!permCheckStatusToCallbacks.isEmpty()) {
                             for (PermCheckStatus status : PermCheckStatus.values()) {
                                 if (permCheckStatusToCallbacks.get(status) != null) {
                                     System.out.println("\t\tCallbacks where " + status + ": "
@@ -333,7 +335,7 @@ public class MethodPermDetector {
                                 }
                             }
                         } else {
-                            System.out.println("\t\tCallbacks: NONE !");
+                            System.out.println("\t\tCallbacks: NONE, POSSIBLY BLOCKED");
                         }
 
                         //count by status
@@ -391,7 +393,9 @@ public class MethodPermDetector {
 
                     Map<CheckerUsageStatus, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
                             getCheckerUsageStatusToCallbacksMap(checkerPair, perm);
-                    if (!checkerUsageStatusToCallbacks.isEmpty()) {
+                    if (outflowIgnoreSet.contains(checkerEdge.src()) || outflowIgnoreSet.contains(parent.src())) {
+                        System.out.println("\t\tCallbacks: BLOCKED");
+                    } else if (!checkerUsageStatusToCallbacks.isEmpty()) {
                         for (CheckerUsageStatus status : checkerUsageStatusToCallbacks.keySet()) {
                             System.out.println("\t\tCallbacks where " + status + ": "
                                     + checkerUsageStatusToCallbacks.get(status).size());
@@ -401,7 +405,7 @@ public class MethodPermDetector {
                             }
                         }
                     } else {
-                        System.out.println("\t\tCallbacks: NONE !");
+                        System.out.println("\t\tCallbacks: NONE, POSSIBLY BLOCKED");
                     }
 
                     //count by status
