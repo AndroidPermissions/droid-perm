@@ -6,6 +6,7 @@ import soot.jimple.toolkits.callgraph.Edge;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,10 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
         throw new UnsupportedOperationException();//can be done for each implementation, but differently
     }
 
+    public Map<Edge, Set<Edge>> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         throw new UnsupportedOperationException();
@@ -46,6 +51,11 @@ public abstract class AbstractCallPathHolder implements CallPathHolder {
 
     @Override
     public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback) {
         throw new UnsupportedOperationException();
     }
 }

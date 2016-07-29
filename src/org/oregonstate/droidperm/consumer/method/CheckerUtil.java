@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.consumer.method;
 
-import org.oregonstate.droidperm.util.IteratorUtil;
-import org.oregonstate.droidperm.util.MyCollectors;
-import org.oregonstate.droidperm.util.SortUtil;
-import org.oregonstate.droidperm.util.StreamUtil;
+import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -27,11 +24,18 @@ public class CheckerUtil {
                 callback -> callback,
                 //here getCallsToSensitiveFor actually means calls to checkers
                 callback -> checkerPathsHolder.getCallsToSensitiveFor(callback).stream()
-                        .map(CheckerUtil::getPossiblePermissionsFromChecker).collect(MyCollectors.toFlatSet())
+                        .map((checkerCall) -> getPossiblePermissionsFromChecker(checkerCall,
+                                checkerPathsHolder.getParentEdges(checkerCall, callback)))
+                        .collect(MyCollectors.toFlatSet())
         ));
     }
 
-    static Set<String> getPossiblePermissionsFromChecker(Edge checkerCall) {
+    static Set<String> getPossiblePermissionsFromChecker(Edge checkerCall, Set<Edge> parents) {
+        return parents.stream().flatMap(parent -> getPossiblePermissionsFromChecker(checkerCall, parent).stream())
+                .collect(Collectors.toSet());
+    }
+
+    static Set<String> getPossiblePermissionsFromChecker(Edge checkerCall, Edge parent) {
         InvokeExpr invoke = checkerCall.srcStmt().getInvokeExpr();
 
         //key intuition: in both perm. checker versions the last argument is the permission value
@@ -40,9 +44,9 @@ public class CheckerUtil {
             return Collections.singleton(((StringConstant) lastArg).value);
         } else if (lastArg instanceof Local) {
             PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
-            //todo get points-to context-sensitively for GEOM, context-insens for SPARK.
-            //Likely won't affect results in real apps anyway.
-            Set<String> permSet = pta.reachingObjects((Local) lastArg).possibleStringConstants();
+            PointsToSet pointsTo = PointsToUtil
+                    .getPointsToWithFallback((Local) lastArg, parent != null ? parent.srcStmt() : null, pta);
+            Set<String> permSet = pointsTo != null ? pointsTo.possibleStringConstants() : null;
             if (permSet != null) {
                 if (permSet.size() != 1) {
                     logger.warn("Possible imprecision in the permission check: " + invoke + ", possible values: " +
@@ -59,11 +63,12 @@ public class CheckerUtil {
             Set<MethodOrMethodContext> permCheckers) {
         CallGraph cg = Scene.v().getCallGraph();
         Map<String, LinkedHashMap<Edge, Boolean>> result = new HashMap<>();
-        for (MethodOrMethodContext sens : permCheckers) {
-            Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
+        for (MethodOrMethodContext checker : permCheckers) {
+            Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(checker));
             for (Edge edgeInto
                     : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
-                Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto);
+                //todo 1-CFA points-to
+                Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, (Edge) null);
                 for (String perm : possiblePerm) {
                     if (!result.containsKey(perm)) {
                         result.put(perm, new LinkedHashMap<>());

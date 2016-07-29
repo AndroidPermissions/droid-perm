@@ -21,6 +21,11 @@ public interface CallPathHolder {
 
     Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback);
 
+    /**
+     * For 1-CFA analysis. Map from call to its parent calls, for each call to sensitive in this calblack.
+     */
+    Map<Edge, Set<Edge>> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback);
+
     void printPathsFromCallbackToSensitive();
 
     /**
@@ -32,4 +37,12 @@ public interface CallPathHolder {
      * Map from reachable sensitives to sets of callbacks.
      */
     Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap();
+
+    /**
+     * To be used for checkers only. this method does not check points-to consistency between parent edges and child
+     * edges.
+     * <p>
+     * For methods executed directly inside callback, parent will be the edge from dummy main to callback.
+     */
+    Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback);
 }
