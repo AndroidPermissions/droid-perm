@@ -317,6 +317,9 @@ public class MethodPermDetector {
                             printed = true;
                         }
                         System.out.println("\tfrom " + edgeInto.getSrc());
+                        if (TryCatchCheckerUtil.isTryCatchChecked(edgeInto)) {
+                            System.out.println("\t\tTRY-CATCH CHECKED");
+                        }
 
                         MethodInContext sensInC = new MethodInContext(edgeInto);
                         Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =

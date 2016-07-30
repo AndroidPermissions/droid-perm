@@ -256,9 +256,3 @@
 %================================
 <edu.oregonstate.dp.ignore.IgnoreListTestAct: void sensitiveIgnored()>
 <edu.oregonstate.dp.ignore.IgnoreListTestAct: void sensitiveIgnored2()>
-
-%   Twidere app
-%========================================
-%   78 false positives. Perm checked by pattern:
-%       catch (SecurityException ignore) {}
-<org.mariotaku.twidere.util.Utils: android.location.Location getCachedLocation(android.content.Context)>

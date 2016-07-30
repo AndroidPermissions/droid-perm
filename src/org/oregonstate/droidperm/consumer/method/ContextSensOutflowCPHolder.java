@@ -53,6 +53,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     /**
      * From each MethodInContext in the call graph, the set of sensitives it reaches.
+     * <p>
+     * todo Do not include sensitives checked by try-catch. this would require storing sensitives in context.
+     * <p>
+     * toperf this collection is likely a huge memory hog.
      */
     private MultiMap<MethodInContext, MethodOrMethodContext> reachableSensitives;
 

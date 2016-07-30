@@ -12,6 +12,7 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.jimple.toolkits.callgraph.Targets;
 import soot.jimple.toolkits.callgraph.TransitiveTargets;
+import soot.util.Chain;
 import soot.util.MultiMap;
 
 import java.io.File;
@@ -99,6 +100,34 @@ public class DebugUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void printBody(String methodSig) {
+        SootMethod meth = Scene.v().getMethod(methodSig);
+
+        System.out.println("Units:");
+        Body body = meth.getActiveBody();
+        PatchingChain<Unit> units = body.getUnits();
+        units.forEach(unit -> System.out.println("\t" + unit + " : " + unit.getJavaSourceStartLineNumber()));
+        System.out.println();
+
+        System.out.println("Traps:");
+        Chain<Trap> traps = body.getTraps();
+        traps.forEach(trap -> {
+            System.out.println("\tTrap :"
+                    + "\n\t\tbegin: " + trap.getBeginUnit() + " : " + trap.getBeginUnit()
+                    .getJavaSourceStartLineNumber()
+                    + "\n\t\tend: " + trap.getEndUnit() + " : " + trap.getEndUnit().getJavaSourceStartLineNumber()
+                    + "\n\t\thandler: "
+                    + trap.getHandlerUnit() + " : " + trap.getHandlerUnit().getJavaSourceStartLineNumber()
+                    + "\n\t\tex type: " + trap.getException() + "\n");
+        });
+
+        System.out.println();
+    }
+
+    public static Unit getUnitInBody(Unit unit, Body body) {
+        return body.getUnits().stream().filter(bodyUnit -> bodyUnit.equals(unit)).findAny().orElse(null);
     }
 
     public static void debugEdgesOutOf(CallGraph cg, MethodOrMethodContext node) {
