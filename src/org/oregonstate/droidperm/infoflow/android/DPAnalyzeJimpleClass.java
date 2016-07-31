@@ -10,27 +10,8 @@
  ******************************************************************************/
 package org.oregonstate.droidperm.infoflow.android;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import soot.*;
-import soot.jimple.DefinitionStmt;
-import soot.jimple.IdentityStmt;
-import soot.jimple.InstanceInvokeExpr;
-import soot.jimple.IntConstant;
-import soot.jimple.InvokeExpr;
-import soot.jimple.ReturnVoidStmt;
-import soot.jimple.Stmt;
+import soot.jimple.*;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
@@ -43,6 +24,12 @@ import soot.toolkits.scalar.SimpleLiveLocals;
 import soot.toolkits.scalar.SmartLocalDefs;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Analyzes the classes in the APK file to find custom implementations of the
@@ -425,11 +412,16 @@ public class DPAnalyzeJimpleClass {
 		Set<SootClass> baseClassesAndInterfaces = collectAllInterfaces(sootClass);
 		baseClassesAndInterfaces.addAll(Scene.v().getActiveHierarchy().getSuperclassesOf(sootClass));
 		for (SootClass i : baseClassesAndInterfaces) {
-			if (androidCallbacks.contains(i.getName()))
+			if (isAndroidInterface(i) || androidCallbacks.contains(i.getName()))
 				for (SootMethod sm : i.getMethods())
 					checkAndAddMethod(getMethodFromHierarchyEx(baseClass,
 							sm.getSubSignature()), lifecycleElement);
 		}
+	}
+
+	private boolean isAndroidInterface(SootClass sootClass) {
+		return sootClass.isInterface()
+				&& (sootClass.getName().startsWith("android") || sootClass.getName().startsWith("com.google"));
 	}
 
 	/**
