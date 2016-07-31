@@ -23,19 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import soot.Body;
-import soot.Local;
-import soot.MethodOrMethodContext;
-import soot.PackManager;
-import soot.RefType;
-import soot.Scene;
-import soot.SceneTransformer;
-import soot.SootClass;
-import soot.SootMethod;
-import soot.Transform;
-import soot.Type;
-import soot.Unit;
-import soot.Value;
+import soot.*;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.IdentityStmt;
 import soot.jimple.InstanceInvokeExpr;
@@ -223,6 +211,8 @@ public class DPAnalyzeJimpleClass {
 						iinv.getMethodRef().getSubSignature().getString());
 				for (int i = 0; i < parameters.length; i++) {
 					String param = parameters[i];
+
+					//Here fragment classes are detected
 					if (androidCallbacks.contains(param)) {
 						Value arg = iinv.getArg(i);
 
@@ -430,8 +420,11 @@ public class DPAnalyzeJimpleClass {
 		if (sootClass.hasSuperclass())
 			analyzeClassInterfaceCallbacks(baseClass, sootClass.getSuperclass(), lifecycleElement);
 
-		// Do we implement one of the well-known interfaces?
-		for (SootClass i : collectAllInterfaces(sootClass)) {
+		// Do we implement one of the callback classes or interfaces?
+		// Callback classes are required to support fragments.
+		Set<SootClass> baseClassesAndInterfaces = collectAllInterfaces(sootClass);
+		baseClassesAndInterfaces.addAll(Scene.v().getActiveHierarchy().getSuperclassesOf(sootClass));
+		for (SootClass i : baseClassesAndInterfaces) {
 			if (androidCallbacks.contains(i.getName()))
 				for (SootMethod sm : i.getMethods())
 					checkAndAddMethod(getMethodFromHierarchyEx(baseClass,

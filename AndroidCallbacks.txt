@@ -186,3 +186,7 @@ com.loopj.android.http.AsyncHttpResponseHandler
 
 % FlowDroidTest - equivalent scenarion to AsyncHttpResponseHandler
 % com.loopj.android.http.ResponseHandlerInterface
+
+% Fragments
+android.app.Fragment
+android.support.v4.app.Fragment
