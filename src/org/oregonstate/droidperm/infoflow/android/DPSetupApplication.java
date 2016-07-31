@@ -19,7 +19,6 @@ import soot.*;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.AbstractInfoflow;
 import soot.jimple.infoflow.Infoflow;
-import soot.jimple.infoflow.android.AnalyzeJimpleClass;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.config.SootConfigForAndroid;
 import soot.jimple.infoflow.android.data.AndroidMethod;
@@ -456,7 +455,7 @@ public class DPSetupApplication {
 	 *             Thrown if a required configuration cannot be read
 	 */
 	private void calculateCallbackMethods(ARSCFileParser resParser, LayoutFileParser lfp) throws IOException {
-		AnalyzeJimpleClass jimpleClass = null;
+		DPAnalyzeJimpleClass jimpleClass = null;
 
 		boolean hasChanged = true;
 		while (hasChanged) {
@@ -471,9 +470,9 @@ public class DPSetupApplication {
 				// Collect the callback interfaces implemented in the app's
 				// source code
 				if (callbackClasses == null) {
-					jimpleClass = new AnalyzeJimpleClass(config, entrypoints);
+					jimpleClass = new DPAnalyzeJimpleClass(config, entrypoints);
 				} else {
-					jimpleClass = new AnalyzeJimpleClass(config, entrypoints, callbackClasses);
+					jimpleClass = new DPAnalyzeJimpleClass(config, entrypoints, callbackClasses);
 				}
 				jimpleClass.collectCallbackMethods();
 
@@ -513,6 +512,7 @@ public class DPSetupApplication {
 					final String layoutFileName = ((StringResource) resource).getValue();
 
 					// Add the callback methods for the given class
+					//todo retrieve layout fragments here
 					Set<String> callbackMethods = lfp.getCallbackMethods().get(layoutFileName);
 					if (callbackMethods != null) {
 						for (String methodName : callbackMethods) {
@@ -753,6 +753,7 @@ public class DPSetupApplication {
 	}
 
 	private AndroidEntryPointCreator createEntryPointCreator() {
+		//todo callbacks and entrypoints are registered differently
 		AndroidEntryPointCreator entryPointCreator = new AndroidEntryPointCreator(new ArrayList<String>(
 				this.entrypoints));
 		Map<String, List<String>> callbackMethodSigs = new HashMap<String, List<String>>();
