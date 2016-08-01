@@ -48,6 +48,7 @@ public class DroidPermMain {
 
     private static boolean aggressiveTaintWrapper = false;
     private static boolean noTaintWrapper = false;
+    private static boolean XMLPerms = false;
     private static String summaryPath;
 
     /**
@@ -57,6 +58,7 @@ public class DroidPermMain {
 
     private static String additionalClasspath = "";
     private static File permissionDefFile = new File("PermissionDefs.txt");
+    private static File xmlPermDefFile;
     private static File txtOut;
     private static File xmlOut;
 
@@ -288,6 +290,10 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--CALL-GRAPH-DUMP-FILE")) {
                 callGraphDumpFile = new File(args[i + 1]);
                 i += 2;
+            } else if (args[i].equalsIgnoreCase("--XML-PERM-DEF-FILE")) {
+                xmlPermDefFile = new File(args[i + 1]);
+                XMLPerms = true;
+                i += 2;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -428,7 +434,12 @@ public class DroidPermMain {
         }
 
         //Run DroidPerm
-        new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+        if(XMLPerms) {
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut, xmlPermDefFile).analyzeAndPrint();
+        }
+        else {
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+        }
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
 

@@ -1,8 +1,10 @@
 package org.oregonstate.droidperm.consumer.method;
 
+import com.sun.istack.internal.Nullable;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.TxtPermissionDefParser;
+import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,7 @@ public class MethodPermDetector {
     private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
     private File txtOut;
     private File xmlOut;
+    private File xmlPermDefFile = null;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -85,6 +88,13 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
+    public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut, File xmlPermDefFile) {
+        this.permissionDefFile = permissionDefFile;
+        this.txtOut = txtOut;
+        this.xmlOut = xmlOut;
+        this.xmlPermDefFile = xmlPermDefFile;
+    }
+
     public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
         this.permissionDefFile = permissionDefFile;
         this.txtOut = txtOut;
@@ -107,9 +117,16 @@ public class MethodPermDetector {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         IPermissionDefProvider permissionDefProvider;
+        IPermissionDefProvider xmlPermissionDefProvider;
         Set<SootMethod> outflowIgnoreSet;
         try {
             permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
+            if (xmlPermDefFile != null) {
+                xmlPermissionDefProvider = new XMLPermissionDefParser(xmlPermDefFile);
+            }
+            else {
+                xmlPermissionDefProvider = null;
+            }
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -117,6 +134,9 @@ public class MethodPermDetector {
 
         Set<SootMethodAndClass> permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
         Set<AndroidMethod> sensitiveDefs = permissionDefProvider.getSensitiveDefs();
+        if (xmlPermissionDefProvider != null) {
+            sensitiveDefs.addAll(xmlPermissionDefProvider.getSensitiveDefs());
+        }
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));

@@ -11,7 +11,7 @@ public class PermMinerMain {
 
     public static void main(final String[] args) throws JAXBException, IOException {
         String androidAnnotationsLocation = args[0];
-        File saveFile = new File(args[1]);
+        File saveFile = new File(args[1], args[2]);
         XmlPermDefMiner.extractPermissionDefs(androidAnnotationsLocation, saveFile);
     }
 }
