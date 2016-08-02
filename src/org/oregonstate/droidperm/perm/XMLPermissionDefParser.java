@@ -23,12 +23,7 @@ import java.util.regex.Pattern;
  */
 public class XMLPermissionDefParser implements IPermissionDefProvider {
     private static final int INITIAL_SET_SIZE = 10000;
-    //Separating the directory and the file name allow relative pathing when saving the output
-    private static final String PERMISSIONS_SAVE_DIR = "src\\test\\annotations\\";
-    private static final String PERMISSIONS_SAVE_FILE_NAME = "permdefparser.xml";
-
-    private static final String regex = "^<(.+):\\s*(.+)\\s+(.+)\\s*\\((.*)\\)>\\s+->\\s+(.+)$";
-    private static final Pattern pattern = Pattern.compile(regex);
+    private static final String PERMISSIONS_SAVE_FILE_NAME = "minedpermdefs.xml";
 
     private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>(INITIAL_SET_SIZE);
     private Set<AndroidMethod> sensitiveDefs = new HashSet<>(INITIAL_SET_SIZE);
@@ -41,15 +36,15 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
         this.txtPermDefFile = txtFile;
         parseTxtPermissions();
         minePermDefs();
-        addSensitives(getPermissionDefList(PERMISSIONS_SAVE_DIR+PERMISSIONS_SAVE_FILE_NAME));
+        addSensitives(getPermissionDefList(PERMISSIONS_SAVE_FILE_NAME));
     }
 
     private void minePermDefs() {
-        String[] arguments = new String[3];
+        String[] arguments = new String[2];
 
         arguments[0] = xmlpermDefFile.getAbsolutePath();
-        arguments[1] = PERMISSIONS_SAVE_DIR;
-        arguments[2] = PERMISSIONS_SAVE_FILE_NAME;
+        //arguments[1] = PERMISSIONS_SAVE_DIR;
+        arguments[1] = PERMISSIONS_SAVE_FILE_NAME;
 
         try {
             PermMinerMain.main(arguments);
