@@ -286,4 +286,17 @@ public class DebugUtil {
     private static String toDisplayString(PointsToSet pointsTo, Exception e) {
         return "" + (pointsTo != null ? pointsTo.possibleTypes() : "EXCEPTION: " + e);
     }
+
+    public static void logClassesWithCallbacks(Set<MethodOrMethodContext> uiCallbacks) {
+        Set<SootClass> classesWithCallbacks = uiCallbacks.stream()
+                //classes that only have constructors and static initializers as "callbacks" are filtered out.
+                .filter(meth -> !(meth.method().isConstructor() || meth.method().isStaticInitializer()))
+
+                .map(meth -> meth.method().getDeclaringClass())
+                .sorted(SortUtil.classComparator).collect(Collectors.toCollection(LinkedHashSet::new));
+        System.out.println("\nTotal classes with callbacks: " + classesWithCallbacks.size() + "\n"
+                + "========================================================================");
+        classesWithCallbacks.forEach(System.out::println);
+        System.out.println();
+    }
 }
