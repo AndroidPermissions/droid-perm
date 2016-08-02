@@ -21,8 +21,6 @@ import soot.jimple.infoflow.AbstractInfoflow;
 import soot.jimple.infoflow.Infoflow;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.callbacks.AbstractCallbackAnalyzer;
-import soot.jimple.infoflow.android.callbacks.DefaultCallbackAnalyzer;
-import soot.jimple.infoflow.android.callbacks.FastCallbackAnalyzer;
 import soot.jimple.infoflow.android.config.SootConfigForAndroid;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.android.data.parsers.PermissionMethodParser;
@@ -484,8 +482,8 @@ public class DPSetupApplication {
 				// Collect the callback interfaces implemented in the app's
 				// source code
 				jimpleClass = callbackClasses == null
-						? new DefaultCallbackAnalyzer(config, entrypoints, callbackFile)
-						: new DefaultCallbackAnalyzer(config, entrypoints, callbackClasses);
+						? new DPDefaultCallbackAnalyzer(config, entrypoints, callbackFile)
+						: new DPDefaultCallbackAnalyzer(config, entrypoints, callbackClasses);
 				jimpleClass.collectCallbackMethods();
 
 				// Find the user-defined sources in the layout XML files. This
@@ -606,8 +604,8 @@ public class DPSetupApplication {
 		// Collect the callback interfaces implemented in the app's
 		// source code
 		AbstractCallbackAnalyzer jimpleClass = callbackClasses == null
-				? new FastCallbackAnalyzer(config, entrypoints, callbackFile)
-				: new FastCallbackAnalyzer(config, entrypoints, callbackClasses);
+				? new DPFastCallbackAnalyzer(config, entrypoints, callbackFile)
+				: new DPFastCallbackAnalyzer(config, entrypoints, callbackClasses);
 		jimpleClass.collectCallbackMethods();
 		
 		// Collect the results
