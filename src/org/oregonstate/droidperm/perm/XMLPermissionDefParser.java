@@ -10,15 +10,12 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import javax.xml.bind.JAXBException;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -26,7 +23,6 @@ import java.util.regex.Pattern;
  */
 public class XMLPermissionDefParser implements IPermissionDefProvider {
     private static final int INITIAL_SET_SIZE = 10000;
-    //@TODO Ask Denis where to save the xml output before parsing
     //Separating the directory and the file name allow relative pathing when saving the output
     private static final String PERMISSIONS_SAVE_DIR = "src\\test\\annotations\\";
     private static final String PERMISSIONS_SAVE_FILE_NAME = "permdefparser.xml";
@@ -37,19 +33,21 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
     private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>(INITIAL_SET_SIZE);
     private Set<AndroidMethod> sensitiveDefs = new HashSet<>(INITIAL_SET_SIZE);
 
-    private File permDefFile;
-    private List<String> lines;
+    private File xmlpermDefFile;
+    private File txtPermDefFile;
 
-    public XMLPermissionDefParser(File permDefFile) throws IOException {
-        this.permDefFile = permDefFile;
+    public XMLPermissionDefParser(File xmlFile, File txtFile) throws IOException {
+        this.xmlpermDefFile = xmlFile;
+        this.txtPermDefFile = txtFile;
+        parseTxtPermissions();
         minePermDefs();
         addSensitives(getPermissionDefList(PERMISSIONS_SAVE_DIR+PERMISSIONS_SAVE_FILE_NAME));
     }
 
-    public void minePermDefs() {
+    private void minePermDefs() {
         String[] arguments = new String[3];
 
-        arguments[0] = permDefFile.getAbsolutePath();
+        arguments[0] = xmlpermDefFile.getAbsolutePath();
         arguments[1] = PERMISSIONS_SAVE_DIR;
         arguments[2] = PERMISSIONS_SAVE_FILE_NAME;
 
@@ -79,7 +77,7 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
             List<String> parameters = new ArrayList<>();
             Set<String> permissions = new HashSet<>();
 
-            if(permissionDef.getTargetType() == TargetType.Method) {
+            if(permissionDef.getTargetType() != TargetType.Field && !permissionDef.getPermissions().isEmpty()) {
                 String[] tokens = permissionDef.getTargetName().split(delimiters);
                 returnType = tokens[0];
                 targetName = tokens[1];
@@ -88,19 +86,25 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
                         parameters.add(tokens[i]);
                     }
                 }
-            }
-            else {
-                //@TODO: Ask Denis how he wants to handle type FIELD
-                targetName = permissionDef.getTargetName();
-                returnType = permissionDef.getTargetType().toString();
-                parameters.add("This is a field");
-            }
-            for(Permission permission : permissionDef.getPermissions()) {
-                permissions.add(permission.getName());
-            }
 
-            sensitiveDefs.add(new AndroidMethod(targetName, parameters, returnType,
-                    permissionDef.getClassName(), permissions));
+                for (Permission permission : permissionDef.getPermissions()) {
+                    permissions.add(permission.getName());
+                }
+
+
+                sensitiveDefs.add(new AndroidMethod(targetName, parameters, returnType,
+                        permissionDef.getClassName(), permissions));
+            }
+        }
+    }
+
+    private void parseTxtPermissions() {
+        try {
+            TxtPermissionDefParser txtPermissionDefParser = new TxtPermissionDefParser(this.txtPermDefFile);
+            sensitiveDefs.addAll(txtPermissionDefParser.getSensitiveDefs());
+            permCheckerDefs.addAll(txtPermissionDefParser.getPermCheckerDefs());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

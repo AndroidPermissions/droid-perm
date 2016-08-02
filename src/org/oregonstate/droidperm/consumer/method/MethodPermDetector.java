@@ -117,15 +117,13 @@ public class MethodPermDetector {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
 
         IPermissionDefProvider permissionDefProvider;
-        IPermissionDefProvider xmlPermissionDefProvider;
         Set<SootMethod> outflowIgnoreSet;
         try {
-            permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
             if (xmlPermDefFile != null) {
-                xmlPermissionDefProvider = new XMLPermissionDefParser(xmlPermDefFile);
+                permissionDefProvider = new XMLPermissionDefParser(xmlPermDefFile, permissionDefFile);
             }
             else {
-                xmlPermissionDefProvider = null;
+                permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
             }
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
@@ -134,9 +132,6 @@ public class MethodPermDetector {
 
         Set<SootMethodAndClass> permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
         Set<AndroidMethod> sensitiveDefs = permissionDefProvider.getSensitiveDefs();
-        if (xmlPermissionDefProvider != null) {
-            sensitiveDefs.addAll(xmlPermissionDefProvider.getSensitiveDefs());
-        }
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
