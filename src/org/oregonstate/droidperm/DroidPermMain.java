@@ -123,6 +123,7 @@ public class DroidPermMain {
         List<File> apkFiles = new ArrayList<>();
         if (apkFileOrDir.isDirectory()) {
             String[] apkFileNames = apkFileOrDir.list((dir, name) -> (name.endsWith(".apk")));
+            assert apkFileNames != null; //If it's null, there's nothing to do. Program should crash.
             for (String dirFile : apkFileNames) {
                 apkFiles.add(new File(dirFile));
             }
@@ -266,22 +267,20 @@ public class DroidPermMain {
                 config.setLogSourcesAndSinks(true);
                 i++;
             } else if (args[i].equalsIgnoreCase("--callbackanalyzer")) {
-                String algo = args[i+1];
-                if (algo.equalsIgnoreCase("DEFAULT"))
+                String algo = args[i + 1];
+                if (algo.equalsIgnoreCase("DEFAULT")) {
                     config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Default);
-                else if (algo.equalsIgnoreCase("FAST"))
+                } else if (algo.equalsIgnoreCase("FAST")) {
                     config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Fast);
-                else {
+                } else {
                     System.err.println("Invalid callback analysis algorithm");
                     return false;
                 }
                 i += 2;
-            }
-            else if (args[i].equalsIgnoreCase("--maxthreadnum")){
-                config.setMaxThreadNum(Integer.valueOf(args[i+1]));
+            } else if (args[i].equalsIgnoreCase("--maxthreadnum")) {
+                config.setMaxThreadNum(Integer.valueOf(args[i + 1]));
                 i += 2;
-            }
-            else if (args[i].equalsIgnoreCase("--arraysizetainting")) {
+            } else if (args[i].equalsIgnoreCase("--arraysizetainting")) {
                 config.setEnableArraySizeTainting(true);
                 i++;
 
@@ -435,7 +434,7 @@ public class DroidPermMain {
                 return "DEFAULT";
             case Fast:
                 return "FAST";
-            default :
+            default:
                 return "UNKNOWN";
         }
     }
@@ -584,7 +583,7 @@ public class DroidPermMain {
                                         "--callbackanalyzer", callbackAlgorithmToString(config.getCallbackAnalyzer()),
                                         "--maxthreadnum", Integer.toString(config.getMaxThreadNum()),
                                         config.getEnableArraySizeTainting() ? "--arraysizetainting" : ""
-                                        };
+        };
         System.out.println("Running command: " + executable + " " + Arrays.toString(command));
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
