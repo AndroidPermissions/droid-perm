@@ -265,6 +265,25 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--logsourcesandsinks")) {
                 config.setLogSourcesAndSinks(true);
                 i++;
+            } else if (args[i].equalsIgnoreCase("--callbackanalyzer")) {
+                String algo = args[i+1];
+                if (algo.equalsIgnoreCase("DEFAULT"))
+                    config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Default);
+                else if (algo.equalsIgnoreCase("FAST"))
+                    config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Fast);
+                else {
+                    System.err.println("Invalid callback analysis algorithm");
+                    return false;
+                }
+                i += 2;
+            }
+            else if (args[i].equalsIgnoreCase("--maxthreadnum")){
+                config.setMaxThreadNum(Integer.valueOf(args[i+1]));
+                i += 2;
+            }
+            else if (args[i].equalsIgnoreCase("--arraysizetainting")) {
+                config.setEnableArraySizeTainting(true);
+                i++;
 
                 //new in DroidPerm - additional classpath for analysis
             } else if (args[i].equalsIgnoreCase("--additionalCP")) {
@@ -339,6 +358,8 @@ public class DroidPermMain {
         System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
         System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
         System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
+        System.out.println("\t--CALLBACKANALYZER x Uses callback analysis algorithm x");
+        System.out.println("\t--MAXTHREADNUM x Sets the maximum number of threads to be used by the analysis to x");
         System.out.println();
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
@@ -352,6 +373,7 @@ public class DroidPermMain {
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
         System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
+        System.out.println("Supported callback algorithms: DEFAULT, FAST");
         System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
                 "RemoveSideEffectFreeCode");
         System.out.println();
@@ -403,6 +425,17 @@ public class DroidPermMain {
             case ContextInsensitiveSourceFinder:
                 return "SOURCESONLY";
             default:
+                return "UNKNOWN";
+        }
+    }
+
+    private static String callbackAlgorithmToString(InfoflowAndroidConfiguration.CallbackAnalyzer analyzer) {
+        switch (analyzer) {
+            case Default:
+                return "DEFAULT";
+            case Fast:
+                return "FAST";
+            default :
                 return "UNKNOWN";
         }
     }
@@ -548,6 +581,9 @@ public class DroidPermMain {
                                         InfoflowAndroidConfiguration.getUseTypeTightening() ? "" : "--notypetightening",
                                         InfoflowAndroidConfiguration.getUseThisChainReduction() ? "" : "--safemode",
                                         config.getLogSourcesAndSinks() ? "--logsourcesandsinks" : "",
+                                        "--callbackanalyzer", callbackAlgorithmToString(config.getCallbackAnalyzer()),
+                                        "--maxthreadnum", Integer.toString(config.getMaxThreadNum()),
+                                        config.getEnableArraySizeTainting() ? "--arraysizetainting" : ""
                                         };
         System.out.println("Running command: " + executable + " " + Arrays.toString(command));
         try {
