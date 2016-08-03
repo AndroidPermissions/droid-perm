@@ -50,6 +50,7 @@ public class DroidPermMain {
 
     private static boolean aggressiveTaintWrapper = false;
     private static boolean noTaintWrapper = false;
+    public static CallgraphAlgorithm dummyMainGenCGAlgo = CallgraphAlgorithm.CHA;
     private static String summaryPath;
 
     /**

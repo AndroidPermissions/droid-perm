@@ -11,6 +11,7 @@
 package org.oregonstate.droidperm.infoflow.android;
 
 import heros.InterproceduralCFG;
+import org.oregonstate.droidperm.DroidPermMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -19,6 +20,7 @@ import soot.*;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.AbstractInfoflow;
 import soot.jimple.infoflow.Infoflow;
+import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.callbacks.AbstractCallbackAnalyzer;
 import soot.jimple.infoflow.android.config.SootConfigForAndroid;
@@ -514,6 +516,8 @@ public class DPSetupApplication {
 		}
 
 		// Collect the XML-based callback methods
+		//todo DP: if an xml-based callback registers a programmatic callback, it won't be detected
+		//this method should be part of the above loop
 		collectXmlBasedCallbackMethods(resParser, lfp, jimpleClass);
 	}
 
@@ -742,7 +746,7 @@ public class DPSetupApplication {
 
 		// Configure the callgraph algorithm
 		if (constructCallgraph) {
-			switch (config.getCallgraphAlgorithm()) {
+			switch (getDummyMainGenCGAlgo()) {
 			case AutomaticSelection:
 			case SPARK:
 				Options.v().setPhaseOption("cg.spark", "on");
@@ -940,6 +944,14 @@ public class DPSetupApplication {
 
 	public void setCallbackFile(String callbackFile) {
 		this.callbackFile = callbackFile;
+	}
+
+	public InfoflowConfiguration.CallgraphAlgorithm getDummyMainGenCGAlgo() {
+		if (DroidPermMain.dummyMainGenCGAlgo != null) {
+			return DroidPermMain.dummyMainGenCGAlgo;
+		} else {
+			return config.getCallgraphAlgorithm();
+		}
 	}
 
 }
