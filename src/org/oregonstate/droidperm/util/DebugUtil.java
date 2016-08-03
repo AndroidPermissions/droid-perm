@@ -288,15 +288,58 @@ public class DebugUtil {
     }
 
     public static void logClassesWithCallbacks(Set<MethodOrMethodContext> uiCallbacks) {
-        Set<SootClass> classesWithCallbacks = uiCallbacks.stream()
+        Set<SootClass> callbackClasses = getCallbackClasses(uiCallbacks);
+        System.out.println("\nTotal classes with callbacks: " + callbackClasses.size() + "\n"
+                + "========================================================================");
+        callbackClasses.forEach(System.out::println);
+        System.out.println();
+    }
+
+    private static Set<SootClass> getCallbackClasses(Set<MethodOrMethodContext> uiCallbacks) {
+        return uiCallbacks.stream()
                 //classes that only have constructors and static initializers as "callbacks" are filtered out.
                 .filter(meth -> !(meth.method().isConstructor() || meth.method().isStaticInitializer()))
 
                 .map(meth -> meth.method().getDeclaringClass())
                 .sorted(SortUtil.classComparator).collect(Collectors.toCollection(LinkedHashSet::new));
-        System.out.println("\nTotal classes with callbacks: " + classesWithCallbacks.size() + "\n"
+    }
+
+    public static void logFragments(Set<MethodOrMethodContext> uiCallbacks) {
+        List<SootClass> detectedFragments = getFragmentsFrom(getCallbackClasses(uiCallbacks));
+        List<SootClass> undetectedFragments = getFragmentsFrom(Scene.v().getApplicationClasses());
+        undetectedFragments.removeAll(detectedFragments);
+
+        System.out.println("\nFragments\n"
                 + "========================================================================");
-        classesWithCallbacks.forEach(System.out::println);
-        System.out.println();
+        System.out.println("Total fragments: " + (detectedFragments.size() + undetectedFragments.size()));
+        System.out.println("Detected fragments: " + detectedFragments.size());
+        System.out.println("Undetected fragments: " + undetectedFragments.size());
+
+        System.out.println("\nDetected fragments: " + detectedFragments.size() + "\n"
+                + "------------------------------------------------------------------------");
+        detectedFragments.stream().sorted(SortUtil.classComparator).forEach(System.out::println);
+
+        System.out.println("\nUndetected fragments: " + undetectedFragments.size() + "\n"
+                + "------------------------------------------------------------------------");
+        undetectedFragments.stream().sorted(SortUtil.classComparator).forEach(System.out::println);
+    }
+
+    private static List<SootClass> getFragmentsFrom(Collection<SootClass> inputClasses) {
+        return inputClasses.stream()
+                .filter(sootClass ->
+                        sootClass.isConcrete()
+                                && !(sootClass.getName().startsWith("android.")
+                                || sootClass.getName().startsWith("java."))
+                                && isFragment(sootClass)
+                )
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isFragment(SootClass sootClass) {
+        Hierarchy hierarchy = Scene.v().getActiveHierarchy();
+        List<SootClass> superclasses = hierarchy.getSuperclassesOf(sootClass);
+        SootClass fragmentClass = Scene.v().getSootClassUnsafe("android.app.Fragment");
+        SootClass supportFragmentClass = Scene.v().getSootClassUnsafe("android.support.v4.app.Fragment");
+        return superclasses.contains(fragmentClass) || superclasses.contains(supportFragmentClass);
     }
 }

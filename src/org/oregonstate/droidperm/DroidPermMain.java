@@ -25,10 +25,12 @@ import soot.jimple.infoflow.ipc.IIPCManager;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
+import soot.options.Options;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -476,6 +478,10 @@ public class DroidPermMain {
             setupApplication.setSootConfig(options -> {
                 options.set_keep_line_number(true);
                 options.set_include_all(true);
+
+                //Required to distinguish between application and library classes in DroidPerm
+                Options.v().set_process_dir(Collections.singletonList(fileName));
+
                 //options.setPhaseOption("cg.spark", "dump-html"); //output format is unintelligible.
 
                 //just some execution statistics, nothing useful for debugging.

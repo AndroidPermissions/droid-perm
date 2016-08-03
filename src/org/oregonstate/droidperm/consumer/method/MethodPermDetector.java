@@ -161,6 +161,7 @@ public class MethodPermDetector {
         //setupApp.printProducerDefs();
         //setupApp.printConsumerDefs();
         DebugUtil.logClassesWithCallbacks(sensitivePathsHolder.getUiCallbacks());
+        DebugUtil.logFragments(sensitivePathsHolder.getUiCallbacks());
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
