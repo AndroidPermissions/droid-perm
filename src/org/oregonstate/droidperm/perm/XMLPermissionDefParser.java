@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
@@ -40,11 +39,7 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
     }
 
     private void minePermDefs() {
-        String[] arguments = new String[2];
-
-        arguments[0] = xmlpermDefFile.getAbsolutePath();
-        //arguments[1] = PERMISSIONS_SAVE_DIR;
-        arguments[1] = PERMISSIONS_SAVE_FILE_NAME;
+        String[] arguments = {xmlpermDefFile.getAbsolutePath(), PERMISSIONS_SAVE_FILE_NAME};
 
         try {
             PermMinerMain.main(arguments);
@@ -63,7 +58,7 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
     }
 
     private void addSensitives(PermissionDefList permissionDefList) {
-        String delimiters = "[ \\( \\),]+";
+        String delimiters = "[ \\(\\),]+";
         String returnType;
         String targetName;
 
