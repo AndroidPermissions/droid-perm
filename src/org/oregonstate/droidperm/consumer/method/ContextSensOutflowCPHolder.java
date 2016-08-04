@@ -3,7 +3,6 @@ package org.oregonstate.droidperm.consumer.method;
 import com.google.common.collect.Iterators;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.PointsToUtil;
-import org.oregonstate.droidperm.util.SortUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +33,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     private Set<SootMethod> outflowIgnoreSet;
 
     private long time = System.currentTimeMillis();
+    private Set<MethodOrMethodContext> uiCallbacks;
 
     private Set<MethodInContext> sensitivesInContext = new HashSet<>();
 
@@ -53,6 +53,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     /**
      * From each MethodInContext in the call graph, the set of sensitives it reaches.
+     * <p>
+     * todo Do not include sensitives checked by try-catch. this would require storing sensitives in context.
+     * <p>
+     * toperf this collection is likely a huge memory hog.
      */
     private MultiMap<MethodInContext, MethodOrMethodContext> reachableSensitives;
 
@@ -62,7 +66,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     private Map<MethodInContext, Set<MethodOrMethodContext>> sensitiveInCToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
-                                      Set<SootMethod> outflowIgnoreSet, boolean logClassesWithCallbacks) {
+                                      Set<SootMethod> outflowIgnoreSet) {
         super(dummyMainMethod, sensitives);
         this.outflowIgnoreSet = outflowIgnoreSet;
 
@@ -71,15 +75,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             logger.warn("ContextSensOutflowCPHolder is slow with PointsTo algorithms other than GEOM");
         }
 
-        callbackToOutflowMap = buildCallbackToOutflowMap(logClassesWithCallbacks);
+        callbackToOutflowMap = buildCallbackToOutflowMap();
         sensitiveInCToCallbacksMap = buildSensitiveToCallbacksMap();
         buildReachableSensitives();
     }
 
-    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap(
-            boolean logClassesWithCallbacks) {
+    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
         Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> map = new HashMap<>();
-        Set<MethodOrMethodContext> uiCallbacks = getUICallbacks();
+        uiCallbacks = computeUICallbacks();
         logger.info("\n\nTotal callbacks: " + uiCallbacks.size() + "\n");
         for (MethodOrMethodContext callback : uiCallbacks) {
             Map<MethodInContext, MethodInContext> outflow = getBreadthFirstOutflow(callback);
@@ -94,27 +97,11 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
             logger.info("DP: Callback processed: " + callback + " in " + (newTime - time) / 1E3 + " sec");
             time = newTime;
         }
-        if (logClassesWithCallbacks) {
-            logClassesWithCallbacks(uiCallbacks);
-        }
 
         return map;
     }
 
-    private void logClassesWithCallbacks(Set<MethodOrMethodContext> uiCallbacks) {
-        Set<SootClass> classesWithCallbacks = uiCallbacks.stream()
-                //classes that only have constructors and static initializers as "callbacks" are filtered out.
-                .filter(meth -> !(meth.method().isConstructor() || meth.method().isStaticInitializer()))
-
-                .map(meth -> meth.method().getDeclaringClass())
-                .sorted(SortUtil.classComparator).collect(Collectors.toCollection(LinkedHashSet::new));
-        System.err.println("\nTotal classes with callbacks: " + classesWithCallbacks.size() + "\n"
-                + "========================================================================");
-        classesWithCallbacks.forEach(System.err::println);
-        System.err.println();
-    }
-
-    private Set<MethodOrMethodContext> getUICallbacks() {
+    private Set<MethodOrMethodContext> computeUICallbacks() {
         return StreamUtil.asStream(Scene.v().getCallGraph().edgesOutOf(dummyMainMethod))
                 .map(Edge::getTgt).collect(Collectors.toCollection(LinkedHashSet::new));
     }
@@ -371,11 +358,33 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
     }
 
     @Override
+    public Map<Edge, Set<Edge>> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
+        return sensitivesInContext.stream().collect(Collectors.toMap(
+                sensInC -> sensInC.edge,
+                sensInC -> getParentEdges(sensInC.edge, callback)
+        ));
+    }
+
+    @Override
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
                 .map(methInCt -> cg.findEdge(methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback) {
+        MethodInContext methInC = new MethodInContext(edge);
+        if (!callbackToOutflowMap.get(callback).containsKey(methInC)) {
+            return Collections.emptySet();
+        }
+
+        Iterator<Edge> allParentEdges = Scene.v().getCallGraph().edgesInto(edge.getSrc());
+        return StreamUtil.asStream(allParentEdges)
+                .filter(parent -> (callbackToOutflowMap.get(callback).containsKey(new MethodInContext(parent))
+                        || edge.getSrc() == callback))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -389,5 +398,14 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
         return sensitiveInCToCallbacksMap;
+    }
+
+    public Set<MethodOrMethodContext> getReachingCallbacks(MethodInContext meth) {
+        return callbackToOutflowMap.keySet().stream()
+                .filter(callback -> callbackToOutflowMap.get(callback).containsKey(meth)).collect(Collectors.toSet());
+    }
+
+    public Set<MethodOrMethodContext> getUiCallbacks() {
+        return uiCallbacks;
     }
 }

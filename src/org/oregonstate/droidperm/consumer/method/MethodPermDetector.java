@@ -148,7 +148,7 @@ public class MethodPermDetector {
         //checkers
 
         logger.info("Processing checkers");
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet, false);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
@@ -162,7 +162,7 @@ public class MethodPermDetector {
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new PartialPointsToCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet, true);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
 
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
@@ -174,6 +174,8 @@ public class MethodPermDetector {
     private void printResults() {
         //setupApp.printProducerDefs();
         //setupApp.printConsumerDefs();
+        DebugUtil.logClassesWithCallbacks(sensitivePathsHolder.getUiCallbacks());
+        DebugUtil.logFragments(sensitivePathsHolder.getUiCallbacks());
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
