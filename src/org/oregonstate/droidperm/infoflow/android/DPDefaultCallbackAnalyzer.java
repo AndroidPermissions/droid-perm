@@ -30,6 +30,9 @@ public class DPDefaultCallbackAnalyzer extends DefaultCallbackAnalyzer {
         super(config, entryPointClasses, androidCallbacks);
     }
 
+    /**
+     * This implementation still does not detect Fragment classes when they are returned by callback methods.
+     */
     @Override
     protected void analyzeClassInterfaceCallbacks(SootClass baseClass, SootClass sootClass,
                                                   SootClass lifecycleElement) {
@@ -56,15 +59,19 @@ public class DPDefaultCallbackAnalyzer extends DefaultCallbackAnalyzer {
         Set<SootClass> baseClassesAndInterfaces = collectAllInterfaces(sootClass);
         baseClassesAndInterfaces.addAll(Scene.v().getActiveHierarchy().getSuperclassesOf(sootClass));
         for (SootClass i : baseClassesAndInterfaces) {
-            if (isAndroidInterface(i) || androidCallbacks.contains(i.getName()))
-                for (SootMethod sm : i.getMethods())
+            if (isAndroidCallback(i.getName())) {
+                for (SootMethod sm : i.getMethods()) {
                     checkAndAddMethod(getMethodFromHierarchyEx(baseClass,
                             sm.getSubSignature()), lifecycleElement);
+                }
+            }
         }
     }
 
-    private boolean isAndroidInterface(SootClass sootClass) {
-        return sootClass.isInterface()
-                && (sootClass.getName().startsWith("android") || sootClass.getName().startsWith("com.google"));
+    @Override
+    protected boolean isAndroidCallback(String typeName) {
+        SootClass sootClass = Scene.v().containsClass(typeName) ? Scene.v().getSootClass(typeName) : null;
+        return (sootClass != null && sootClass.isInterface() && (sootClass.getName().startsWith("android")))
+                || super.isAndroidCallback(typeName);
     }
 }
