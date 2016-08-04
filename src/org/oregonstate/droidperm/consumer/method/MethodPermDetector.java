@@ -37,6 +37,8 @@ public class MethodPermDetector {
     private File txtOut;
     private File xmlOut;
     private Set<SootMethod> outflowIgnoreSet;
+    private Set<SootMethodAndClass> permCheckerDefs;
+    private Set<AndroidMethod> sensitiveDefs;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -116,11 +118,13 @@ public class MethodPermDetector {
             throw new RuntimeException(e);
         }
 
-        Set<SootMethodAndClass> permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
-        Set<AndroidMethod> sensitiveDefs = permissionDefProvider.getSensitiveDefs();
+        permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
+        sensitiveDefs = permissionDefProvider.getSensitiveDefs();
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
+
+        //todo use resolveAbstractDispatchesToMap() instead
         resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
         sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
                 .sorted(SortUtil.methodOrMCComparator)
@@ -164,6 +168,8 @@ public class MethodPermDetector {
         DebugUtil.logFragments(sensitivePathsHolder.getUiCallbacks());
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
+
+        UndetectedItemsUtil.printUndetectedCheckers(permCheckerDefs, permCheckers, outflowIgnoreSet);
 
         //printPermCheckStatusPerCallbacks();
         printCheckersInContext(true);
