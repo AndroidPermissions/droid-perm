@@ -63,6 +63,7 @@ public class DPBatchRunner {
 
     private static void batchRun(String appsDir, String droidPermHomeDir, String outputLogsDir,
                                  boolean taintAnalysisEnabled, String[] vmArgs) throws IOException {
+        Files.createDirectories(Paths.get(outputLogsDir));
         Map<String, List<Path>> appNamesToApksMap = Files.list(Paths.get(appsDir)).sorted()
                 .filter(path -> Files.isDirectory(path))
                 .collect(Collectors.toMap(
@@ -101,7 +102,6 @@ public class DPBatchRunner {
             throws IOException {
         String droidPermClassPath = droidPermHomeDir + "/droid-perm.jar";
         String androidClassPath = droidPermHomeDir + "/android-23-cr+util_io.zip";
-        Path xmlFile = Paths.get(outputLogsDir, appName + ".xml");
         Path logFile = Paths.get(outputLogsDir, appName + ".log");
         Path errorFile = Paths.get(outputLogsDir, appName + ".error.log");
 
@@ -110,8 +110,7 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList(vmArgs));
         processBuilderArgs.addAll(Arrays.asList(
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
-                androidClassPath,
-                "--xml-out", xmlFile.toAbsolutePath().toString()));
+                androidClassPath));
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
         if (taintAnalysisEnabled) {
             processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
