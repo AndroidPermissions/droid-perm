@@ -726,7 +726,11 @@ public class DPSetupApplication {
 		Options.v().set_no_bodies_for_excluded(true);
 		Options.v().set_allow_phantom_refs(true);
 		Options.v().set_output_format(Options.output_format_none);
-		Options.v().set_whole_program(constructCallgraph);
+
+		//didn't notice this to help, but who knows
+		Options.v().set_whole_program(true);
+		//Options.v().set_whole_program(constructCallgraph);
+
 		Options.v().set_process_dir(Collections.singletonList(apkFileLocation));
 		if (forceAndroidJar)
 			Options.v().set_force_android_jar(androidJar);

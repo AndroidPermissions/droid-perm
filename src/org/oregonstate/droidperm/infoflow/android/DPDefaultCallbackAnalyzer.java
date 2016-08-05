@@ -61,8 +61,11 @@ public class DPDefaultCallbackAnalyzer extends DefaultCallbackAnalyzer {
         for (SootClass i : baseClassesAndInterfaces) {
             if (isAndroidCallback(i.getName())) {
                 for (SootMethod sm : i.getMethods()) {
-                    checkAndAddMethod(getMethodFromHierarchyEx(baseClass,
-                            sm.getSubSignature()), lifecycleElement);
+                    try {
+                        checkAndAddMethod(getMethodFromHierarchyEx(baseClass, sm.getSubSignature()), lifecycleElement);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
