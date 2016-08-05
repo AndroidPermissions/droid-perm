@@ -81,7 +81,7 @@ public class SceneUtil {
                     Body body;
                     try {
                         body = contextMeth.retrieveActiveBody();
-                    } catch (ResolutionFailedException e) {
+                    } catch (Exception e) {
                         logger.warn(e.getMessage());
                         continue;
                     }
@@ -93,7 +93,7 @@ public class SceneUtil {
                             SootMethod invokeMethod;
                             try {
                                 invokeMethod = invoke.getMethod();
-                            } catch (ResolutionFailedException e) {
+                            } catch (Exception e) {
                                 continue;
                             }
 
