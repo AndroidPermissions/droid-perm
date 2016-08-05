@@ -75,6 +75,11 @@ public class DroidPermMain {
         //during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
         config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.NoCodeElimination);
         config.setEnableCallbackSources(false);
+
+        //Optimal settings after latest updates.
+        config.setCallgraphAlgorithm(CallgraphAlgorithm.GEOM);
+        config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Fast);
+        config.setTaintAnalysisEnabled(false);
     }
 
     private static long initTime;
