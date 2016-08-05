@@ -81,8 +81,12 @@ public class SceneUtil {
                     Body body;
                     try {
                         body = contextMeth.retrieveActiveBody();
+                    } catch (NullPointerException e) {
+                        //Redundant.
+                        //This one is thrown after other types of exceptions were thrown previously for same method.
+                        continue;
                     } catch (Exception e) {
-                        logger.warn(e.getMessage());
+                        logger.warn("Exception in retrieveActiveBody() for " + contextMeth + " : " + e.toString());
                         continue;
                     }
 
@@ -94,12 +98,13 @@ public class SceneUtil {
                             try {
                                 invokeMethod = invoke.getMethod();
                             } catch (Exception e) {
+                                logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
                                 continue;
                             }
 
                             if (sensSubsignatures.contains(invokeMethod.getSubSignature())) {
                                 List<SootMethod> resolvedMethods = hier.resolveAbstractDispatch(
-                                        invokeMethod.getDeclaringClass(), invoke.getMethod());
+                                        invokeMethod.getDeclaringClass(), invokeMethod);
                                 if (!Collections.disjoint(resolvedMethods, sensitives)) {
                                     //this unit calls a sensitive.
                                     SootMethod sens = resolvedMethods.stream().filter(sensitives::contains).findAny()

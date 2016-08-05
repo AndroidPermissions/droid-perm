@@ -165,7 +165,13 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 return edgesIterator;
             }
 
-            SootMethod staticTargetMethod = virtualInvoke.getMethod();
+            SootMethod staticTargetMethod;
+            try {
+                staticTargetMethod = virtualInvoke.getMethod();
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+                return edgesIterator;
+            }
             Set<Type> pointsToTargetTypes = pointsToSet.possibleTypes();
             List<SootMethod> pointsToTargetMethods =
                     HierarchyUtil.resolveHybridDispatch(staticTargetMethod, pointsToTargetTypes);
@@ -313,8 +319,15 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
         //shortcutted call, if it's a fake edge
         if (child != null && child.edge.kind().isFake()) { //child edge is always != null
+            SootMethod shortcuttedMethod;
+            try {
+                shortcuttedMethod = child.getContext().getInvokeExpr().getMethod();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                shortcuttedMethod = null;
+            }
             out.append("\n    ");
-            out.append(child.getContext().getInvokeExpr().getMethod());
+            out.append(shortcuttedMethod);
             out.append(
                     "\n                                                                FAKE edge: call shortcutted");
         }
