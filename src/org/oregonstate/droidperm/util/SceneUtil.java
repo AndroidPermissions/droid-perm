@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
  */
 public class SceneUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(SceneUtil.class);
     public static final String EXTENDS_PREFIX = "? extends ";
 
     /**
@@ -75,7 +78,15 @@ public class SceneUtil {
                         continue;
                     }
 
-                    for (Unit u : contextMeth.retrieveActiveBody().getUnits()) {
+                    Body body;
+                    try {
+                        body = contextMeth.retrieveActiveBody();
+                    } catch (ResolutionFailedException e) {
+                        logger.warn(e.getMessage());
+                        continue;
+                    }
+
+                    for (Unit u : body.getUnits()) {
                         Stmt stmt = (Stmt) u;
                         if (stmt.containsInvokeExpr()) {
                             InvokeExpr invoke = stmt.getInvokeExpr();
