@@ -12,6 +12,7 @@
 
 %   Contains checks for LOCATION. Risks polluting the analysis with false positive checks.
 <android.support.v7.app.TwilightManager: android.location.Location getLastKnownLocation()>
+<android.support.v7.app.TwilightManager: android.location.Location getLastKnownLocationForProvider(java.lang.String)>
 
 
 % All methods inside a few android.support.v4.app classes:

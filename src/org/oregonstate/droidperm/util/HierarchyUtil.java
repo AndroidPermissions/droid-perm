@@ -83,16 +83,15 @@ public class HierarchyUtil {
                 .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
+    /**
+     * Includes all initial defs as keys, including those with 0 results.
+     */
     public static <T extends SootMethodAndClass> Map<T, List<SootMethod>> resolveAbstractDispatchesToMap(
             Collection<T> methodDefs) {
-        Map<T, List<SootMethod>> result = new HashMap<>();
-        for (T methodDef : methodDefs) {
-            List<SootMethod> resolved = resolveAbstractDispatch(methodDef);
-            if (!resolved.isEmpty()) {
-                result.put(methodDef, resolved);
-            }
-        }
-        return result;
+        return methodDefs.stream().collect(Collectors.toMap(
+                methodDef -> methodDef,
+                HierarchyUtil::resolveAbstractDispatch
+        ));
     }
 
     public static List<SootMethod> resolveAbstractDispatch(SootMethodAndClass methodDef) {

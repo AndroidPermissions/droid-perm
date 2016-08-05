@@ -72,7 +72,7 @@ public class MethodPermDetector {
     /**
      * A map from permission sets to sets of resolved sensitive method definitions requiring this permission set.
      */
-    private Map<Set<String>, Set<AndroidMethod>> permissionToSensitiveDefMap;
+    private Map<Set<String>, Set<AndroidMethod>> permissionToResolvedSensitiveDefMap;
 
     private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> permsToSensitivesMap;
     private ContextSensOutflowCPHolder sensitivePathsHolder;
@@ -144,7 +144,7 @@ public class MethodPermDetector {
 
         //sensitives
         sensitiveToSensitiveDefMap = buildSensitiveToSensitiveDefMap();
-        permissionToSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
+        permissionToResolvedSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
         permsToSensitivesMap = buildPermsToSensitivesMap();
 
         logger.info("Processing sensitives");
@@ -170,6 +170,7 @@ public class MethodPermDetector {
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
         UndetectedItemsUtil.printUndetectedCheckers(permCheckerDefs, permCheckers, outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedSensitives(sensitiveDefs, sensitives, outflowIgnoreSet);
 
         //printPermCheckStatusPerCallbacks();
         printCheckersInContext(true);
@@ -203,9 +204,9 @@ public class MethodPermDetector {
     }
 
     private Set<String> getPermissionsFor(MethodOrMethodContext sensitive) {
-        return permissionToSensitiveDefMap.keySet().stream().filter(
+        return permissionToResolvedSensitiveDefMap.keySet().stream().filter(
                 permSet -> {
-                    Set<AndroidMethod> sensitiveDefs = permissionToSensitiveDefMap.get(permSet);
+                    Set<AndroidMethod> sensitiveDefs = permissionToResolvedSensitiveDefMap.get(permSet);
                     return sensitiveDefs.stream().map(sensDef -> resolvedSensitiveDefs.get(sensDef))
                             .anyMatch(methSet -> methSet.contains(sensitive));
                 }
