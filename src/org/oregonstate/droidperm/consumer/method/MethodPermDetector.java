@@ -58,6 +58,9 @@ public class MethodPermDetector {
      * 2nd level map: from checker ( Pair[Edge, ParentEdge] ) to safety status. True means safe, the checker described
      * by this edge only checks for one permission. False means unsafe: multiple contexts use this checker to check for
      * multiple permissions, so not all contexts check for all permissions.
+     * <p>
+     * The key on 1st level map as well as parentEdge in 2nd level map may be null, if the checker was not fully
+     * resolved.
      */
     private Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> permsToCheckersMap;
 
@@ -373,6 +376,8 @@ public class MethodPermDetector {
 
     /**
      * All checkers in context are printed here, including those that are not reachable from callbacks.
+     * <p>
+     * Map permsToCheckersMap may contain null keys. Also parent edge in pair maybe null.
      */
     public void printCheckersInContext(boolean printCallbacks) {
         String noCallbacksHeader = "Checkers in context in the call graph:";
@@ -398,14 +403,15 @@ public class MethodPermDetector {
                         oldSens = checkerMeth;
                     }
                     System.out.println("\tfrom lvl1 " + checkerEdge.getSrc());
-                    System.out.println("\tfrom lvl2 " + parent.getSrc());
+                    System.out.println("\tfrom lvl2 " + (parent != null ? parent.getSrc() : null));
                     if (!permsToCheckersMap.get(perm).get(checkerPair)) {
                         System.out.println("\t\tPoints-to certainty: UNCERTAIN");
                     }
 
                     Map<CheckerUsageStatus, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
                             getCheckerUsageStatusToCallbacksMap(checkerPair, perm);
-                    if (outflowIgnoreSet.contains(checkerEdge.src()) || outflowIgnoreSet.contains(parent.src())) {
+                    if (outflowIgnoreSet.contains(checkerEdge.src())
+                            || (parent != null && outflowIgnoreSet.contains(parent.src()))) {
                         System.out.println("\t\tCallbacks: BLOCKED");
                     } else if (!checkerUsageStatusToCallbacks.isEmpty()) {
                         for (CheckerUsageStatus status : checkerUsageStatusToCallbacks.keySet()) {
@@ -449,7 +455,8 @@ public class MethodPermDetector {
             reachableCallbacks = new HashSet<>();
         }
         return reachableCallbacks.stream().sorted(SortUtil.methodOrMCComparator).collect(
-                Collectors.groupingBy(callback -> getCheckUsageStatus(callback, perm)));
+                Collectors.groupingBy(callback ->
+                        perm != null ? getCheckUsageStatus(callback, perm) : CheckerUsageStatus.UNUSED));
     }
 
     /**
@@ -462,7 +469,7 @@ public class MethodPermDetector {
                                                             ContextSensOutflowCPHolder pathsHolder) {
         Edge meth = methParentPair.getO1();
         Edge parent = methParentPair.getO2();
-        Edge target = parent.getSrc() != dummyMainMethod ? parent : meth;
+        Edge target = (parent != null && parent.getSrc() != dummyMainMethod) ? parent : meth;
         return pathsHolder.getReachingCallbacks(new MethodInContext(target));
     }
 

@@ -63,7 +63,7 @@ public class CheckerUtil {
     /**
      * 1st level map: key = permission, values = checkers that check this permission.
      * <p>
-     * 2nd level map: key = Pair[Edge, ParentEdge], value = whether cerain or not.
+     * 2nd level map: key = Pair[Edge, ParentEdge], value = whether certain or not.
      */
     public static Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> buildPermsToCheckersMap(
             Set<MethodOrMethodContext> permCheckers) {
@@ -73,18 +73,32 @@ public class CheckerUtil {
             Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(checker));
             for (Edge edgeInto
                     : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
-                for (Edge parent : (Iterable<Edge>) () -> cg.edgesInto(edgeInto.getSrc())) {
+                Iterator<Edge> parentEdgesIt = cg.edgesInto(edgeInto.getSrc());
+                if (!parentEdgesIt.hasNext()) {
+                    checkAndPut(result, null, new Pair<>(edgeInto, null), false);
+                    continue;
+                }
+                for (Edge parent : (Iterable<Edge>) () -> parentEdgesIt) {
                     Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, parent);
+                    if (possiblePerm.isEmpty()) {
+                        checkAndPut(result, null, new Pair<>(edgeInto, parent), false);
+                        continue;
+                    }
                     for (String perm : possiblePerm) {
-                        if (!result.containsKey(perm)) {
-                            result.put(perm, new LinkedHashMap<>());
-                        }
-                        // if size == 1 then it's a safe check
-                        result.get(perm).put(new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
+                        // if size == 1 then it's a certain check
+                        checkAndPut(result, perm, new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
                     }
                 }
             }
         }
         return result;
+    }
+
+    private static void checkAndPut(Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> result,
+                                    String perm, Pair<Edge, Edge> pair, boolean isCertain) {
+        if (!result.containsKey(perm)) {
+            result.put(perm, new LinkedHashMap<>());
+        }
+        result.get(perm).put(pair, isCertain);
     }
 }
