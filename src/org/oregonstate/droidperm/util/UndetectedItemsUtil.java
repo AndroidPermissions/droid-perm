@@ -1,12 +1,10 @@
 package org.oregonstate.droidperm.util;
 
-import soot.MethodOrMethodContext;
-import soot.Scene;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
-import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 import soot.util.AbstractMultiMap;
 import soot.util.HashMultiMap;
@@ -24,12 +22,13 @@ import java.util.stream.Collectors;
 public class UndetectedItemsUtil {
 
     /**
+     * todo detected should be a map from units to container methods (methods re only for debugging)
+     *
      * @param outflowIgnoreSet - entries from this list are used to filter out call contexts. Works for
      *                         TwilightManager.
      */
     private static MultiMap<SootMethod, Pair<Stmt, SootMethod>> getUndetectedCalls(
-            Collection<? extends SootMethodAndClass> methodDefs, Set<MethodOrMethodContext> detected,
-            Set<SootMethod> outflowIgnoreSet) {
+            Collection<? extends SootMethodAndClass> methodDefs, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetected = SceneUtil.resolveMethodUsages(methodDefs);
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> copy = new HashMultiMap<>(undetected);
 
@@ -40,14 +39,13 @@ public class UndetectedItemsUtil {
         }
 
         //filter out detected
-        CallGraph cg = Scene.v().getCallGraph();
-        detected.stream().flatMap(detMeth -> StreamUtil.asStream(cg.edgesInto(detMeth))).forEach(
+        detected.forEach(
                 edge -> undetected.remove(edge.tgt(), new Pair<>(edge.srcStmt(), edge.src())));
         return undetected;
     }
 
-    public static void printUndetectedCheckers(Collection<SootMethodAndClass> checkerDefs,
-                                               Set<MethodOrMethodContext> detected, Set<SootMethod> outflowIgnoreSet) {
+    public static void printUndetectedCheckers(Collection<SootMethodAndClass> checkerDefs, Set<Edge> detected,
+                                               Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedCheckers =
                 getUndetectedCalls(checkerDefs, detected, outflowIgnoreSet);
@@ -64,8 +62,7 @@ public class UndetectedItemsUtil {
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
-    public static void printUndetectedSensitives(Set<AndroidMethod> sensitiveDefs,
-                                                 Set<MethodOrMethodContext> detected,
+    public static void printUndetectedSensitives(Set<AndroidMethod> sensitiveDefs, Set<Edge> detected,
                                                  Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
         Map<AndroidMethod, List<SootMethod>> sensDefToSensMap =

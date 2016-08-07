@@ -172,8 +172,8 @@ public class MethodPermDetector {
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
-        UndetectedItemsUtil.printUndetectedCheckers(permCheckerDefs, permCheckers, outflowIgnoreSet);
-        UndetectedItemsUtil.printUndetectedSensitives(sensitiveDefs, sensitives, outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedCheckers(permCheckerDefs, getPrintedCheckEdges(), outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedSensitives(sensitiveDefs, getPrintedSensitiveEdges(), outflowIgnoreSet);
 
         //printPermCheckStatusPerCallbacks();
         printCheckersInContext(true);
@@ -199,6 +199,25 @@ public class MethodPermDetector {
             }
         }
         //DebugUtil.pointsToTest();
+    }
+
+    /**
+     * Computed from from permsToSensitivesMap
+     */
+    private Set<Edge> getPrintedSensitiveEdges() {
+        CallGraph cg = Scene.v().getCallGraph();
+        return permsToSensitivesMap.values().stream().flatMap(Collection::stream)
+                .flatMap(meth -> StreamUtil.asStream(cg.edgesInto(meth)))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Computed from permsToCheckersMap
+     */
+    private Set<Edge> getPrintedCheckEdges() {
+        return permsToCheckersMap.values().stream().flatMap(map -> map.keySet().stream())
+                .map(Pair::getO1)
+                .collect(Collectors.toSet());
     }
 
     private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> buildPermsToSensitivesMap() {
