@@ -31,9 +31,7 @@ public class DPFastCallbackAnalyzer extends FastCallbackAnalyzer {
 
     @Override
     protected boolean isAndroidCallback(String typeName) {
-        SootClass sootClass = Scene.v().containsClass(typeName) ? Scene.v().getSootClass(typeName) : null;
-        return (sootClass != null && sootClass.isInterface() && (sootClass.getName().startsWith("android")))
-                || super.isAndroidCallback(typeName);
+        return isClassInAndroidPackage(typeName) || super.isAndroidCallback(typeName);
     }
 
     protected void analyzeClassInterfaceCallbacks(SootClass baseClass, SootClass sootClass,
