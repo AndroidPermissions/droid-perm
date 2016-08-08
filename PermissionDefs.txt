@@ -44,6 +44,30 @@
 <android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus$Listener)> -> ACCESS_FINE_LOCATION
 <android.location.LocationManager: boolean addNmeaListener(android.location.GpsStatus$NmeaListener)> -> ACCESS_FINE_LOCATION
 
+
+% LOCATION - com.google.android.gms.location.FusedLocationProviderApi
+% ==================================
+
+<com.google.android.gms.location.FusedLocationProviderApi: android.location.Location getLastLocation(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.location.LocationAvailability getLocationAvailability(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationCallback, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult setMockMode(com.google.android.gms.common.api.GoogleApiClient, boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult setMockLocation(com.google.android.gms.common.api.GoogleApiClient, android.location.Location)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+
+
+% LOCATION - com.google.android.gms.maps.GoogleMap
+% ----------------------------------
+<com.google.android.gms.maps.GoogleMap: void setMyLocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+
+
+% LOCATION - android.webkit.WebSettings
+% ----------------------------------
+<android.webkit.WebSettings: void setGeoLocationEnabled(boolean)> -> ACCESS_FINE_LOCATION
+
+
 % CAMERA
 % ==================================
 
@@ -54,16 +78,3 @@
 % App-specific or Lib-specific sensitives
 % ==================================
 
-
-% App: XYZTouristsAttraction
-% ----------------------------------
-
-<com.google.android.gms.location.FusedLocationProviderApi: android.location.Location getLastLocation(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_FINE_LOCATION
-
-% George's sensitives
-% ----------------------------------
-<com.google.android.gms.maps.GoogleMap: void setMyLocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-
-% Jacob's sensitives
-% ----------------------------------
-<android.webkit.WebSettings: void setGeoLocationEnabled(boolean)> -> ACCESS_FINE_LOCATION
