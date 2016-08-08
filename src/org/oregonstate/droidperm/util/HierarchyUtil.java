@@ -102,8 +102,10 @@ public class HierarchyUtil {
         } else {
             SootMethod method = scene.grabMethod(methodDef.getSignature());
             if (method == null) {
-                logger.warn("Nonexistent producer/consumer method: " + methodDef);
-                return Collections.emptyList();
+                throw new RuntimeException("Class " + clazz + " is in Scene but method " + methodDef.getSignature()
+                        + " is not.");
+//                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
+//                return Collections.emptyList();
             }
 
             return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);
