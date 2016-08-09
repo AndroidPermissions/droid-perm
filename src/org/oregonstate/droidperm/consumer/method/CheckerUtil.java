@@ -47,17 +47,14 @@ public class CheckerUtil {
             PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
             PointsToSet pointsTo = PointsToUtil
                     .getPointsToWithFallback((Local) lastArg, parent != null ? parent.srcStmt() : null, pta);
-            Set<String> permSet = pointsTo != null ? pointsTo.possibleStringConstants() : null;
-            if (permSet != null) {
-                if (permSet.size() != 1) {
-                    logger.warn("Possible imprecision in the permission check: " + invoke + ", possible values: " +
-                            permSet);
-                }
-                return permSet;
+            if (pointsTo != null) {
+                Set<String> permSet = pointsTo.possibleStringConstants();
+                return permSet != null ? permSet : Collections.emptySet();
+            } else {
+                throw new RuntimeException("Null points-to for checker: " + invoke);
             }
         }
-        logger.warn("Permission checkers not supported for: " + invoke);
-        return Collections.emptySet();
+        throw new RuntimeException("Permission checker not supported for: " + invoke);
     }
 
     /**

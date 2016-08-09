@@ -102,8 +102,10 @@ public class HierarchyUtil {
         } else {
             SootMethod method = scene.grabMethod(methodDef.getSignature());
             if (method == null) {
-                throw new RuntimeException("Class " + clazz + " is in Scene but method " + methodDef.getSignature()
-                        + " is not.");
+                System.err.println("Existing methods in " + clazz + " :");
+                clazz.getMethods().forEach(System.err::println);
+                throw new RuntimeException(
+                        "Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
 //                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
 //                return Collections.emptyList();
             }
