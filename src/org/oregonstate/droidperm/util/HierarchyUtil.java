@@ -102,6 +102,9 @@ public class HierarchyUtil {
         } else {
             SootMethod method = scene.grabMethod(methodDef.getSignature());
             if (method == null) {
+                if (clazz.isPhantom()) {
+                    System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
+                }
                 System.err.println("Existing methods in " + clazz + " :");
                 clazz.getMethods().forEach(System.err::println);
                 throw new RuntimeException(

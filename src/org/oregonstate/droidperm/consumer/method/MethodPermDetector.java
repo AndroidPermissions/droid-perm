@@ -100,7 +100,7 @@ public class MethodPermDetector {
 
     public void analyzeAndPrint() {
         long startTime = System.currentTimeMillis();
-        logger.warn("\n\n"
+        logger.info("\n\n"
                 + "Start of DroidPerm logs\n"
                 + "========================================================================\n");
         analyze();
