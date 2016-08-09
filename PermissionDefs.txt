@@ -65,7 +65,7 @@
 
 % LOCATION - android.webkit.WebSettings
 % ----------------------------------
-<android.webkit.WebSettings: void setGeoLocationEnabled(boolean)> -> ACCESS_FINE_LOCATION
+<android.webkit.WebSettings: void setGeolocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 
 
 % CAMERA
