@@ -482,6 +482,11 @@ public class DroidPermMain {
 
             //toclean insert additional Soot options here
             setupApplication.setSootConfig(options -> {
+                //Many apk files have multiple de files inside. This option is required for them.
+                //Some risks are possible when option is enabled, for example when the same class is in several dex
+                // files.
+                options.set_process_multiple_dex(true);
+
                 options.set_keep_line_number(true);
                 options.set_include_all(true);
 
