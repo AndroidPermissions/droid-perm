@@ -406,7 +406,8 @@ public class MethodPermDetector {
                 "\n\n" + header + " \n========================================================================");
 
         for (String perm : permsToCheckersMap.keySet()) {
-            System.out.println("\n" + perm + "\n------------------------------------");
+            String displayPerm = perm != null ? perm : "PERMISSION VALUES UNKNOWN";
+            System.out.println("\n" + displayPerm + "\n------------------------------------");
 
             Map<Set<CheckerUsageStatus>, Integer> checkersCountByStatus = new HashMap<>();
             MethodOrMethodContext oldSens = null;
