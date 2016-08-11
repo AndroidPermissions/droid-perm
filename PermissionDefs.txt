@@ -77,11 +77,6 @@
 % ==================================
 <android.hardware.Camera: android.hardware.Camera open()> -> CAMERA
 <android.hardware.Camera: android.hardware.Camera open(int)> -> CAMERA
-<android.hardware.Camera: void startPreview()> -> CAMERA
-<android.hardware.Camera: void takePicture(android.hardware.Camera$ShutterCallback, android.hardware.Camera$PictureCallback, android.hardware.Camera$PictureCallback)> -> CAMERA
-<android.hardware.Camera: void takePicture(android.hardware.Camera$ShutterCallback, android.hardware.Camera$PictureCallback, android.hardware.Camera$PictureCallback, android.hardware.Camera$PictureCallback)> -> CAMERA
-<android.hardware.Camera: int getNumberOfCameras()> -> CAMERA
-<android.hardware.Camera: void getCameraInfo(int, android.hardware.Camera$CameraInfo)> -> CAMERA
 
 % GET_ACCOUNTS
 % ==================================
