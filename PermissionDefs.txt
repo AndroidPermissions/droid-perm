@@ -31,7 +31,6 @@
 <android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: void addProximityAlert(double, double, float, long, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: void removeProximityAlert(android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<android.location.LocationManager: void removeUpdates(android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 <android.location.LocationManager: void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
@@ -44,6 +43,9 @@
 <android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus$Listener)> -> ACCESS_FINE_LOCATION
 <android.location.LocationManager: boolean addNmeaListener(android.location.GpsStatus$NmeaListener)> -> ACCESS_FINE_LOCATION
 
+% UNCERTAIN - It is uncertain whether this one is a sensitive.
+% Some apps check permissions before calling it, some apps don't.
+<android.location.LocationManager: void removeUpdates(android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 
 % LOCATION - com.google.android.gms.location.FusedLocationProviderApi
 % ----------------------------------
