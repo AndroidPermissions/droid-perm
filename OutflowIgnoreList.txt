@@ -16,7 +16,7 @@
 
 
 % All methods inside a few android.support.v4.app classes:
-% FragmentActivity, FragmentManagerImpl, Fragment.
+% FragmentActivity, FragmentManagerImpl.
 % Reason: They all produce unfeasible paths that touch all fragments in the app from most activities.
 % Full context sensitivity is likely not enough to solve this.
 %================================
