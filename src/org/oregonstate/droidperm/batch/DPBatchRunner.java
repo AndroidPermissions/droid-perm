@@ -19,7 +19,8 @@ public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
     private static final String[] EXTRA_OPTS =
-            new String[]{"--pathalgo", "CONTEXTSENSITIVE", "--cgalgo", "GEOM"};
+            new String[]{"--pathalgo", "CONTEXTSENSITIVE"};
+    private static final String CG_ALGO_OPT = "--cgalgo";
     private static final String[] TAINT_ENABLED_OPTS =
             new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks"};
     private static final String[] TAINT_DISABLED_OPTS = new String[]{"--taint-analysis-enabled", "false"};
@@ -39,7 +40,9 @@ public class DPBatchRunner {
      * args[3] = --taint-analysis-enabled or --taint-analysis-disabled. Pick first for overnight run. Leads to longer
      * execution time, important for storage permissions.
      * <p>
-     * args[4] = list of VM arguments, in quotes if more than one. Could be left empty. Recommended value to increase
+     * args[4] = --cgalgo=GEOM or --cgalgo=SPARK. Unless otherwise noted, use --cgalgo=GEOM.
+     * <p>
+     * args[5] = list of VM arguments, in quotes if more than one. Could be left empty. Recommended value to increase
      * heap memory: -Xmx4g
      */
     public static void main(final String[] args) throws IOException, InterruptedException {
@@ -47,22 +50,24 @@ public class DPBatchRunner {
         String droidPermHomeDir = args[1];
         String outputLogsDir = args[2];
         boolean taintAnalysisEnabled = "--taint-analysis-enabled".equals(args[3]);
-        String[] vmArgs = args.length > 4 ? args[4].split("\\s+") : new String[]{};
+        String cgAlgo = args[4].equals("--cgalgo=GEOM") ? "GEOM" : "SPARK";
+        String[] vmArgs = args.length > 5 ? args[5].split("\\s+") : new String[]{};
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("outputLogsDir: " + outputLogsDir);
         logger.info("taintAnalysisEnabled: " + taintAnalysisEnabled);
+        logger.info("cgalgo: " + cgAlgo);
         logger.info("vmArgs: " + Arrays.toString(vmArgs) + "\n");
         long startTime = System.currentTimeMillis();
 
-        batchRun(appsDir, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, vmArgs);
+        batchRun(appsDir, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, cgAlgo, vmArgs);
 
         logger.info(
                 "\n\nBatch runner total execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " sec");
     }
 
     private static void batchRun(String appsDir, String droidPermHomeDir, String outputLogsDir,
-                                 boolean taintAnalysisEnabled, String[] vmArgs) throws IOException {
+                                 boolean taintAnalysisEnabled, String cgAlgo, String[] vmArgs) throws IOException {
         Files.createDirectories(Paths.get(outputLogsDir));
         Map<String, List<Path>> appNamesToApksMap = Files.list(Paths.get(appsDir)).sorted()
                 .filter(path -> Files.isDirectory(path))
@@ -93,12 +98,12 @@ public class DPBatchRunner {
                 logger.warn(appName + ": multiple apk files found: " + apks + "\nPicking the first one.");
             }
             Path apk = apks.get(0);
-            analyzeApp(appName, apk, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, vmArgs);
+            analyzeApp(appName, apk, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, cgAlgo, vmArgs);
         }
     }
 
     private static void analyzeApp(String appName, Path apk, String droidPermHomeDir, String outputLogsDir,
-                                   boolean taintAnalysisEnabled, String[] vmArgs)
+                                   boolean taintAnalysisEnabled, String cgAlgo, String[] vmArgs)
             throws IOException {
         String droidPermClassPath = droidPermHomeDir + "/droid-perm.jar";
         String androidClassPath = droidPermHomeDir + "/android-23-cr+util_io.zip";
@@ -112,6 +117,8 @@ public class DPBatchRunner {
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
                 androidClassPath));
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
+        processBuilderArgs.add(CG_ALGO_OPT);
+        processBuilderArgs.add(cgAlgo);
         if (taintAnalysisEnabled) {
             processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
         } else {
