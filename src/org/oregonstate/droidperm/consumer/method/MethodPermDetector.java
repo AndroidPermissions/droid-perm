@@ -358,6 +358,9 @@ public class MethodPermDetector {
                         if (outflowIgnoreSet.contains(edgeInto.src())) {
                             System.out.println("\t\tCallbacks: BLOCKED");
                         } else if (!permCheckStatusToCallbacks.isEmpty()) {
+                            List<MethodOrMethodContext> callbacks = permCheckStatusToCallbacks.values().stream()
+                                    .flatMap(Collection::stream).collect(Collectors.toList());
+                            System.out.println("\t\tCallback types: " + CallbackTypeUtil.getCallbackTypes(callbacks));
                             for (PermCheckStatus status : PermCheckStatus.values()) {
                                 if (permCheckStatusToCallbacks.get(status) != null) {
                                     System.out.println("\t\tCallbacks where " + status + ": "
@@ -434,6 +437,9 @@ public class MethodPermDetector {
                             || (parent != null && outflowIgnoreSet.contains(parent.src()))) {
                         System.out.println("\t\tCallbacks: BLOCKED");
                     } else if (!checkerUsageStatusToCallbacks.isEmpty()) {
+                        List<MethodOrMethodContext> callbacks = checkerUsageStatusToCallbacks.values().stream()
+                                .flatMap(Collection::stream).collect(Collectors.toList());
+                        System.out.println("\t\tCallback types: " + CallbackTypeUtil.getCallbackTypes(callbacks));
                         for (CheckerUsageStatus status : checkerUsageStatusToCallbacks.keySet()) {
                             System.out.println("\t\tCallbacks where " + status + ": "
                                     + checkerUsageStatusToCallbacks.get(status).size());
