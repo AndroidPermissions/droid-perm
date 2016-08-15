@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.infoflow.android;
 
-import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
@@ -27,11 +26,6 @@ public class DPFastCallbackAnalyzer extends FastCallbackAnalyzer {
                                   Set<String> entryPointClasses, Set<String> androidCallbacks)
             throws IOException {
         super(config, entryPointClasses, androidCallbacks);
-    }
-
-    @Override
-    protected boolean isAndroidCallback(String typeName) {
-        return isClassInAndroidPackage(typeName) || super.isAndroidCallback(typeName);
     }
 
     protected void analyzeClassInterfaceCallbacks(SootClass baseClass, SootClass sootClass,
@@ -61,5 +55,15 @@ public class DPFastCallbackAnalyzer extends FastCallbackAnalyzer {
                         e.printStackTrace();
                     }
         }
+    }
+
+    @Override
+    protected boolean isAndroidCallback(String typeName) {
+        return isClassInAndroidPackage(typeName) || super.isAndroidCallback(typeName);
+    }
+
+    @Override
+    protected boolean isMethodOverrideCallback(SootClass parentClass) {
+        return isClassInAndroidPackage(parentClass.getName()) && !parentClass.getName().equals("android.os.AsyncTask");
     }
 }

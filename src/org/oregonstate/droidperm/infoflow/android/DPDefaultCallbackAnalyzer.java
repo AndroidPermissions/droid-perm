@@ -75,4 +75,9 @@ public class DPDefaultCallbackAnalyzer extends DefaultCallbackAnalyzer {
     protected boolean isAndroidCallback(String typeName) {
         return isClassInAndroidPackage(typeName) || super.isAndroidCallback(typeName);
     }
+
+    @Override
+    protected boolean isMethodOverrideCallback(SootClass parentClass) {
+        return isClassInAndroidPackage(parentClass.getName()) && !parentClass.getName().equals("android.os.AsyncTask");
+    }
 }
