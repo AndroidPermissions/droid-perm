@@ -45,7 +45,7 @@
 
 % UNCERTAIN - It is uncertain whether this one is a sensitive.
 % Some apps check permissions before calling it, some apps don't.
-<android.location.LocationManager: void removeUpdates(android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+% <android.location.LocationManager: void removeUpdates(android.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
 
 % LOCATION - com.google.android.gms.location.FusedLocationProviderApi
 % ----------------------------------
