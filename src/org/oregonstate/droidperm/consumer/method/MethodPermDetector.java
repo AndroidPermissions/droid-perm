@@ -34,7 +34,7 @@ public class MethodPermDetector {
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
     private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
 
-    private File permissionDefFile;
+    private File txtPermDefFile;
     private File txtOut;
     private File xmlOut;
     private Set<SootMethod> outflowIgnoreSet;
@@ -95,15 +95,9 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
-    public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut, File xmlPermDefFile) {
-        this.permissionDefFile = permissionDefFile;
-        this.txtOut = txtOut;
-        this.xmlOut = xmlOut;
+    public MethodPermDetector(File txtPermDefFile, File xmlPermDefFile, File txtOut, File xmlOut) {
+        this.txtPermDefFile = txtPermDefFile;
         this.xmlPermDefFile = xmlPermDefFile;
-    }
-
-    public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
-        this.permissionDefFile = permissionDefFile;
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
     }
@@ -125,12 +119,9 @@ public class MethodPermDetector {
 
         IPermissionDefProvider permissionDefProvider;
         try {
-            if (xmlPermDefFile != null) {
-                permissionDefProvider = new XMLPermissionDefParser(xmlPermDefFile, permissionDefFile);
-            }
-            else {
-                permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
-            }
+            permissionDefProvider = xmlPermDefFile != null
+                                    ? new XMLPermissionDefParser(xmlPermDefFile, txtPermDefFile)
+                                    : new TxtPermissionDefParser(txtPermDefFile);
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);

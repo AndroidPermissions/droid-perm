@@ -81,7 +81,6 @@ public class XmlPermDefMiner {
     public static PermissionDefList unmarshallPermDefs(File file) throws JAXBException {
         JAXBContext jbContext = JAXBContext.newInstance(PermissionDefList.class);
         Unmarshaller unmarshaller = jbContext.createUnmarshaller();
-
         return (PermissionDefList) unmarshaller.unmarshal(file);
     }
 
