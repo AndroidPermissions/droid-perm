@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.consumer.method;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.TxtPermissionDefParser;
+import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,8 @@ public class MethodPermDetector {
     private Set<SootMethod> outflowIgnoreSet;
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> sensitiveDefs;
+
+    private File xmlPermDefFile = null;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -92,6 +95,13 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
+    public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut, File xmlPermDefFile) {
+        this.permissionDefFile = permissionDefFile;
+        this.txtOut = txtOut;
+        this.xmlOut = xmlOut;
+        this.xmlPermDefFile = xmlPermDefFile;
+    }
+
     public MethodPermDetector(File permissionDefFile, File txtOut, File xmlOut) {
         this.permissionDefFile = permissionDefFile;
         this.txtOut = txtOut;
@@ -115,7 +125,12 @@ public class MethodPermDetector {
 
         IPermissionDefProvider permissionDefProvider;
         try {
-            permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
+            if (xmlPermDefFile != null) {
+                permissionDefProvider = new XMLPermissionDefParser(xmlPermDefFile, permissionDefFile);
+            }
+            else {
+                permissionDefProvider = new TxtPermissionDefParser(permissionDefFile);
+            }
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);

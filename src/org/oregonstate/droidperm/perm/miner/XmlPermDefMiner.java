@@ -78,6 +78,13 @@ public class XmlPermDefMiner {
         marshaller.marshal(permissionDefList, file);
     }
 
+    public static PermissionDefList unmarshallPermDefs(File file) throws JAXBException {
+        JAXBContext jbContext = JAXBContext.newInstance(PermissionDefList.class);
+        Unmarshaller unmarshaller = jbContext.createUnmarshaller();
+
+        return (PermissionDefList) unmarshaller.unmarshal(file);
+    }
+
     /**
      * This function takes a JaxbItemList and filters out all of the items that do not have the RequiresPermission
      * annotation

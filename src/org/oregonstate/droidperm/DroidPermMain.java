@@ -25,12 +25,10 @@ import soot.jimple.infoflow.ipc.IIPCManager;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
-import soot.options.Options;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -50,7 +48,7 @@ public class DroidPermMain {
 
     private static boolean aggressiveTaintWrapper = false;
     private static boolean noTaintWrapper = false;
-    public static CallgraphAlgorithm dummyMainGenCGAlgo = CallgraphAlgorithm.CHA;
+    private static boolean XMLPerms = false;
     private static String summaryPath;
 
     /**
@@ -60,6 +58,7 @@ public class DroidPermMain {
 
     private static String additionalClasspath = "";
     private static File permissionDefFile = new File("PermissionDefs.txt");
+    private static File xmlPermDefFile;
     private static File txtOut;
     private static File xmlOut;
 
@@ -131,7 +130,6 @@ public class DroidPermMain {
         List<File> apkFiles = new ArrayList<>();
         if (apkFileOrDir.isDirectory()) {
             String[] apkFileNames = apkFileOrDir.list((dir, name) -> (name.endsWith(".apk")));
-            assert apkFileNames != null; //If it's null, there's nothing to do. Program should crash.
             for (String dirFile : apkFileNames) {
                 apkFiles.add(new File(dirFile));
             }
@@ -274,23 +272,6 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--logsourcesandsinks")) {
                 config.setLogSourcesAndSinks(true);
                 i++;
-            } else if (args[i].equalsIgnoreCase("--callbackanalyzer")) {
-                String algo = args[i + 1];
-                if (algo.equalsIgnoreCase("DEFAULT")) {
-                    config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Default);
-                } else if (algo.equalsIgnoreCase("FAST")) {
-                    config.setCallbackAnalyzer(InfoflowAndroidConfiguration.CallbackAnalyzer.Fast);
-                } else {
-                    System.err.println("Invalid callback analysis algorithm");
-                    return false;
-                }
-                i += 2;
-            } else if (args[i].equalsIgnoreCase("--maxthreadnum")) {
-                config.setMaxThreadNum(Integer.valueOf(args[i + 1]));
-                i += 2;
-            } else if (args[i].equalsIgnoreCase("--arraysizetainting")) {
-                config.setEnableArraySizeTainting(true);
-                i++;
 
                 //new in DroidPerm - additional classpath for analysis
             } else if (args[i].equalsIgnoreCase("--additionalCP")) {
@@ -313,6 +294,10 @@ public class DroidPermMain {
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--CALL-GRAPH-DUMP-FILE")) {
                 callGraphDumpFile = new File(args[i + 1]);
+                i += 2;
+            } else if (args[i].equalsIgnoreCase("--XML-PERM-DEF-FILE")) {
+                xmlPermDefFile = new File(args[i + 1]);
+                XMLPerms = true;
                 i += 2;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
@@ -365,8 +350,6 @@ public class DroidPermMain {
         System.out.println("\t--NOTAINTWRAPPER Disables the use of taint wrappers");
         System.out.println("\t--NOTYPETIGHTENING Disables the use of taint wrappers");
         System.out.println("\t--LOGSOURCESANDSINKS Print out concrete source/sink instances");
-        System.out.println("\t--CALLBACKANALYZER x Uses callback analysis algorithm x");
-        System.out.println("\t--MAXTHREADNUM x Sets the maximum number of threads to be used by the analysis to x");
         System.out.println();
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
@@ -380,7 +363,6 @@ public class DroidPermMain {
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
         System.out.println("Supported path algorithms: CONTEXTSENSITIVE, CONTEXTINSENSITIVE, SOURCESONLY");
-        System.out.println("Supported callback algorithms: DEFAULT, FAST");
         System.out.println("Options for CODE-ELIMINATION-MODE: NoCodeElimination, PropagateConstants, " +
                 "RemoveSideEffectFreeCode");
         System.out.println();
@@ -436,17 +418,6 @@ public class DroidPermMain {
         }
     }
 
-    private static String callbackAlgorithmToString(InfoflowAndroidConfiguration.CallbackAnalyzer analyzer) {
-        switch (analyzer) {
-            case Default:
-                return "DEFAULT";
-            case Fast:
-                return "FAST";
-            default:
-                return "UNKNOWN";
-        }
-    }
-
     private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws IOException {
         initTime = System.nanoTime();
 
@@ -468,7 +439,12 @@ public class DroidPermMain {
         }
 
         //Run DroidPerm
-        new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+        if(XMLPerms) {
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut, xmlPermDefFile).analyzeAndPrint();
+        }
+        else {
+            new MethodPermDetector(permissionDefFile, txtOut, xmlOut).analyzeAndPrint();
+        }
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
 
@@ -489,10 +465,6 @@ public class DroidPermMain {
 
                 options.set_keep_line_number(true);
                 options.set_include_all(true);
-
-                //Required to distinguish between application and library classes in DroidPerm
-                Options.v().set_process_dir(Collections.singletonList(fileName));
-
                 //options.setPhaseOption("cg.spark", "dump-html"); //output format is unintelligible.
 
                 //just some execution statistics, nothing useful for debugging.
@@ -597,10 +569,7 @@ public class DroidPermMain {
                                         InfoflowAndroidConfiguration.getUseTypeTightening() ? "" : "--notypetightening",
                                         InfoflowAndroidConfiguration.getUseThisChainReduction() ? "" : "--safemode",
                                         config.getLogSourcesAndSinks() ? "--logsourcesandsinks" : "",
-                                        "--callbackanalyzer", callbackAlgorithmToString(config.getCallbackAnalyzer()),
-                                        "--maxthreadnum", Integer.toString(config.getMaxThreadNum()),
-                                        config.getEnableArraySizeTainting() ? "--arraysizetainting" : ""
-        };
+                                        };
         System.out.println("Running command: " + executable + " " + Arrays.toString(command));
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
@@ -641,7 +610,7 @@ public class DroidPermMain {
     }
 
     private static void printSourcesAndSinks(DPSetupApplication setupApplication) {
-        if (config.isTaintAnalysisEnabled() && config.getLogSourcesAndSinks()) {
+        if (config.getLogSourcesAndSinks()) {
             if (!setupApplication.getCollectedSources().isEmpty()) {
                 List<Stmt> sortedSources = setupApplication.getCollectedSources().stream()
                         .sorted(new UnitComparator()).collect(Collectors.toList());
