@@ -13,10 +13,14 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -64,16 +68,16 @@ public class XmlPermDefMiner {
         jbMarshaller.marshal(data, file);
     }
 
-    /**
-     * This functions marshalls a PermissionDefList object into xml
-     *
-     * @throws JAXBException
-     */
-    public static void marshallPermDef(PermissionDefList permissionDefList, File file) throws JAXBException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void save(PermissionDefList permissionDefList, File file) throws JAXBException, IOException {
         JAXBContext jaxbContext = JAXBContext.newInstance(PermissionDefList.class);
         Marshaller marshaller = jaxbContext.createMarshaller();
-
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        Path path = file.toPath();
+        if (path.getParent() != null) {
+            Files.createDirectories(path.getParent());
+        }
 
         marshaller.marshal(permissionDefList, file);
     }
@@ -119,9 +123,9 @@ public class XmlPermDefMiner {
         PermissionDefList permissionDefList;
         jaxbItemList = m.combineItems(androidAnnotationsLocation);
         jaxbItemList = filterItemList(jaxbItemList);
-        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
+        permissionDefList = m.buildPermissionDefList(jaxbItemList);
 
-        marshallPermDef(permissionDefList, saveFile);
+        save(permissionDefList, saveFile);
     }
 
     /**
@@ -131,7 +135,6 @@ public class XmlPermDefMiner {
      * combined JaxbItemList. This combined list can then be marshalled into a single xml file.
      *
      * @return JaxbItemList - a single object containing all of the items in the annotations files
-     * @throws JAXBException
      */
     public JaxbItemList combineItems(String androidAnnotationsLocation) throws JAXBException, IOException {
         JaxbItemList combinedItems = new JaxbItemList();
@@ -150,13 +153,7 @@ public class XmlPermDefMiner {
         return combinedItems;
     }
 
-    /**
-     * This function converts JaxbItems into PermissionDefs. It calls a coule helper functions to extract information
-     * from the JaxbItems.
-     *
-     * @return A PermissionDefList object
-     */
-    public PermissionDefList ItemsToPermissionDefs(JaxbItemList items) {
+    public PermissionDefList buildPermissionDefList(JaxbItemList items) {
         String delimiters = "[ ]+";
         PermissionDefList permissionDefList = new PermissionDefList();
 
@@ -164,10 +161,11 @@ public class XmlPermDefMiner {
             PermissionDef permissionDef = new PermissionDef();
 
             //Break up the string on spaces
+            //The string before the first space is the class name, what comes after is the method or field value
             String[] tokens = jaxbItem.getName().split(delimiters);
 
-            //The string before the first space is the class name, what comes after is the method or field value
-            permissionDef.setClassName(tokens[0]);
+            String javaClassName = tokens[0];
+            permissionDef.setClassName(processInnerClasses(javaClassName));
 
             //Here the method or field is rebuilt because it was likely broken by the previous split
             StringBuilder firstBuilder = new StringBuilder();
@@ -177,10 +175,11 @@ public class XmlPermDefMiner {
 
             //This check ensure that any Java generics information is removed from the string
             if (firstBuilder.toString().contains("<")) {
-                scrubJavaGenerics(permissionDef, firstBuilder);
-            } else {
-                permissionDef.setTargetName(firstBuilder.toString().trim());
+                firstBuilder = scrubJavaGenerics(permissionDef, firstBuilder);
             }
+            String beforeProcessingInner = firstBuilder.toString().trim();
+            String signature = processInnerClasses(beforeProcessingInner);
+            permissionDef.setTargetName(signature);
 
             //Here we determine if the target of the permission is a method or a field
             if (permissionDef.getTargetName().contains("(")
@@ -200,7 +199,23 @@ public class XmlPermDefMiner {
     }
 
     /**
-     * Does the bulk of the work for ItemsToPermissionDefs. It gets the relevant information from a JaxbAnnotation
+     * Replace "." with "$" when connecting inner class names.
+     */
+    private String processInnerClasses(String str) {
+        //Match a dot, followed by an uppercase java id including $, followed by a dot.
+        //Last dot should be replaced by $
+        String regex = "(\\.\\p{Upper}[\\w$]*)\\.";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(str);
+        while (matcher.find()) {
+            str = str.replaceAll(regex, "$1\\$");
+            matcher = pattern.matcher(str);
+        }
+        return str;
+    }
+
+    /**
+     * Does the bulk of the work for buildPermissionDefList. It gets the relevant information from a JaxbAnnotation
      * object and gives it to a PermissionDef object.
      */
     private void extractPermissions(PermissionDef permissionDef, Iterator<JaxbAnnotation> jaxbAnnotationIterator) {
@@ -246,7 +261,7 @@ public class XmlPermDefMiner {
      * This function removes any java generics information from the methods that require permissions. It is a helper the
      * ItemsToPermissionDef function
      */
-    private void scrubJavaGenerics(PermissionDef permissionDef, StringBuilder firstBuilder) {
+    private StringBuilder scrubJavaGenerics(PermissionDef permissionDef, StringBuilder firstBuilder) {
 
         //Java generics are in greater than/less than brackets so we breakup the string on them
         String delims = "[<>]+";
@@ -262,7 +277,7 @@ public class XmlPermDefMiner {
                 secondBuilder.append(token[i]);
             }
         }
-        permissionDef.setTargetName(secondBuilder.toString().trim());
+        return secondBuilder;
     }
 
     public List<JaxbItemList> getXMLFromIOStream(String pathToJar) throws IOException, JAXBException {

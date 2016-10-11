@@ -95,13 +95,13 @@
     <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromChild(android.app.Activity, android.content.Intent, int, android.os.Bundle) 1" targetType="Method"/>
     <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromFragment(android.app.Fragment, android.content.Intent, int) 1" targetType="Method"/>
     <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromFragment(android.app.Fragment, android.content.Intent, int, android.os.Bundle) 1" targetType="Method"/>
-    <permissionDef className="android.app.KeyguardManager" permissionRel="AllOf" targetName="void exitKeyguardSecurely(android.app.KeyguardManager.OnKeyguardExitResult)" targetType="Method">
+    <permissionDef className="android.app.KeyguardManager" permissionRel="AllOf" targetName="void exitKeyguardSecurely(android.app.KeyguardManager$OnKeyguardExitResult)" targetType="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
-    <permissionDef className="android.app.KeyguardManager.KeyguardLock" permissionRel="AllOf" targetName="void disableKeyguard()" targetType="Method">
+    <permissionDef className="android.app.KeyguardManager$KeyguardLock" permissionRel="AllOf" targetName="void disableKeyguard()" targetType="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
-    <permissionDef className="android.app.KeyguardManager.KeyguardLock" permissionRel="AllOf" targetName="void reenableKeyguard()" targetType="Method">
+    <permissionDef className="android.app.KeyguardManager$KeyguardLock" permissionRel="AllOf" targetName="void reenableKeyguard()" targetType="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="android.bluetooth.BluetoothServerSocket listenUsingInsecureRfcommWithServiceRecord(java.lang.String, java.util.UUID)" targetType="Method">
@@ -131,10 +131,10 @@
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="boolean startDiscovery()" targetType="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="boolean startLeScan(android.bluetooth.BluetoothAdapter.LeScanCallback)" targetType="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="boolean startLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetType="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="boolean startLeScan(java.util.UUID[], android.bluetooth.BluetoothAdapter.LeScanCallback)" targetType="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="boolean startLeScan(java.util.UUID[], android.bluetooth.BluetoothAdapter$LeScanCallback)" targetType="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="int getProfileConnectionState(int)" targetType="Method">
@@ -159,7 +159,7 @@
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="java.util.Set  getBondedDevices()" targetType="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="void stopLeScan(android.bluetooth.BluetoothAdapter.LeScanCallback)" targetType="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" targetName="void stopLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetType="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" targetName="android.bluetooth.BluetoothClass getBluetoothClass()" targetType="Method">
@@ -288,7 +288,7 @@
     <permissionDef className="android.content.Intent" permissionRel="AllOf" targetName="ACTION_CALL" targetType="Field">
         <permission name="android.permission.CALL_PHONE"/>
     </permissionDef>
-    <permissionDef className="android.hardware.camera2.CameraManager" permissionRel="AllOf" targetName="void openCamera(java.lang.String, android.hardware.camera2.CameraDevice.StateCallback, android.os.Handler)" targetType="Method">
+    <permissionDef className="android.hardware.camera2.CameraManager" permissionRel="AllOf" targetName="void openCamera(java.lang.String, android.hardware.camera2.CameraDevice$StateCallback, android.os.Handler)" targetType="Method">
         <permission name="android.permission.CAMERA"/>
     </permissionDef>
     <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" targetName="boolean hasEnrolledFingerprints()" targetType="Method">
@@ -297,17 +297,17 @@
     <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" targetName="boolean isHardwareDetected()" targetType="Method">
         <permission name="android.permission.USE_FINGERPRINT"/>
     </permissionDef>
-    <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" targetName="void authenticate(android.hardware.fingerprint.FingerprintManager.CryptoObject, android.os.CancellationSignal, int, android.hardware.fingerprint.FingerprintManager.AuthenticationCallback, android.os.Handler)" targetType="Method">
+    <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" targetName="void authenticate(android.hardware.fingerprint.FingerprintManager$CryptoObject, android.os.CancellationSignal, int, android.hardware.fingerprint.FingerprintManager$AuthenticationCallback, android.os.Handler)" targetType="Method">
         <permission name="android.permission.USE_FINGERPRINT"/>
     </permissionDef>
     <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" targetName="android.location.Location getLastKnownLocation(java.lang.String)" targetType="Method">
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" targetName="boolean addGpsStatusListener(android.location.GpsStatus.Listener)" targetType="Method">
+    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" targetName="boolean addGpsStatusListener(android.location.GpsStatus$Listener)" targetType="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" targetName="boolean addNmeaListener(android.location.GpsStatus.NmeaListener)" targetType="Method">
+    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" targetName="boolean addNmeaListener(android.location.GpsStatus$NmeaListener)" targetType="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
     <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" targetName="void addProximityAlert(double, double, float, long, android.app.PendingIntent)" targetType="Method">
@@ -366,11 +366,11 @@
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.media.tv.TvContract.Channels" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.media.tv.TvContract$Channels" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.media.tv.TvContract.Channels" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.media.tv.TvContract$Channels" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
     </permissionDef>
@@ -448,10 +448,10 @@
     <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" targetName="java.util.List  getConfiguredNetworks()" targetType="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager.MulticastLock" permissionRel="AllOf" targetName="void acquire()" targetType="Method">
+    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" permissionRel="AllOf" targetName="void acquire()" targetType="Method">
         <permission name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager.MulticastLock" permissionRel="AllOf" targetName="void release()" targetType="Method">
+    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" permissionRel="AllOf" targetName="void release()" targetType="Method">
         <permission name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     </permissionDef>
     <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="boolean invokeBeam(android.app.Activity)" targetType="Method">
@@ -472,16 +472,16 @@
     <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setBeamPushUris(android.net.Uri[], android.app.Activity)" targetType="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setBeamPushUrisCallback(android.nfc.NfcAdapter.CreateBeamUrisCallback, android.app.Activity)" targetType="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setBeamPushUrisCallback(android.nfc.NfcAdapter$CreateBeamUrisCallback, android.app.Activity)" targetType="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity...)" targetType="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity$$$)" targetType="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setNdefPushMessageCallback(android.nfc.NfcAdapter.CreateNdefMessageCallback, android.app.Activity, android.app.Activity...)" targetType="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setNdefPushMessageCallback(android.nfc.NfcAdapter$CreateNdefMessageCallback, android.app.Activity, android.app.Activity$$$)" targetType="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter.OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity...)" targetType="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" targetName="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter$OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity$$$)" targetType="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
     <permissionDef className="android.nfc.cardemulation.CardEmulation" permissionRel="AllOf" targetName="boolean isDefaultServiceForAid(android.content.ComponentName, java.lang.String)" targetType="Method">
@@ -555,7 +555,7 @@
     <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="void deleteHistoryTimeFrame(android.content.ContentResolver, long, long)" targetType="Method">
         <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
     </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="void requestAllIcons(android.content.ContentResolver, java.lang.String, android.webkit.WebIconDatabase.IconListener)" targetType="Method">
+    <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="void requestAllIcons(android.content.ContentResolver, java.lang.String, android.webkit.WebIconDatabase$IconListener)" targetType="Method">
         <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
     </permissionDef>
     <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="void truncateHistory(android.content.ContentResolver)" targetType="Method">
@@ -574,99 +574,99 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.CalendarAlerts" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarAlerts" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.CalendarAlerts" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarAlerts" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.CalendarEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.CalendarEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Colors" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Colors" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Colors" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Colors" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.EventDays" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$EventDays" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.EventDays" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$EventDays" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.EventsEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$EventsEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.EventsEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$EventsEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.ExtendedProperties" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$ExtendedProperties" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.ExtendedProperties" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$ExtendedProperties" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Reminders" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Reminders" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.Reminders" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$Reminders" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.SyncState" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$SyncState" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract.SyncState" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CalendarContract$SyncState" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
@@ -678,24 +678,24 @@
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_FILTER_URI" targetType="Field">
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_FILTER_URI" targetType="Field">
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_FILTER_URI" targetType="Field">
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_FILTER_URI" targetType="Field">
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
-    <permissionDef className="android.provider.CallLog.Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
+    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
     <permissionDef className="android.provider.UserDictionary" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
@@ -704,11 +704,11 @@
         <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.UserDictionary.Words" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.UserDictionary$Words" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.UserDictionary.Words" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
+    <permissionDef className="android.provider.UserDictionary$Words" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
     </permissionDef>

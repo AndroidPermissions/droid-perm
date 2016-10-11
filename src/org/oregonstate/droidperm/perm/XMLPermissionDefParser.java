@@ -11,10 +11,8 @@ import soot.jimple.infoflow.data.SootMethodAndClass;
 import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
@@ -29,39 +27,39 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
         sensitiveDefs.addAll(txtPermissionDefParser.getSensitiveDefs());
         permCheckerDefs.addAll(txtPermissionDefParser.getPermCheckerDefs());
 
-        addSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
+        Set<AndroidMethod> xmlSensitives = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
+        sensitiveDefs.addAll(xmlSensitives);
     }
 
-    private void addSensitives(PermissionDefList permissionDefList) {
+    private Set<AndroidMethod> buildXmlSensitives(PermissionDefList permissionDefList) {
+        Set<AndroidMethod> xmlSensitives = new LinkedHashSet<>();
         String delimiters = "[ \\(\\),]+";
         String returnType;
         String targetName;
 
 
         for (PermissionDef permissionDef : permissionDefList.getPermissionDefs()) {
-            List<String> parameters = new ArrayList<>();
-            Set<String> permissions = new HashSet<>();
-
             //todo permissions targeting fields are ignored for the moment
             if (permissionDef.getTargetType() != TargetType.Field && !permissionDef.getPermissions().isEmpty()) {
                 String[] tokens = permissionDef.getTargetName().split(delimiters);
                 returnType = tokens[0];
                 targetName = tokens[1];
+
+                List<String> parameters = new ArrayList<>();
                 for (int i = 2; i < tokens.length; i++) {
                     if (tokens[i].length() > 1) {
                         parameters.add(tokens[i]);
                     }
                 }
 
-                for (Permission permission : permissionDef.getPermissions()) {
-                    permissions.add(permission.getName());
-                }
+                Set<String> permissions = permissionDef.getPermissions().stream().map(Permission::getName)
+                        .collect(Collectors.toSet());
 
-
-                sensitiveDefs.add(new AndroidMethod(targetName, parameters, returnType,
+                xmlSensitives.add(new AndroidMethod(targetName, parameters, returnType,
                         permissionDef.getClassName(), permissions));
             }
         }
+        return xmlSensitives;
     }
 
     @Override

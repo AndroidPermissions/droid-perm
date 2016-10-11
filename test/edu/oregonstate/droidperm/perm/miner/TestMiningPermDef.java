@@ -103,8 +103,8 @@ public class TestMiningPermDef {
         jaxbItemList = m.combineItems("src\\test\\annotations\\androidAnnotations.jar");
         jaxbItemList = m.filterItemList(jaxbItemList);
 
-        permissionDefList = m.ItemsToPermissionDefs(jaxbItemList);
+        permissionDefList = m.buildPermissionDefList(jaxbItemList);
 
-        m.marshallPermDef(permissionDefList, f1);
+        m.save(permissionDefList, f1);
     }
 }

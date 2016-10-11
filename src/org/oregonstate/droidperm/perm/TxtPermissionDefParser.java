@@ -30,8 +30,8 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
     private static final int INITIAL_SET_SIZE = 10000;
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 
-    private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>(INITIAL_SET_SIZE);
-    private Set<AndroidMethod> sensitiveDefs = new HashSet<>(INITIAL_SET_SIZE);
+    private Set<SootMethodAndClass> permCheckerDefs = new LinkedHashSet<>(INITIAL_SET_SIZE);
+    private Set<AndroidMethod> sensitiveDefs = new LinkedHashSet<>(INITIAL_SET_SIZE);
 
     private List<String> lines;
 
