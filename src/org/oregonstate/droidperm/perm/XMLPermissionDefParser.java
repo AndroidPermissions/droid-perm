@@ -5,6 +5,8 @@ import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.TargetType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class XMLPermissionDefParser implements IPermissionDefProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(XMLPermissionDefParser.class);
+
     private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>();
     private Set<AndroidMethod> sensitiveDefs = new HashSet<>();
 
@@ -28,7 +32,22 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
         permCheckerDefs.addAll(txtPermissionDefParser.getPermCheckerDefs());
 
         Set<AndroidMethod> xmlSensitives = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
+
+        checkDisjoint(txtPermissionDefParser.getSensitiveDefs(), xmlSensitives);
         sensitiveDefs.addAll(xmlSensitives);
+    }
+
+    private void checkDisjoint(Set<AndroidMethod> txtSensitives, Set<AndroidMethod> xmlSensitives) {
+        Set<String> txtSignatures = txtSensitives.stream().map(SootMethodAndClass::getSubSignature)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> xmlSignatures = xmlSensitives.stream().map(SootMethodAndClass::getSubSignature)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        txtSignatures.retainAll(xmlSignatures);
+        if (!txtSignatures.isEmpty()) {
+            logger.error("Sensitive defs found in both txt and xml definitions:");
+            txtSignatures.forEach(System.err::println);
+            throw new RuntimeException("Sensitive defs found in both txt and xml definitions");
+        }
     }
 
     private Set<AndroidMethod> buildXmlSensitives(PermissionDefList permissionDefList) {
