@@ -75,10 +75,7 @@ public class DPBatchRunner {
                         path -> path.getFileName().toString(),
                         path -> {
                             try {
-                                return Files.walk(path)
-                                        .filter(possibleApk -> possibleApk.getFileName().toString()
-                                                .endsWith("-debug.apk"))
-                                        .collect(Collectors.toList());
+                                return Files.walk(path).collect(Collectors.toList());
                             } catch (IOException e) {
                                 //Looks like Java 8 lambdas don't like to throw checked exceptions.
                                 throw new RuntimeException(e);
@@ -91,11 +88,15 @@ public class DPBatchRunner {
         for (String appName : appNamesToApksMap.keySet()) {
             List<Path> apks = appNamesToApksMap.get(appName);
             if (apks.isEmpty()) {
-                logger.warn(appName + ": No files matching \"*-debug.apk\" found.");
+                logger.warn(appName + ": No files matching \"*.apk\" found.");
                 continue;
             }
             if (apks.size() > 1) {
-                logger.warn(appName + ": multiple apk files found: " + apks + "\nPicking the first one.");
+                apks = apks.stream().filter(apk -> apk.getFileName().toString().endsWith("-debug.apk"))
+                        .collect(Collectors.toList());
+                if (apks.size() > 1) {
+                    logger.warn(appName + ": multiple -debug.apk files found: " + apks + "\nPicking the first one.");
+                }
             }
             Path apk = apks.get(0);
             analyzeApp(appName, apk, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, cgAlgo, vmArgs);
