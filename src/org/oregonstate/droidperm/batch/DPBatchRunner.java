@@ -75,7 +75,9 @@ public class DPBatchRunner {
                         path -> path.getFileName().toString(),
                         path -> {
                             try {
-                                return Files.walk(path).collect(Collectors.toList());
+                                return Files.walk(path)
+                                        .filter(possibleApk -> possibleApk.getFileName().toString().endsWith(".apk"))
+                                        .collect(Collectors.toList());
                             } catch (IOException e) {
                                 //Looks like Java 8 lambdas don't like to throw checked exceptions.
                                 throw new RuntimeException(e);
