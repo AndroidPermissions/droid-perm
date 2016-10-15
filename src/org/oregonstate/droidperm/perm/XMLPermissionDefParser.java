@@ -5,52 +5,29 @@ import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.TargetType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.android.data.AndroidMethod;
-import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
  */
-public class XMLPermissionDefParser implements IPermissionDefProvider {
+public class XMLPermissionDefParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(XMLPermissionDefParser.class);
+    private Set<AndroidMethod> sensitiveDefs;
 
-    private Set<SootMethodAndClass> permCheckerDefs = new HashSet<>();
-    private Set<AndroidMethod> sensitiveDefs = new HashSet<>();
-
-    public XMLPermissionDefParser(File xmlPermDefFile, File txtPermDefFile) throws IOException, JAXBException {
-        TxtPermissionDefParser txtPermissionDefParser = new TxtPermissionDefParser(txtPermDefFile);
-        sensitiveDefs.addAll(txtPermissionDefParser.getSensitiveDefs());
-        permCheckerDefs.addAll(txtPermissionDefParser.getPermCheckerDefs());
-
-        Set<AndroidMethod> xmlSensitives = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
-
-        checkDisjoint(txtPermissionDefParser.getSensitiveDefs(), xmlSensitives);
-        sensitiveDefs.addAll(xmlSensitives);
+    public XMLPermissionDefParser(File xmlPermDefFile) throws JAXBException {
+        sensitiveDefs = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
     }
 
-    private void checkDisjoint(Set<AndroidMethod> txtSensitives, Set<AndroidMethod> xmlSensitives) {
-        Set<String> txtSignatures = txtSensitives.stream().map(SootMethodAndClass::getSubSignature)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        Set<String> xmlSignatures = xmlSensitives.stream().map(SootMethodAndClass::getSubSignature)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        txtSignatures.retainAll(xmlSignatures);
-        if (!txtSignatures.isEmpty()) {
-            logger.error("Sensitive defs found in both txt and xml definitions:");
-            txtSignatures.forEach(System.err::println);
-            throw new RuntimeException("Sensitive defs found in both txt and xml definitions");
-        }
-    }
-
-    private Set<AndroidMethod> buildXmlSensitives(PermissionDefList permissionDefList) {
+    //todo for some reason not all sensitives are registered.
+    private static Set<AndroidMethod> buildXmlSensitives(PermissionDefList permissionDefList) {
         Set<AndroidMethod> xmlSensitives = new LinkedHashSet<>();
         String delimiters = "[ \\(\\),]+";
         String returnType;
@@ -81,12 +58,6 @@ public class XMLPermissionDefParser implements IPermissionDefProvider {
         return xmlSensitives;
     }
 
-    @Override
-    public Set<SootMethodAndClass> getPermCheckerDefs() {
-        return permCheckerDefs;
-    }
-
-    @Override
     public Set<AndroidMethod> getSensitiveDefs() {
         return sensitiveDefs;
     }

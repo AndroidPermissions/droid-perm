@@ -10,6 +10,10 @@ package org.oregonstate.droidperm;
 import org.oregonstate.droidperm.anno.PermAnnotationService;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
+import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
+import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
@@ -28,6 +32,7 @@ import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
 
+import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -484,8 +489,21 @@ public class DroidPermMain {
         if (printAnnoPermDef) {
             PermAnnotationService.printAnnoPermDefs();
         }
-        new MethodPermDetector(txtPermDefFile, xmlPermDefFile, txtOut, xmlOut).analyzeAndPrint();
+        IPermissionDefProvider permDefProvider = getPermDefProvider();
+        new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
+    }
+
+    private static IPermissionDefProvider getPermDefProvider() throws IOException {
+        try {
+            TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
+            return xmlPermDefFile != null ? new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
+                    txtPermDefProvider.getSensitiveDefs(),
+                    new XMLPermissionDefParser(xmlPermDefFile).getSensitiveDefs())
+                                          : txtPermDefProvider;
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {

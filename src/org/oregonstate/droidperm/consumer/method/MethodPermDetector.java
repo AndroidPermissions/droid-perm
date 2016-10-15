@@ -2,8 +2,6 @@ package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
-import org.oregonstate.droidperm.perm.TxtPermissionDefParser;
-import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +32,12 @@ public class MethodPermDetector {
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
     private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
 
-    private File txtPermDefFile;
     private File txtOut;
     private File xmlOut;
+    private IPermissionDefProvider permDefProvider;
     private Set<SootMethod> outflowIgnoreSet;
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> sensitiveDefs;
-
-    private File xmlPermDefFile = null;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -95,11 +91,10 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
-    public MethodPermDetector(File txtPermDefFile, File xmlPermDefFile, File txtOut, File xmlOut) {
-        this.txtPermDefFile = txtPermDefFile;
-        this.xmlPermDefFile = xmlPermDefFile;
+    public MethodPermDetector(File txtOut, File xmlOut, IPermissionDefProvider permDefProvider) {
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
+        this.permDefProvider = permDefProvider;
     }
 
     public void analyzeAndPrint() {
@@ -116,19 +111,14 @@ public class MethodPermDetector {
 
     private void analyze() {
         Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
-
-        IPermissionDefProvider permissionDefProvider;
         try {
-            permissionDefProvider = xmlPermDefFile != null
-                                    ? new XMLPermissionDefParser(xmlPermDefFile, txtPermDefFile)
-                                    : new TxtPermissionDefParser(txtPermDefFile);
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
-        sensitiveDefs = permissionDefProvider.getSensitiveDefs();
+        permCheckerDefs = permDefProvider.getPermCheckerDefs();
+        sensitiveDefs = permDefProvider.getSensitiveDefs();
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));

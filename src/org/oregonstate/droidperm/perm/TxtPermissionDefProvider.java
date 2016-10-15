@@ -25,13 +25,12 @@ import java.util.stream.Collectors;
  * @author Siegfried Rasthofer, Denis Bogdanas
  * @see soot.jimple.infoflow.android.data.parsers.PermissionMethodParser
  */
-public class TxtPermissionDefParser implements IPermissionDefProvider {
+public class TxtPermissionDefProvider implements IPermissionDefProvider {
 
-    private static final int INITIAL_SET_SIZE = 10000;
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 
-    private Set<SootMethodAndClass> permCheckerDefs = new LinkedHashSet<>(INITIAL_SET_SIZE);
-    private Set<AndroidMethod> sensitiveDefs = new LinkedHashSet<>(INITIAL_SET_SIZE);
+    private Set<SootMethodAndClass> permCheckerDefs = new LinkedHashSet<>();
+    private Set<AndroidMethod> sensitiveDefs = new LinkedHashSet<>();
 
     private List<String> lines;
 
@@ -43,9 +42,9 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
     private static final Pattern pattern = Pattern.compile(regex);
 
     /**
-     * Creates a TxtPermissionDefParser loading data from a file.
+     * Creates a TxtPermissionDefProvider loading data from a file.
      */
-    public TxtPermissionDefParser(File file) throws IOException {
+    public TxtPermissionDefProvider(File file) throws IOException {
         readFile(file);
         parseLines();
     }
@@ -102,7 +101,7 @@ public class TxtPermissionDefParser implements IPermissionDefProvider {
         } else {
             Set<String> permissions = Arrays.stream(checkerOrPermList.split(","))
                     .map(String::trim)
-                    .map(TxtPermissionDefParser::parsePermission).collect(Collectors.toSet());
+                    .map(TxtPermissionDefProvider::parsePermission).collect(Collectors.toSet());
             androidMethodDef =
                     new AndroidMethod(methodName, methodParameters, returnType, className, permissions);
             androidMethodDef.setSink(true);
