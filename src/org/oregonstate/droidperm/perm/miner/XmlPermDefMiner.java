@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -93,26 +94,14 @@ public class XmlPermDefMiner {
      * annotation
      *
      * @return a filtered JaxbItemList
-     * @throws JAXBException
      */
     public static JaxbItemList filterItemList(JaxbItemList unfilteredItems) throws JAXBException {
         JaxbItemList filteredItems = new JaxbItemList();
-        JaxbItem jaxbItem;
+        List<JaxbItem> newList = unfilteredItems.getItems().stream().filter(item ->
+                item.getAnnotations().stream().anyMatch(anno -> anno.getName().contains("RequiresPermission"))
+        ).collect(Collectors.toList());
+        filteredItems.setItems(newList);
 
-        Iterator<JaxbItem> itemIterator = unfilteredItems.getItem().iterator();
-        Iterator<JaxbAnnotation> annotationIterator;
-
-        //A nested loop to read each item and each of its annotations
-        while (itemIterator.hasNext()) {
-            jaxbItem = itemIterator.next();
-            annotationIterator = jaxbItem.getAnnotations().iterator();
-            while (annotationIterator.hasNext()) {
-                //This if does the actual filtering out of items that do do not use permissions
-                if (annotationIterator.next().getName().contains("RequiresPermission")) {
-                    filteredItems.addItem(jaxbItem);
-                }
-            }
-        }
         return filteredItems;
     }
 
@@ -137,27 +126,20 @@ public class XmlPermDefMiner {
      * @return JaxbItemList - a single object containing all of the items in the annotations files
      */
     public JaxbItemList combineItems(String androidAnnotationsLocation) throws JAXBException, IOException {
-        JaxbItemList combinedItems = new JaxbItemList();
-
         List<JaxbItemList> jaxbItemLists = getXMLFromIOStream(androidAnnotationsLocation);
+        JaxbItemList result = new JaxbItemList();
 
-        Iterator<JaxbItemList> jaxbItemListIterator = jaxbItemLists.iterator();
-        Iterator<JaxbItem> jaxbItemIterator;
-
-        while (jaxbItemListIterator.hasNext()) {
-            jaxbItemIterator = jaxbItemListIterator.next().getItem().iterator();
-            while (jaxbItemIterator.hasNext()) {
-                combinedItems.addItem(jaxbItemIterator.next());
-            }
-        }
-        return combinedItems;
+        List<JaxbItem> combinedItems =
+                jaxbItemLists.stream().flatMap(l -> l.getItems().stream()).collect(Collectors.toList());
+        result.setItems(combinedItems);
+        return result;
     }
 
     public PermissionDefList buildPermissionDefList(JaxbItemList items) {
         String delimiters = "[ ]+";
         PermissionDefList permissionDefList = new PermissionDefList();
 
-        for (JaxbItem jaxbItem : items.getItem()) {
+        for (JaxbItem jaxbItem : items.getItems()) {
             PermissionDef permissionDef = new PermissionDef();
 
             //Break up the string on spaces
@@ -190,10 +172,12 @@ public class XmlPermDefMiner {
             }
 
             //Finally iterate through the annotations, extract the relevant information and put it in a PermDef object
-            Iterator<JaxbAnnotation> jaxbAnnotationIterator = jaxbItem.getAnnotations().iterator();
-            extractPermissions(permissionDef, jaxbAnnotationIterator);
+            extractPermissions(permissionDef, jaxbItem);
 
-            permissionDefList.addPermissionDef(permissionDef);
+            //some permission defs wrongly have an empty set of permissions. They have to be elliminated here.
+            if (!permissionDef.getPermissions().isEmpty()) {
+                permissionDefList.addPermissionDef(permissionDef);
+            }
         }
         return permissionDefList;
     }
@@ -218,7 +202,8 @@ public class XmlPermDefMiner {
      * Does the bulk of the work for buildPermissionDefList. It gets the relevant information from a JaxbAnnotation
      * object and gives it to a PermissionDef object.
      */
-    private void extractPermissions(PermissionDef permissionDef, Iterator<JaxbAnnotation> jaxbAnnotationIterator) {
+    private void extractPermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
+        Iterator<JaxbAnnotation> jaxbAnnotationIterator = jaxbItem.getAnnotations().iterator();
         while (jaxbAnnotationIterator.hasNext()) {
             JaxbAnnotation jaxbAnnotation = jaxbAnnotationIterator.next();
 

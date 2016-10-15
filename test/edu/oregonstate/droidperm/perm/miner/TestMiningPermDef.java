@@ -27,7 +27,7 @@ public class TestMiningPermDef {
         File f = new File("src\\test\\annotations\\annotations.xml");
         File f1 = new File("src\\test\\annotations\\annotations2.xml");
 
-        jaxbItems.setItem(m.unmarshallXML(f).getItem());
+        jaxbItems.setItems(m.unmarshallXML(f).getItems());
 
         m.marshallXML(jaxbItems, f1);
     }
@@ -66,11 +66,11 @@ public class TestMiningPermDef {
         File f = new File("src\\test\\annotations\\annotations.xml");
         File f1 = new File("src\\test\\annotations\\annotations3.xml");
 
-        jaxbItems.setItem(m.unmarshallXML(f).getItem());
+        jaxbItems.setItems(m.unmarshallXML(f).getItems());
 
-        filteredJaxbItems.setItem(m.filterItemList(jaxbItems).getItem());
+        filteredJaxbItems.setItems(m.filterItemList(jaxbItems).getItems());
 
-        Iterator<JaxbItem> itemIterator = filteredJaxbItems.getItem().iterator();
+        Iterator<JaxbItem> itemIterator = filteredJaxbItems.getItems().iterator();
         Iterator<JaxbAnnotation> annotationIterator = null;
 
         while (itemIterator.hasNext()) {

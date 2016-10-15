@@ -85,16 +85,6 @@
     <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" targetName="void setUserData(android.accounts.Account, java.lang.String, java.lang.String)" targetType="Method">
         <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="boolean startActivityIfNeeded(android.content.Intent, int) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="boolean startActivityIfNeeded(android.content.Intent, int, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="boolean startNextMatchingActivity(android.content.Intent) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="boolean startNextMatchingActivity(android.content.Intent, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityForResult(android.content.Intent, int) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityForResult(android.content.Intent, int, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromChild(android.app.Activity, android.content.Intent, int) 1" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromChild(android.app.Activity, android.content.Intent, int, android.os.Bundle) 1" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromFragment(android.app.Fragment, android.content.Intent, int) 1" targetType="Method"/>
-    <permissionDef className="android.app.Activity" permissionRel="AllOf" targetName="void startActivityFromFragment(android.app.Fragment, android.content.Intent, int, android.os.Bundle) 1" targetType="Method"/>
     <permissionDef className="android.app.KeyguardManager" permissionRel="AllOf" targetName="void exitKeyguardSecurely(android.app.KeyguardManager$OnKeyguardExitResult)" targetType="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
@@ -222,9 +212,6 @@
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="android.content.SyncInfo getCurrentSync()" targetType="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String) 0" targetType="Method"/>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String, android.os.CancellationSignal) 0" targetType="Method"/>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="android.net.Uri insert(android.net.Uri, android.content.ContentValues) 0" targetType="Method"/>
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="boolean getMasterSyncAutomatically()" targetType="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
@@ -237,12 +224,9 @@
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="boolean isSyncPending(android.accounts.Account, java.lang.String)" targetType="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="int bulkInsert(android.net.Uri, android.content.ContentValues[]) 0" targetType="Method"/>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="int delete(android.net.Uri, java.lang.String, java.lang.String[]) 0" targetType="Method"/>
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="int getIsSyncable(android.accounts.Account, java.lang.String)" targetType="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="int update(android.net.Uri, android.content.ContentValues, java.lang.String, java.lang.String[]) 0" targetType="Method"/>
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="java.util.List  getPeriodicSyncs(android.accounts.Account, java.lang.String)" targetType="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
@@ -267,24 +251,6 @@
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" targetName="void setSyncAutomatically(android.accounts.Account, java.lang.String, boolean)" targetType="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="boolean bindService(android.content.Intent, android.content.ServiceConnection, int) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void removeStickyBroadcast(android.content.Intent) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void removeStickyBroadcastAsUser(android.content.Intent, android.os.UserHandle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendBroadcast(android.content.Intent) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendBroadcast(android.content.Intent, java.lang.String) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendBroadcastAsUser(android.content.Intent, android.os.UserHandle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendBroadcastAsUser(android.content.Intent, android.os.UserHandle, java.lang.String) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendOrderedBroadcast(android.content.Intent, java.lang.String) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendOrderedBroadcast(android.content.Intent, java.lang.String, android.content.BroadcastReceiver, android.os.Handler, int, java.lang.String, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendOrderedBroadcastAsUser(android.content.Intent, android.os.UserHandle, java.lang.String, android.content.BroadcastReceiver, android.os.Handler, int, java.lang.String, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendStickyBroadcast(android.content.Intent) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendStickyBroadcastAsUser(android.content.Intent, android.os.UserHandle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendStickyOrderedBroadcast(android.content.Intent, android.content.BroadcastReceiver, android.os.Handler, int, java.lang.String, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void sendStickyOrderedBroadcastAsUser(android.content.Intent, android.os.UserHandle, android.content.BroadcastReceiver, android.os.Handler, int, java.lang.String, android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void startActivities(android.content.Intent[]) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void startActivities(android.content.Intent[], android.os.Bundle) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void startActivity(android.content.Intent) 0" targetType="Method"/>
-    <permissionDef className="android.content.Context" permissionRel="AllOf" targetName="void startActivity(android.content.Intent, android.os.Bundle) 0" targetType="Method"/>
     <permissionDef className="android.content.Intent" permissionRel="AllOf" targetName="ACTION_CALL" targetType="Field">
         <permission name="android.permission.CALL_PHONE"/>
     </permissionDef>
@@ -359,14 +325,6 @@
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
     <permissionDef className="android.media.tv.TvContract" permissionRel="AllOf" targetName="android.net.Uri buildChannelUri(long)" targetType="Method">
-        <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
-        <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.media.tv.TvContract" permissionRel="AllOf" targetName="android.net.Uri buildChannelUri(long)" targetType="Method">
-        <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
-        <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.media.tv.TvContract$Channels" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationType="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationType="Write"/>
     </permissionDef>
@@ -518,14 +476,6 @@
         <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationType="Read"/>
         <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="BOOKMARKS_URI" targetType="Field">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationType="Read"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="SEARCHES_URI" targetType="Field">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationType="Read"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.Browser" permissionRel="AllOf" targetName="SEARCHES_URI" targetType="Field">
         <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationType="Read"/>
         <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationType="Write"/>
@@ -570,19 +520,7 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.CalendarContract$Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Attendees" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$CalendarAlerts" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
@@ -594,19 +532,7 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$CalendarEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.CalendarContract$Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Calendars" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Colors" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
@@ -618,19 +544,7 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$EventDays" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.CalendarContract$Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Events" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$EventsEntity" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
@@ -642,19 +556,7 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$ExtendedProperties" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.CalendarContract$Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Instances" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Reminders" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
@@ -666,19 +568,7 @@
         <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$SyncState" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALENDAR" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALENDAR" operationType="Write"/>
-    </permissionDef>
     <permissionDef className="android.provider.CallLog" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CallLog" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_FILTER_URI" targetType="Field">
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
@@ -690,21 +580,7 @@
         <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_CALL_LOG" operationType="Read"/>
-        <permission name="android.permission.WRITE_CALL_LOG" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" targetName="CONTENT_URI_WITH_VOICEMAIL" targetType="Field"/>
     <permissionDef className="android.provider.UserDictionary" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
-        <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.UserDictionary" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
-        <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
-        <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.UserDictionary$Words" permissionRel="AllOf" targetName="CONTENT_URI" targetType="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationType="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationType="Write"/>
     </permissionDef>

@@ -26,7 +26,6 @@ public class XMLPermissionDefParser {
         sensitiveDefs = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile));
     }
 
-    //todo for some reason not all sensitives are registered.
     private static Set<AndroidMethod> buildXmlSensitives(PermissionDefList permissionDefList) {
         Set<AndroidMethod> xmlSensitives = new LinkedHashSet<>();
         String delimiters = "[ \\(\\),]+";
@@ -36,7 +35,7 @@ public class XMLPermissionDefParser {
 
         for (PermissionDef permissionDef : permissionDefList.getPermissionDefs()) {
             //todo permissions targeting fields are ignored for the moment
-            if (permissionDef.getTargetType() != TargetType.Field && !permissionDef.getPermissions().isEmpty()) {
+            if (permissionDef.getTargetType() == TargetType.Method) {
                 String[] tokens = permissionDef.getTargetName().split(delimiters);
                 returnType = tokens[0];
                 targetName = tokens[1];
@@ -51,8 +50,9 @@ public class XMLPermissionDefParser {
                 Set<String> permissions = permissionDef.getPermissions().stream().map(Permission::getName)
                         .collect(Collectors.toSet());
 
-                xmlSensitives.add(new AndroidMethod(targetName, parameters, returnType,
-                        permissionDef.getClassName(), permissions));
+                AndroidMethod sensitiveDef = new AndroidMethod(targetName, parameters, returnType,
+                        permissionDef.getClassName(), permissions);
+                xmlSensitives.add(sensitiveDef);
             }
         }
         return xmlSensitives;

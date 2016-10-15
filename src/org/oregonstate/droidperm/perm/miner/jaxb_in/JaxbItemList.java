@@ -11,18 +11,18 @@ import java.util.List;
 @XmlRootElement(name = "root")
 public class JaxbItemList {
 
-    private List<JaxbItem> item = new ArrayList<>();
+    private List<JaxbItem> items = new ArrayList<>();
 
-    @XmlElement
-    public List<JaxbItem> getItem() {
-        return item;
+    @XmlElement(name = "item")
+    public List<JaxbItem> getItems() {
+        return items;
     }
 
-    public void setItem(List<JaxbItem> items) {
-        this.item = items;
+    public void setItems(List<JaxbItem> items) {
+        this.items = items;
     }
 
     public void addItem(JaxbItem item) {
-        this.item.add(item);
+        this.items.add(item);
     }
 }
