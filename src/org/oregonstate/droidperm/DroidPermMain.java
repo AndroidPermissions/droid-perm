@@ -7,6 +7,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
+import org.oregonstate.droidperm.anno.PermAnnotationService;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.util.CallGraphUtil;
@@ -70,6 +71,7 @@ public class DroidPermMain {
     private static InfoflowAndroidConfiguration config = new InfoflowAndroidConfiguration();
     private static IIPCManager ipcManager = null;
     private static File callGraphDumpFile;
+    private static boolean printAnnoPermDef;
 
     static {
         // DroidPerm default config options
@@ -318,6 +320,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--CALL-GRAPH-DUMP-FILE")) {
                 callGraphDumpFile = new File(args[i + 1]);
                 i += 2;
+            } else if (args[i].equalsIgnoreCase("--PRINT-ANNO-PERM-DEF")) {
+                printAnnoPermDef = true;
+                i++;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -375,13 +380,15 @@ public class DroidPermMain {
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
         System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
-        System.out.println("\t--XML-PERM-DEF-FILE Path to xml permission definitions file. Optional. Even if specified, "
-                + "a txt perm def file is also necessary for checker definitions.");
+        System.out
+                .println("\t--XML-PERM-DEF-FILE Path to xml permission definitions file. Optional. Even if specified, "
+                        + "a txt perm def file is also necessary for checker definitions.");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
         System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
         System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
         System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
         System.out.println("\t--CALL-GRAPH-DUMP-FILE <file>: Dump the call graph to a file.");
+        System.out.println("\t--PRINT-ANNO-PERM-DEF: Print available permission def annoations.");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
@@ -474,6 +481,9 @@ public class DroidPermMain {
         }
 
         //Run DroidPerm
+        if (printAnnoPermDef) {
+            PermAnnotationService.printAnnoPermDefs();
+        }
         new MethodPermDetector(txtPermDefFile, xmlPermDefFile, txtOut, xmlOut).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }

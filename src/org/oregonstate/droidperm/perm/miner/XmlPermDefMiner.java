@@ -247,11 +247,14 @@ public class XmlPermDefMiner {
                     }
 
                     //This block handles the OR/AND relationship that may exist when an item has multiple permissions
+                    PermissionRel permRel;
                     if (jaxbVal.getName().contains("anyOf")) {
-                        permissionDef.setPermissionRel(PermissionRel.AnyOf);
+                        permRel = PermissionRel.AnyOf;
                     } else {
-                        permissionDef.setPermissionRel(PermissionRel.AllOf);
+                        //if there's no rel defined, it's AllOf.
+                        permRel = PermissionRel.AllOf;
                     }
+                    permissionDef.setPermissionRel(permRel);
                 }
             }
         }

@@ -10,18 +10,18 @@ import java.util.List;
  */
 @XmlRootElement(name = "PermissionDefinitions")
 public class PermissionDefList {
-    private List<PermissionDef> PermissionDefs = new ArrayList<>();
+    private List<PermissionDef> permissionDefs = new ArrayList<>();
 
     @XmlElement(name = "permissionDef")
     public List<PermissionDef> getPermissionDefs() {
-        return PermissionDefs;
+        return permissionDefs;
     }
 
     public void setPermissionDefs(List<org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef> permissionDefs) {
-        PermissionDefs = permissionDefs;
+        this.permissionDefs = permissionDefs;
     }
 
     public void addPermissionDef(PermissionDef permissionDef) {
-        this.PermissionDefs.add(permissionDef);
+        this.permissionDefs.add(permissionDef);
     }
 }

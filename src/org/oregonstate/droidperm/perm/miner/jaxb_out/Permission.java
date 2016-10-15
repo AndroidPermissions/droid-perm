@@ -11,6 +11,14 @@ public class Permission {
     private String name;
     private OperationType operationType;
 
+    public Permission() {
+    }
+
+    public Permission(String name, OperationType operationType) {
+        this.name = name;
+        this.operationType = operationType;
+    }
+
     @XmlAttribute
     public String getName() {
         return name;

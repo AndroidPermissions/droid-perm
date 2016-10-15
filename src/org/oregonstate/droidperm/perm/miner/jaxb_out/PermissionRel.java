@@ -6,5 +6,16 @@ package org.oregonstate.droidperm.perm.miner.jaxb_out;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 7/1/2016.
  */
 public enum PermissionRel {
-    AllOf, AnyOf
+    AllOf, AnyOf;
+
+    public static PermissionRel fromAnnotName(String name) {
+        switch (name) {
+            case "allOf":
+                return AllOf;
+            case "anyOf":
+                return AnyOf;
+            default:
+                throw new RuntimeException("Unknown Permission rel: " + name);
+        }
+    }
 }
