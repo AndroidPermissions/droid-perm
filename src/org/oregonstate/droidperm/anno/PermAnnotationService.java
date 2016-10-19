@@ -1,19 +1,18 @@
 package org.oregonstate.droidperm.anno;
 
+import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
+import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.tagkit.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/13/2016.
@@ -116,5 +115,9 @@ public class PermAnnotationService {
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Set<AndroidMethod> getSensitiveDefs() {
+        return XMLPermissionDefParser.buildXmlSensitives(getPermissionDefs());
     }
 }

@@ -7,8 +7,10 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/14/2016.
@@ -24,14 +26,18 @@ public class AggregatePermDefProvider implements IPermissionDefProvider {
     public AggregatePermDefProvider(Set<SootMethodAndClass> permCheckerDefs,
                                     Set<AndroidMethod>... sensitiveDefSetList) {
         this.permCheckerDefs = Collections.unmodifiableSet(permCheckerDefs);
-        this.sensitiveDefs = new LinkedHashSet<>(sensitiveDefSetList[0]);
-        for (int i = 1; i < sensitiveDefSetList.length; i++) {
-            Set<AndroidMethod> sensDefsToAdd = sensitiveDefSetList[i];
-            if (Collections.disjoint(sensitiveDefs, sensDefsToAdd)) {
+
+        Set<AndroidMethod> sensitiveDefs = new LinkedHashSet<>();
+        Set<String> sensitiveSigs = new HashSet<>();
+        for (Set<AndroidMethod> sensDefsToAdd : sensitiveDefSetList) {
+            Set<String> sensitiveSigsToAdd = sensDefsToAdd.stream().map(SootMethodAndClass::getSignature)
+                    .collect(Collectors.toSet());
+            if (Collections.disjoint(sensitiveSigs, sensitiveSigsToAdd)) {
                 sensitiveDefs.addAll(sensDefsToAdd);
+                sensitiveSigs.addAll(sensitiveSigsToAdd);
             } else {
-                Set<AndroidMethod> intersection = new LinkedHashSet<>(sensitiveDefs);
-                intersection.retainAll(sensDefsToAdd);
+                Set<String> intersection = new LinkedHashSet<>(sensitiveSigs);
+                intersection.retainAll(sensitiveSigsToAdd);
                 logger.error("Common sensitive defs found in 2 sources:");
                 intersection.forEach(System.err::println);
                 throw new RuntimeException("Common sensitive defs found in 2 sources");

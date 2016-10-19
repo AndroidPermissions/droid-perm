@@ -24,6 +24,7 @@ import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
+import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
 import soot.jimple.infoflow.ipc.IIPCManager;
@@ -34,10 +35,7 @@ import soot.options.Options;
 
 import javax.xml.bind.JAXBException;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -67,6 +65,7 @@ public class DroidPermMain {
     private static String additionalClasspath = "";
     private static File txtPermDefFile = new File("PermissionDefs.txt");
     private static File xmlPermDefFile;
+    private static boolean useAnnoPermDef;//whether to use permission annotations.
     private static File txtOut;
     private static File xmlOut;
 
@@ -316,6 +315,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--XML-PERM-DEF-FILE")) {
                 xmlPermDefFile = new File(args[i + 1]);
                 i += 2;
+            } else if (args[i].equalsIgnoreCase("--USE-ANNO-PERM-DEF")) {
+                useAnnoPermDef = true;
+                i++;
             } else if (args[i].equalsIgnoreCase("--TXT-OUT")) {
                 txtOut = new File(args[i + 1]);
                 i += 2;
@@ -388,6 +390,8 @@ public class DroidPermMain {
         System.out
                 .println("\t--XML-PERM-DEF-FILE Path to xml permission definitions file. Optional. Even if specified, "
                         + "a txt perm def file is also necessary for checker definitions.");
+        System.out.println(
+                "\t--USE-ANNO-PERM-DEF Use permission definitions provided as @RequiresPermission annotations.");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
         System.out.println("\t--CODE-ELIMINATION-MODE Various options for irrelevant code elimination.");
         System.out.println("\t--TXT-OUT DroidPerm output file: txt format.");
@@ -497,10 +501,17 @@ public class DroidPermMain {
     private static IPermissionDefProvider getPermDefProvider() throws IOException {
         try {
             TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
-            return xmlPermDefFile != null ? new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
-                    txtPermDefProvider.getSensitiveDefs(),
-                    new XMLPermissionDefParser(xmlPermDefFile).getSensitiveDefs())
-                                          : txtPermDefProvider;
+            List<Set<AndroidMethod>> permDefSources = new ArrayList<>();
+            permDefSources.add(txtPermDefProvider.getSensitiveDefs());
+            if (xmlPermDefFile != null) {
+                permDefSources.add(new XMLPermissionDefParser(xmlPermDefFile).getSensitiveDefs());
+            }
+            if (useAnnoPermDef) {
+                permDefSources.add(PermAnnotationService.getSensitiveDefs());
+            }
+            //noinspection unchecked
+            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
+                    permDefSources.toArray(new Set[permDefSources.size()]));
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }

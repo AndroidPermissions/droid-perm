@@ -10,60 +10,13 @@
 % Used by some methods in Android compat framework.
 <android.support.v4.content.PermissionChecker: int checkSelfPermission(android.content.Context,java.lang.String )> -> _PERM_CHECKER_
 
-% WRITE_EXTERNAL_STORAGE
-% ==================================
-
-% <java.io.FileOutputStream: void <init>(java.io.FileDescriptor)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.io.File,boolean)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.lang.String)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileOutputStream: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
-
-% <java.io.FileWriter: void <init>(java.io.FileDescriptor)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileWriter: void <init>(java.io.File,boolean)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileWriter: void <init>(java.lang.String)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileWriter: void <init>(java.lang.String,boolean)> -> WRITE_EXTERNAL_STORAGE
-% <java.io.FileWriter: void <init>(java.io.File)> -> WRITE_EXTERNAL_STORAGE
-
-% LOCATION
-% ==================================
-
-<com.google.android.gms.location.FusedLocationProviderApi: android.location.Location getLastLocation(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.location.LocationAvailability getLocationAvailability(com.google.android.gms.common.api.GoogleApiClient)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationListener)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationListener, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, com.google.android.gms.location.LocationCallback, android.os.Looper)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult requestLocationUpdates(com.google.android.gms.common.api.GoogleApiClient, com.google.android.gms.location.LocationRequest, android.app.PendingIntent)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult setMockMode(com.google.android.gms.common.api.GoogleApiClient, boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-<com.google.android.gms.location.FusedLocationProviderApi: com.google.android.gms.common.api.PendingResult setMockLocation(com.google.android.gms.common.api.GoogleApiClient, android.location.Location)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-
-
-% LOCATION - com.google.android.gms.maps.GoogleMap
-% ----------------------------------
-<com.google.android.gms.maps.GoogleMap: void setMyLocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-
-
-% LOCATION - android.webkit.WebSettings
-% ----------------------------------
-<android.webkit.WebSettings: void setGeolocationEnabled(boolean)> -> ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-
 
 % CAMERA
 % ==================================
 
 % CAMERA - android.hardware.Camera
-% ==================================
+% --------------------------------
 <android.hardware.Camera: android.hardware.Camera open()> -> CAMERA
 <android.hardware.Camera: android.hardware.Camera open(int)> -> CAMERA
 
-% GET_ACCOUNTS
-% ==================================
-
-
-% READ_PHONE_STATE
-% ==================================
-
-
-% App-specific or Lib-specific sensitives
-% ==================================
 
