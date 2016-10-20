@@ -32,7 +32,7 @@ public class DPBatchRunner {
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
     private File appsDir;
 
-    @Parameter(names = "--drood-perm-home", description = "Path to DroidPerm standalone installation dir",
+    @Parameter(names = "--droid-perm-home", description = "Path to DroidPerm standalone installation dir",
             required = true)
     private File droidPermHomeDir;
 
@@ -47,6 +47,9 @@ public class DPBatchRunner {
 
     @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space")
     private String vmArgs;
+
+    @Parameter(names = "--collect-anno-mode", description = "Annotation collection mode. DroidPerm won't be executed.")
+    private boolean collectAnnoMode;
 
     @Parameter(names = "--help", help = true)
     private boolean help = false;
@@ -100,7 +103,8 @@ public class DPBatchRunner {
         logger.info("logDir: " + logDir);
         logger.info("taintAnalysisEnabled: " + taintAnalysisEnabled);
         logger.info("cgalgo: " + cgAlgo);
-        logger.info("vmArgs: " + vmArgs + "\n");
+        logger.info("vmArgs: " + vmArgs);
+        logger.info("collectAnnoMode: " + collectAnnoMode + "\n");
 
         Files.createDirectories(logDir.toPath());
         Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir.toPath()).sorted()
@@ -156,7 +160,10 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
         processBuilderArgs.add(CG_ALGO_OPT);
         processBuilderArgs.add(cgAlgo.name());
-        if (taintAnalysisEnabled) {
+        if (collectAnnoMode) {
+            Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
+            processBuilderArgs.addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-ONLY"));
+        } else if (taintAnalysisEnabled) {
             processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
         } else {
             processBuilderArgs.addAll(Arrays.asList(TAINT_DISABLED_OPTS));

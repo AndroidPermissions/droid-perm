@@ -410,7 +410,8 @@ public class DroidPermMain {
         System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
         System.out.println("\t--CALL-GRAPH-DUMP-FILE <file>: Dump the call graph to a file.");
         System.out.println("\t--PRINT-ANNO-PERM-DEF: Print available permission def annoations.");
-        System.out.println("\t--COLLECT-PERM-ANNO-ONLY: Only collect permission annotations. Do not run DroidPerm.");
+        System.out.println("\t--COLLECT-PERM-ANNO-ONLY: Only collect permission annotations. Do not run DroidPerm."
+                + " Option --xml-out if specified will be the file where annotations are stored.");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
