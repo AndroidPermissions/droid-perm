@@ -99,9 +99,10 @@ public class PermAnnotationService {
     }
 
     public static void printAnnoPermDefs() {
-        System.out.println("\nRequiresPermission annotations"
-                + "\n========================================================================\n");
         List<PermissionDef> permDefs = getPermissionDefs();
+        System.out.println("\nRequiresPermission annotations: " + permDefs.size()
+                + "\n========================================================================\n");
+
         PermissionDefList pdList = new PermissionDefList();
         pdList.setPermissionDefs(permDefs);
 

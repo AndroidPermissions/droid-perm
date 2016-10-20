@@ -14,12 +14,16 @@ import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
 import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
+import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
+import soot.Main;
+import soot.Scene;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
@@ -77,6 +81,11 @@ public class DroidPermMain {
     private static File callGraphDumpFile;
     private static boolean printAnnoPermDef;
 
+    /**
+     * If true then only permission annotations are collected. DroidPerm is not executed.
+     */
+    private static boolean collectPermAnnoOnly;
+
     static {
         // DroidPerm default config options
         //during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
@@ -95,7 +104,7 @@ public class DroidPermMain {
      * @param args Program arguments. args[0] = path to apk-file, args[1] = path to android-dir
      *             (path/android-platforms/)
      */
-    public static void main(final String[] args) throws IOException, InterruptedException {
+    public static void main(final String[] args) throws Exception {
         if (args.length < 2 || !parseAdditionalOptions(args) || !validateAdditionalOptions()) {
             printUsage();
             return;
@@ -330,6 +339,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--PRINT-ANNO-PERM-DEF")) {
                 printAnnoPermDef = true;
                 i++;
+            } else if (args[i].equalsIgnoreCase("--COLLECT-PERM-ANNO-ONLY")) {
+                collectPermAnnoOnly = true;
+                i++;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -398,6 +410,7 @@ public class DroidPermMain {
         System.out.println("\t--XML-OUT DroidPerm output file: xml format.");
         System.out.println("\t--CALL-GRAPH-DUMP-FILE <file>: Dump the call graph to a file.");
         System.out.println("\t--PRINT-ANNO-PERM-DEF: Print available permission def annoations.");
+        System.out.println("\t--COLLECT-PERM-ANNO-ONLY: Only collect permission annotations. Do not run DroidPerm.");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");
@@ -469,11 +482,16 @@ public class DroidPermMain {
         }
     }
 
-    private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws IOException {
+    private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws IOException, JAXBException {
         initTime = System.nanoTime();
 
         // Directory handling
         System.out.println("Analyzing file " + apkFile + "...");
+
+        if (collectPermAnnoOnly) {
+            collectPermAnno(apkFile);
+            return;
+        }
 
         // Run FlowDroid
         System.gc();
@@ -496,6 +514,24 @@ public class DroidPermMain {
         IPermissionDefProvider permDefProvider = getPermDefProvider();
         new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
+    }
+
+    private static void collectPermAnno(File apkFile) throws JAXBException, IOException {
+        String apkFilePath = apkFile.getAbsolutePath();
+
+        Options.v().set_allow_phantom_refs(true);
+        Options.v().set_src_prec(Options.src_prec_apk_class_jimple);
+        Options.v().set_process_dir(Collections.singletonList(apkFilePath));
+        Options.v().set_soot_classpath(apkFilePath);
+        Main.v().autoSetOptions();
+        Scene.v().loadNecessaryClasses();
+
+        PermAnnotationService.printAnnoPermDefs();
+        if (xmlOut != null) {
+            PermissionDefList out = new PermissionDefList();
+            out.setPermissionDefs(PermAnnotationService.getPermissionDefs());
+            XmlPermDefMiner.save(out, xmlOut);
+        }
     }
 
     private static IPermissionDefProvider getPermDefProvider() throws IOException {
