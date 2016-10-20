@@ -17,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +34,6 @@ public class XmlPermDefMiner {
      *
      * @param file .xml file to be turned into objects
      * @return A JaxbItemList object
-     * @throws JAXBException
      */
     public static JaxbItemList unmarshallXML(File file) throws JAXBException {
 
@@ -58,7 +56,6 @@ public class XmlPermDefMiner {
      *
      * @param data JaxbItemList to be marshalled
      * @param file file to marshall the data into
-     * @throws JAXBException
      */
     public static void marshallXML(JaxbItemList data, File file) throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(JaxbItemList.class);
@@ -157,7 +154,7 @@ public class XmlPermDefMiner {
 
             //This check ensure that any Java generics information is removed from the string
             if (firstBuilder.toString().contains("<")) {
-                firstBuilder = scrubJavaGenerics(permissionDef, firstBuilder);
+                firstBuilder = scrubJavaGenerics(firstBuilder);
             }
             String beforeProcessingInner = firstBuilder.toString().trim();
             String signature = processInnerClasses(beforeProcessingInner);
@@ -203,10 +200,7 @@ public class XmlPermDefMiner {
      * object and gives it to a PermissionDef object.
      */
     private void extractPermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
-        Iterator<JaxbAnnotation> jaxbAnnotationIterator = jaxbItem.getAnnotations().iterator();
-        while (jaxbAnnotationIterator.hasNext()) {
-            JaxbAnnotation jaxbAnnotation = jaxbAnnotationIterator.next();
-
+        for (JaxbAnnotation jaxbAnnotation : jaxbItem.getAnnotations()) {
             //noinspection Convert2streamapi
             for (JaxbVal jaxbVal : jaxbAnnotation.getVals()) {
                 //When a value has the name 'apis' its value is not a permission, so we don't store it
@@ -249,7 +243,7 @@ public class XmlPermDefMiner {
      * This function removes any java generics information from the methods that require permissions. It is a helper the
      * ItemsToPermissionDef function
      */
-    private StringBuilder scrubJavaGenerics(PermissionDef permissionDef, StringBuilder firstBuilder) {
+    private StringBuilder scrubJavaGenerics(StringBuilder firstBuilder) {
 
         //Java generics are in greater than/less than brackets so we breakup the string on them
         String delims = "[<>]+";
