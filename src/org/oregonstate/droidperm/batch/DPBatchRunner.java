@@ -1,8 +1,12 @@
 package org.oregonstate.droidperm.batch;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import soot.jimple.infoflow.InfoflowConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +29,28 @@ public class DPBatchRunner {
             new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks"};
     private static final String[] TAINT_DISABLED_OPTS = new String[]{"--taint-analysis-enabled", "false"};
 
+    @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
+    private File appsDir;
+
+    @Parameter(names = "--drood-perm-home", description = "Path to DroidPerm standalone installation dir",
+            required = true)
+    private File droidPermHomeDir;
+
+    @Parameter(names = "--log-dir", description = "Directory where log files will be stored", required = true)
+    private File logDir;
+
+    @Parameter(names = "--taint-analysis", description = "If specified, taint analysis will be enabled")
+    private boolean taintAnalysisEnabled;
+
+    @Parameter(names = "--cg-algo", description = "The call graph algorithm")
+    private InfoflowConfiguration.CallgraphAlgorithm cgAlgo = InfoflowConfiguration.CallgraphAlgorithm.GEOM;
+
+    @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space")
+    private String vmArgs;
+
+    @Parameter(names = "--help", help = true)
+    private boolean help = false;
+
     /**
      * Run droidPerm on all the apps in the given directory.
      * <p>
@@ -46,30 +72,38 @@ public class DPBatchRunner {
      * heap memory: -Xmx4g
      */
     public static void main(final String[] args) throws IOException, InterruptedException {
-        String appsDir = args[0];
-        String droidPermHomeDir = args[1];
-        String outputLogsDir = args[2];
-        boolean taintAnalysisEnabled = "--taint-analysis-enabled".equals(args[3]);
-        String cgAlgo = args[4].equals("--cgalgo=GEOM") ? "GEOM" : "SPARK";
-        String[] vmArgs = args.length > 5 ? args[5].split("\\s+") : new String[]{};
-        logger.info("appsDir: " + appsDir);
-        logger.info("droidPermHomeDir: " + droidPermHomeDir);
-        logger.info("outputLogsDir: " + outputLogsDir);
-        logger.info("taintAnalysisEnabled: " + taintAnalysisEnabled);
-        logger.info("cgalgo: " + cgAlgo);
-        logger.info("vmArgs: " + Arrays.toString(vmArgs) + "\n");
-        long startTime = System.currentTimeMillis();
-
-        batchRun(appsDir, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, cgAlgo, vmArgs);
-
-        logger.info(
-                "\n\nBatch runner total execution time: " + (System.currentTimeMillis() - startTime) / 1E3 + " sec");
+        DPBatchRunner main = new DPBatchRunner();
+        JCommander jCommander = new JCommander(main);
+        try {
+            jCommander.parse(args);
+            if (main.help) {
+                jCommander.usage();
+                return;
+            }
+            long startTime = System.currentTimeMillis();
+            main.batchRun();
+            long endTime = System.currentTimeMillis();
+            logger.info("\n\nBatch runner total execution time: " + (endTime - startTime) / 1E3 + " sec");
+        } catch (ParameterException e) {
+            System.err.println(e.getLocalizedMessage());
+            System.err.println();
+            StringBuilder sb = new StringBuilder();
+            jCommander.usage(sb);
+            System.err.println(sb.toString());
+            System.exit(1);
+        }
     }
 
-    private static void batchRun(String appsDir, String droidPermHomeDir, String outputLogsDir,
-                                 boolean taintAnalysisEnabled, String cgAlgo, String[] vmArgs) throws IOException {
-        Files.createDirectories(Paths.get(outputLogsDir));
-        Map<String, List<Path>> appNamesToApksMap = Files.list(Paths.get(appsDir)).sorted()
+    private void batchRun() throws IOException {
+        logger.info("appsDir: " + appsDir);
+        logger.info("droidPermHomeDir: " + droidPermHomeDir);
+        logger.info("logDir: " + logDir);
+        logger.info("taintAnalysisEnabled: " + taintAnalysisEnabled);
+        logger.info("cgalgo: " + cgAlgo);
+        logger.info("vmArgs: " + vmArgs + "\n");
+
+        Files.createDirectories(logDir.toPath());
+        Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir.toPath()).sorted()
                 .filter(path -> Files.isDirectory(path))
                 .collect(Collectors.toMap(
                         path -> path.getFileName().toString(),
@@ -101,27 +135,27 @@ public class DPBatchRunner {
                 }
             }
             Path apk = apks.get(0);
-            analyzeApp(appName, apk, droidPermHomeDir, outputLogsDir, taintAnalysisEnabled, cgAlgo, vmArgs);
+            analyzeApp(appName, apk);
         }
     }
 
-    private static void analyzeApp(String appName, Path apk, String droidPermHomeDir, String outputLogsDir,
-                                   boolean taintAnalysisEnabled, String cgAlgo, String[] vmArgs)
-            throws IOException {
+    private void analyzeApp(String appName, Path apk) throws IOException {
         String droidPermClassPath = droidPermHomeDir + "/droid-perm.jar";
         String androidClassPath = droidPermHomeDir + "/android-23-cr+util_io.zip";
-        Path logFile = Paths.get(outputLogsDir, appName + ".log");
-        Path errorFile = Paths.get(outputLogsDir, appName + ".error.log");
+        Path logFile = Paths.get(logDir.toString(), appName + ".log");
+        Path errorFile = Paths.get(logDir.toString(), appName + ".error.log");
 
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("java");
-        processBuilderArgs.addAll(Arrays.asList(vmArgs));
+        if (vmArgs != null) {
+            processBuilderArgs.addAll(Arrays.asList(vmArgs.split("\\s+")));
+        }
         processBuilderArgs.addAll(Arrays.asList(
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
                 androidClassPath));
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
         processBuilderArgs.add(CG_ALGO_OPT);
-        processBuilderArgs.add(cgAlgo);
+        processBuilderArgs.add(cgAlgo.name());
         if (taintAnalysisEnabled) {
             processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
         } else {
@@ -129,7 +163,7 @@ public class DPBatchRunner {
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(processBuilderArgs)
-                .directory(new File(droidPermHomeDir))
+                .directory(droidPermHomeDir)
                 .redirectOutput(ProcessBuilder.Redirect.to(logFile.toFile()))
                 .redirectError(ProcessBuilder.Redirect.to(errorFile.toFile()));
 
