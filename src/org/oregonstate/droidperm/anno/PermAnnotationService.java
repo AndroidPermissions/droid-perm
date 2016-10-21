@@ -13,6 +13,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/13/2016.
@@ -84,15 +85,14 @@ public class PermAnnotationService {
         if (visAnnotationTag != null) {
             Collection<AnnotationElem> elems = visAnnotationTag.getAnnotations().stream()
                     .filter(anno -> anno.getType().equals("Landroid/support/annotation/RequiresPermission;"))
-                    .map(AnnotationTag::getElems)
-                    .findAny().orElse(null);
-            if (elems != null) {
-                if (elems.size() == 1) {
-                    return elems.iterator().next();
-                } else {
-                    throw new RuntimeException(
-                            "More than 1 RequiresPermission annotation per host " + host + " : " + elems);
-                }
+                    .flatMap(anno -> anno.getElems().stream())
+                    .filter(elem -> !elem.getName().equals("conditional")) //anything else represents values
+                    .collect(Collectors.toList());
+            if (elems.size() == 1) {
+                return elems.iterator().next();
+            } else if (elems.size() > 1) {
+                throw new RuntimeException(
+                        "More than 1 RequiresPermission annotation per host " + host + " : " + elems);
             }
         }
         return null;
