@@ -22,7 +22,7 @@ public class XMLPermissionDefParser {
     private Set<AndroidMethod> sensitiveDefs;
 
     public XMLPermissionDefParser(File xmlPermDefFile) throws JAXBException {
-        sensitiveDefs = buildXmlSensitives(XmlPermDefMiner.unmarshallPermDefs(xmlPermDefFile).getPermissionDefs());
+        sensitiveDefs = buildXmlSensitives(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
     }
 
     public static Set<AndroidMethod> buildXmlSensitives(List<PermissionDef> permissionDefs) {

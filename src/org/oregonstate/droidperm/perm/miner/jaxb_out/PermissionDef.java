@@ -68,4 +68,39 @@ public class PermissionDef {
     public void addPermission(Permission permission) {
         this.permissions.add(permission);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        PermissionDef that = (PermissionDef) o;
+
+        if (className != null ? !className.equals(that.className) : that.className != null) {
+            return false;
+        }
+        return targetName != null ? targetName.equals(that.targetName) : that.targetName == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = className != null ? className.hashCode() : 0;
+        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "PermissionDef{" +
+                "className='" + className + '\'' +
+                ", targetName='" + targetName + '\'' +
+                ", targetType=" + targetType +
+                ", permissionRel=" + permissionRel +
+                ", permissions=" + permissions +
+                '}';
+    }
 }

@@ -524,6 +524,7 @@ public class DroidPermMain {
         Options.v().set_src_prec(Options.src_prec_apk_class_jimple);
         Options.v().set_process_dir(Collections.singletonList(apkFilePath));
         Options.v().set_soot_classpath(apkFilePath);
+        Options.v().set_process_multiple_dex(true);
         Main.v().autoSetOptions();
         Scene.v().loadNecessaryClasses();
 

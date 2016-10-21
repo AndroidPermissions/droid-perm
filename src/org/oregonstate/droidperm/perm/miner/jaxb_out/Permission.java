@@ -36,4 +36,32 @@ public class Permission {
     public void setOperationType(OperationType operationType) {
         this.operationType = operationType;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Permission that = (Permission) o;
+        return name != null ? name.equals(that.name) : that.name == null && operationType == that.operationType;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (operationType != null ? operationType.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "name='" + name + '\'' +
+                ", operationType=" + operationType +
+                '}';
+    }
 }

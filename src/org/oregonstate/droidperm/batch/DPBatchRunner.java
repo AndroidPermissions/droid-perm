@@ -3,12 +3,15 @@ package org.oregonstate.droidperm.batch;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.InfoflowConfiguration;
 
-import java.io.File;
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,14 +33,14 @@ public class DPBatchRunner {
     private static final String[] TAINT_DISABLED_OPTS = new String[]{"--taint-analysis-enabled", "false"};
 
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
-    private File appsDir;
+    private Path appsDir;
 
     @Parameter(names = "--droid-perm-home", description = "Path to DroidPerm standalone installation dir",
             required = true)
-    private File droidPermHomeDir;
+    private Path droidPermHomeDir;
 
     @Parameter(names = "--log-dir", description = "Directory where log files will be stored", required = true)
-    private File logDir;
+    private Path logDir;
 
     @Parameter(names = "--taint-analysis", description = "If specified, taint analysis will be enabled")
     private boolean taintAnalysisEnabled;
@@ -45,7 +48,8 @@ public class DPBatchRunner {
     @Parameter(names = "--cg-algo", description = "The call graph algorithm")
     private InfoflowConfiguration.CallgraphAlgorithm cgAlgo = InfoflowConfiguration.CallgraphAlgorithm.GEOM;
 
-    @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space")
+    @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space. "
+            + "If more than one, they should be included into quotes (\"\").")
     private String vmArgs;
 
     @Parameter(names = "--collect-anno-mode", description = "Annotation collection mode. DroidPerm won't be executed.")
@@ -53,6 +57,8 @@ public class DPBatchRunner {
 
     @Parameter(names = "--help", help = true)
     private boolean help = false;
+
+    private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -74,7 +80,7 @@ public class DPBatchRunner {
      * args[5] = list of VM arguments, in quotes if more than one. Could be left empty. Recommended value to increase
      * heap memory: -Xmx4g
      */
-    public static void main(final String[] args) throws IOException, InterruptedException {
+    public static void main(final String[] args) throws IOException, InterruptedException, JAXBException {
         DPBatchRunner main = new DPBatchRunner();
         JCommander jCommander = new JCommander(main);
         try {
@@ -97,7 +103,7 @@ public class DPBatchRunner {
         }
     }
 
-    private void batchRun() throws IOException {
+    private void batchRun() throws IOException, JAXBException {
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
@@ -106,8 +112,8 @@ public class DPBatchRunner {
         logger.info("vmArgs: " + vmArgs);
         logger.info("collectAnnoMode: " + collectAnnoMode + "\n");
 
-        Files.createDirectories(logDir.toPath());
-        Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir.toPath()).sorted()
+        Files.createDirectories(logDir);
+        Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir).sorted()
                 .filter(path -> Files.isDirectory(path))
                 .collect(Collectors.toMap(
                         path -> path.getFileName().toString(),
@@ -141,13 +147,21 @@ public class DPBatchRunner {
             Path apk = apks.get(0);
             analyzeApp(appName, apk);
         }
+
+        if (collectAnnoMode) {
+            Path aggregateAnnoFile = Paths.get(logDir.toString(), "_collected_perm_anno.xml");
+            PermissionDefList out = new PermissionDefList();
+            out.setPermissionDefs(new ArrayList<>(permissionDefs.keySet()));
+            XmlPermDefMiner.save(out, aggregateAnnoFile.toFile());
+        }
     }
 
-    private void analyzeApp(String appName, Path apk) throws IOException {
+    private void analyzeApp(String appName, Path apk) throws IOException, JAXBException {
         String droidPermClassPath = droidPermHomeDir + "/droid-perm.jar";
         String androidClassPath = droidPermHomeDir + "/android-23-cr+util_io.zip";
         Path logFile = Paths.get(logDir.toString(), appName + ".log");
         Path errorFile = Paths.get(logDir.toString(), appName + ".error.log");
+        Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
 
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("java");
@@ -161,7 +175,6 @@ public class DPBatchRunner {
         processBuilderArgs.add(CG_ALGO_OPT);
         processBuilderArgs.add(cgAlgo.name());
         if (collectAnnoMode) {
-            Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
             processBuilderArgs.addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-ONLY"));
         } else if (taintAnalysisEnabled) {
             processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
@@ -170,7 +183,7 @@ public class DPBatchRunner {
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(processBuilderArgs)
-                .directory(droidPermHomeDir)
+                .directory(droidPermHomeDir.toFile())
                 .redirectOutput(ProcessBuilder.Redirect.to(logFile.toFile()))
                 .redirectError(ProcessBuilder.Redirect.to(errorFile.toFile()));
 
@@ -185,11 +198,31 @@ public class DPBatchRunner {
             logger.info(appName + " analyzed: " + (newTime - time) / 1E3 + " sec");
             if (exitCode != 0) {
                 logger.error(appName + " analysis returned exit code " + exitCode);
+            } else {
+                if (collectAnnoMode) {
+                    collectAnnotations(annoXmlFile);
+                }
             }
-
         } catch (InterruptedException e) {
             process.destroy();
             throw new RuntimeException(e);
+        }
+    }
+
+    private void collectAnnotations(Path annoXmlFile) throws JAXBException {
+        List<PermissionDef> newAnnos = XmlPermDefMiner.load(annoXmlFile.toFile()).getPermissionDefs();
+        Set<PermissionDef> existingAnnos = new LinkedHashSet<>(newAnnos);
+        existingAnnos.retainAll(permissionDefs.keySet());
+        existingAnnos.stream()
+                .filter(def -> !new HashSet<>(def.getPermissions())
+                        .equals(new HashSet<>(permissionDefs.get(def).getPermissions())))
+                .forEach(def -> logger.warn("Different set of permissions found for " + def));
+
+        newAnnos.removeAll(permissionDefs.keySet());
+        if (!newAnnos.isEmpty()) {
+            logger.info("New annotaions: " + newAnnos.size());
+            logger.info("New annotaions: " + newAnnos);
+            newAnnos.forEach(newAnno -> permissionDefs.put(newAnno, newAnno));
         }
     }
 }
