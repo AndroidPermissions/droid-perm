@@ -14,16 +14,12 @@ import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
 import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
-import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
-import soot.Main;
-import soot.Scene;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
@@ -490,7 +486,7 @@ public class DroidPermMain {
         System.out.println("Analyzing file " + apkFile + "...");
 
         if (collectPermAnnoOnly) {
-            collectPermAnno(apkFile);
+            PermAnnotationService.collectPermAnno(apkFile, xmlOut);
             return;
         }
 
@@ -515,25 +511,6 @@ public class DroidPermMain {
         IPermissionDefProvider permDefProvider = getPermDefProvider();
         new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
-    }
-
-    private static void collectPermAnno(File apkFile) throws JAXBException, IOException {
-        String apkFilePath = apkFile.getAbsolutePath();
-
-        Options.v().set_allow_phantom_refs(true);
-        Options.v().set_src_prec(Options.src_prec_apk_class_jimple);
-        Options.v().set_process_dir(Collections.singletonList(apkFilePath));
-        Options.v().set_soot_classpath(apkFilePath);
-        Options.v().set_process_multiple_dex(true);
-        Main.v().autoSetOptions();
-        Scene.v().loadNecessaryClasses();
-
-        PermAnnotationService.printAnnoPermDefs();
-        if (xmlOut != null) {
-            PermissionDefList out = new PermissionDefList();
-            out.setPermissionDefs(PermAnnotationService.getPermissionDefs());
-            XmlPermDefMiner.save(out, xmlOut);
-        }
     }
 
     private static IPermissionDefProvider getPermDefProvider() throws IOException {
