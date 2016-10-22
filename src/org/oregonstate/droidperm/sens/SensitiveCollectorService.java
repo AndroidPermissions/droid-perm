@@ -1,10 +1,15 @@
 package org.oregonstate.droidperm.sens;
 
 import org.oregonstate.droidperm.util.UndetectedItemsUtil;
+import soot.SootMethod;
+import soot.jimple.Stmt;
 import soot.jimple.infoflow.android.data.AndroidMethod;
+import soot.toolkits.scalar.Pair;
+import soot.util.MultiMap;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -13,6 +18,14 @@ import java.util.Set;
 public class SensitiveCollectorService {
 
     public static void printHierarchySensitives(Set<AndroidMethod> sensitiveDefs) throws IOException {
-        UndetectedItemsUtil.printUndetectedSensitives(sensitiveDefs, Collections.emptySet(), Collections.emptySet());
+        long startTime = System.currentTimeMillis();
+
+        Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap =
+                UndetectedItemsUtil
+                        .buildPermToUndetectedSensMap(sensitiveDefs, Collections.emptySet(), Collections.emptySet());
+        UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedSensMap, "Collected sensitives");
+
+        System.out.println("\nTime to collect sensitives: "
+                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 }

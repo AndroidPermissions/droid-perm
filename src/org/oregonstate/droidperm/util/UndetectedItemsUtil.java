@@ -65,6 +65,17 @@ public class UndetectedItemsUtil {
     public static void printUndetectedSensitives(Set<AndroidMethod> sensitiveDefs, Set<Edge> detected,
                                                  Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
+
+        Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap =
+                buildPermToUndetectedSensMap(sensitiveDefs, detected, outflowIgnoreSet);
+        printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
+
+        System.out.println("\nUndetected sensitives execution time: "
+                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
+    }
+
+    public static Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> buildPermToUndetectedSensMap(
+            Set<AndroidMethod> sensitiveDefs, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
         Map<AndroidMethod, List<SootMethod>> sensDefToSensMap =
                 HierarchyUtil.resolveAbstractDispatchesToMap(sensitiveDefs);
         Map<Set<String>, List<AndroidMethod>> permissionToSensitiveDefMap = sensitiveDefs.stream()
@@ -72,8 +83,7 @@ public class UndetectedItemsUtil {
 
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedSens =
                 getUndetectedCalls(sensitiveDefs, detected, outflowIgnoreSet);
-        Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap
-                = permissionToSensitiveDefMap.keySet().stream().collect(Collectors.toMap(
+        return permissionToSensitiveDefMap.keySet().stream().collect(Collectors.toMap(
                 permSet -> permSet,
                 permSet -> permissionToSensitiveDefMap.get(permSet).stream()
                         .flatMap(androMeth -> sensDefToSensMap.get(androMeth).stream())
@@ -82,8 +92,14 @@ public class UndetectedItemsUtil {
                                 AbstractMultiMap::putAll
                         )
         ));
+    }
 
-        System.out.println("\n\nUndetected sensitives : " + undetectedSens.values().size() + "\n"
+    public static void printUndetectedSensitives(
+            Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap,
+            final String header) {
+        int count = permToUndetectedSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
+
+        System.out.println("\n\n" + header + " : " + count + "\n"
                 + "========================================================================");
         for (Set<String> permSet : permToUndetectedSensMap.keySet()) {
             MultiMap<SootMethod, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedSensMap.get(permSet);
@@ -98,7 +114,5 @@ public class UndetectedItemsUtil {
                 }
             }
         }
-        System.out.println("\nUndetected sensitives execution time: "
-                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 }
