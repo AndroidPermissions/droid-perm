@@ -3,9 +3,11 @@ package org.oregonstate.droidperm.anno;
 import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
-import soot.*;
+import soot.Scene;
+import soot.SootClass;
+import soot.SootField;
+import soot.SootMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod;
-import soot.options.Options;
 import soot.tagkit.*;
 
 import javax.xml.bind.JAXBContext;
@@ -123,17 +125,7 @@ public class PermAnnotationService {
         return XMLPermissionDefParser.buildXmlSensitives(getPermissionDefs());
     }
 
-    public static void collectPermAnno(File apkFile, File xmlOut) throws JAXBException, IOException {
-        String apkFilePath = apkFile.getAbsolutePath();
-
-        Options.v().set_allow_phantom_refs(true);
-        Options.v().set_src_prec(Options.src_prec_apk_class_jimple);
-        Options.v().set_process_dir(Collections.singletonList(apkFilePath));
-        Options.v().set_soot_classpath(apkFilePath);
-        Options.v().set_process_multiple_dex(true);
-        Main.v().autoSetOptions();
-        Scene.v().loadNecessaryClasses();
-
+    public static void collectPermAnno(File xmlOut) throws JAXBException, IOException {
         printAnnoPermDefs();
         if (xmlOut != null) {
             PermissionDefList out = new PermissionDefList();

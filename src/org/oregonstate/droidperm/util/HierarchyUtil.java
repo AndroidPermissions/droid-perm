@@ -104,9 +104,10 @@ public class HierarchyUtil {
             if (method == null) {
                 if (clazz.isPhantom()) {
                     System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
+                } else {
+                    System.err.println("Existing methods in " + clazz + " :");
+                    clazz.getMethods().forEach(System.err::println);
                 }
-                System.err.println("Existing methods in " + clazz + " :");
-                clazz.getMethods().forEach(System.err::println);
                 throw new RuntimeException(
                         "Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
 //                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
