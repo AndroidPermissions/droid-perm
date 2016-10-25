@@ -3,7 +3,7 @@ package org.oregonstate.droidperm.perm;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.TargetType;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 
 import javax.xml.bind.JAXBException;
@@ -34,8 +34,8 @@ public class XMLPermissionDefParser {
 
         for (PermissionDef permissionDef : permissionDefs) {
             //todo permissions targeting fields are ignored for the moment
-            if (permissionDef.getTargetType() == TargetType.Method) {
-                String[] tokens = permissionDef.getTargetName().split(delimiters);
+            if (permissionDef.getTargetKind() == PermTargetKind.Method) {
+                String[] tokens = permissionDef.getTarget().split(delimiters);
                 returnType = tokens[0].trim();
                 targetName = tokens[1].trim();
 

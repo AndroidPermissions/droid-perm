@@ -158,14 +158,14 @@ public class XmlPermDefMiner {
             }
             String beforeProcessingInner = firstBuilder.toString().trim();
             String signature = processInnerClasses(beforeProcessingInner);
-            permissionDef.setTargetName(signature);
+            permissionDef.setTarget(signature);
 
             //Here we determine if the target of the permission is a method or a field
-            if (permissionDef.getTargetName().contains("(")
-                    && permissionDef.getTargetName().contains(")")) {
-                permissionDef.setTargetType(TargetType.Method);
+            if (permissionDef.getTarget().contains("(")
+                    && permissionDef.getTarget().contains(")")) {
+                permissionDef.setTargetKind(PermTargetKind.Method);
             } else {
-                permissionDef.setTargetType(TargetType.Field);
+                permissionDef.setTargetKind(PermTargetKind.Field);
             }
 
             //Finally iterate through the annotations, extract the relevant information and put it in a PermDef object
@@ -215,10 +215,10 @@ public class XmlPermDefMiner {
 
                             //This block handles the extra Read or Write tag that may be attached to a permission
                             if (jaxbAnnotation.getName().contains("Read")) {
-                                permission.setOperationType(OperationType.Read);
+                                permission.setOperationKind(OperationKind.Read);
                             }
                             if (jaxbAnnotation.getName().contains("Write")) {
-                                permission.setOperationType(OperationType.Write);
+                                permission.setOperationKind(OperationKind.Write);
                             }
 
                             permissionDef.addPermission(permission);

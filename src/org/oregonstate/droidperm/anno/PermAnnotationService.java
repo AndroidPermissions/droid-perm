@@ -38,13 +38,13 @@ public class PermAnnotationService {
         for (SootClass sootClass : Scene.v().getApplicationClasses()) {
             for (SootMethod meth : sootClass.getMethods()) {
                 PermissionDef permDef = getPermissionDef(meth, sootClass.getName(), meth.getSubSignature(),
-                        TargetType.Method);
+                        PermTargetKind.Method);
                 if (permDef != null) {
                     list.add(permDef);
                 }
             }
             for (SootField field : sootClass.getFields()) {
-                PermissionDef permDef = getPermissionDef(field, sootClass.getName(), field.getName(), TargetType.Field);
+                PermissionDef permDef = getPermissionDef(field, sootClass.getName(), field.getName(), PermTargetKind.Field);
                 if (permDef != null) {
                     list.add(permDef);
                 }
@@ -54,14 +54,14 @@ public class PermAnnotationService {
     }
 
     private static PermissionDef getPermissionDef(Host target, String className, String targetName,
-                                                  TargetType targetType) {
+                                                  PermTargetKind targetType) {
         AnnotationElem reqPermAnno = getAnnotationElem(target);
         if (reqPermAnno != null) {
             PermissionDef permDef;
             permDef = new PermissionDef();
             permDef.setClassName(className);
-            permDef.setTargetName(targetName);
-            permDef.setTargetType(targetType);
+            permDef.setTarget(targetName);
+            permDef.setTargetKind(targetType);
             if (reqPermAnno instanceof AnnotationStringElem) {
                 AnnotationStringElem stringPermAnno = (AnnotationStringElem) reqPermAnno;
                 permDef.addPermission(new Permission(stringPermAnno.getValue(), null));

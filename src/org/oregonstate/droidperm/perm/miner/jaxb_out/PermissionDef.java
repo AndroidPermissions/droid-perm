@@ -12,9 +12,9 @@ import java.util.List;
 @XmlRootElement
 public class PermissionDef {
     private String className;
-    private String targetName;
-    private TargetType targetType;
-    private PermissionRel permissionRel = PermissionRel.AllOf;
+    private String target;
+    private PermTargetKind targetKind;
+    private PermissionRel permissionRel;
     private List<Permission> permissions = new ArrayList<>();
 
     public PermissionDef() {
@@ -30,21 +30,21 @@ public class PermissionDef {
     }
 
     @XmlAttribute
-    public String getTargetName() {
-        return targetName;
+    public String getTarget() {
+        return target;
     }
 
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
+    public void setTarget(String target) {
+        this.target = target;
     }
 
     @XmlAttribute
-    public TargetType getTargetType() {
-        return targetType;
+    public PermTargetKind getTargetKind() {
+        return targetKind;
     }
 
-    public void setTargetType(TargetType targetType) {
-        this.targetType = targetType;
+    public void setTargetKind(PermTargetKind targetKind) {
+        this.targetKind = targetKind;
     }
 
     @XmlAttribute
@@ -83,13 +83,13 @@ public class PermissionDef {
         if (className != null ? !className.equals(that.className) : that.className != null) {
             return false;
         }
-        return targetName != null ? targetName.equals(that.targetName) : that.targetName == null;
+        return target != null ? target.equals(that.target) : that.target == null;
     }
 
     @Override
     public int hashCode() {
         int result = className != null ? className.hashCode() : 0;
-        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
+        result = 31 * result + (target != null ? target.hashCode() : 0);
         return result;
     }
 
@@ -97,8 +97,8 @@ public class PermissionDef {
     public String toString() {
         return "PermissionDef{" +
                 "className='" + className + '\'' +
-                ", targetName='" + targetName + '\'' +
-                ", targetType=" + targetType +
+                ", target='" + target + '\'' +
+                ", targetKind=" + targetKind +
                 ", permissionRel=" + permissionRel +
                 ", permissions=" + permissions +
                 '}';

@@ -9,14 +9,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Permission {
     private String name;
-    private OperationType operationType;
+    private OperationKind operationKind;
 
     public Permission() {
     }
 
-    public Permission(String name, OperationType operationType) {
+    public Permission(String name, OperationKind operationKind) {
         this.name = name;
-        this.operationType = operationType;
+        this.operationKind = operationKind;
     }
 
     @XmlAttribute
@@ -29,12 +29,12 @@ public class Permission {
     }
 
     @XmlAttribute
-    public OperationType getOperationType() {
-        return operationType;
+    public OperationKind getOperationKind() {
+        return operationKind;
     }
 
-    public void setOperationType(OperationType operationType) {
-        this.operationType = operationType;
+    public void setOperationKind(OperationKind operationKind) {
+        this.operationKind = operationKind;
     }
 
     @Override
@@ -47,13 +47,13 @@ public class Permission {
         }
 
         Permission that = (Permission) o;
-        return name != null ? name.equals(that.name) : that.name == null && operationType == that.operationType;
+        return name != null ? name.equals(that.name) : that.name == null && operationKind == that.operationKind;
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (operationType != null ? operationType.hashCode() : 0);
+        result = 31 * result + (operationKind != null ? operationKind.hashCode() : 0);
         return result;
     }
 
@@ -61,7 +61,7 @@ public class Permission {
     public String toString() {
         return "Permission{" +
                 "name='" + name + '\'' +
-                ", operationType=" + operationType +
+                ", operationKind=" + operationKind +
                 '}';
     }
 }
