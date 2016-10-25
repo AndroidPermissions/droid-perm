@@ -39,7 +39,7 @@ public class XMLPermissionDefParser {
         int firstSpace = permissionDef.getTarget().indexOf(' ');
         String returnType = permissionDef.getTarget().substring(0, firstSpace);
         String nameAndParams = permissionDef.getTarget().substring(firstSpace).trim();
-        String[] nameThenParams = nameAndParams.split("[\\(\\)]");
+        String[] nameThenParams = nameAndParams.split("[()]");
         String methodName = nameThenParams[0];
 
         //deleting all spaces here. If array length is 1, then param lsit is empty.
