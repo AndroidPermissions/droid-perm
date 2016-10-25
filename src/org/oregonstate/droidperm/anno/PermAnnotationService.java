@@ -122,7 +122,7 @@ public class PermAnnotationService {
     }
 
     public static Set<AndroidMethod> getSensitiveDefs() {
-        return XMLPermissionDefParser.buildXmlSensitives(getPermissionDefs());
+        return XMLPermissionDefParser.buildSensitiveDefs(getPermissionDefs());
     }
 
     public static void collectPermAnno(File xmlOut) throws JAXBException, IOException {

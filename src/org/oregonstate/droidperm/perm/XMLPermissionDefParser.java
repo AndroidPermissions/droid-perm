@@ -1,14 +1,14 @@
 package org.oregonstate.droidperm.perm;
 
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,45 +19,36 @@ import java.util.stream.Collectors;
  */
 public class XMLPermissionDefParser {
 
-    private Set<AndroidMethod> sensitiveDefs;
-
-    public XMLPermissionDefParser(File xmlPermDefFile) throws JAXBException {
-        sensitiveDefs = buildXmlSensitives(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
+    public static Set<AndroidMethod> buildSensitiveDefs(File xmlPermDefFile) throws JAXBException {
+        return buildSensitiveDefs(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
     }
 
-    public static Set<AndroidMethod> buildXmlSensitives(List<PermissionDef> permissionDefs) {
+    public static Set<AndroidMethod> buildSensitiveDefs(List<PermissionDef> permissionDefs) {
         Set<AndroidMethod> xmlSensitives = new LinkedHashSet<>();
-        String delimiters = "[ \\(\\),]+";
-        String returnType;
-        String targetName;
-
-
         for (PermissionDef permissionDef : permissionDefs) {
             //todo permissions targeting fields are ignored for the moment
             if (permissionDef.getTargetKind() == PermTargetKind.Method) {
-                String[] tokens = permissionDef.getTarget().split(delimiters);
-                returnType = tokens[0].trim();
-                targetName = tokens[1].trim();
-
-                List<String> parameters = new ArrayList<>();
-                for (int i = 2; i < tokens.length; i++) {
-                    if (tokens[i].length() > 1) {
-                        parameters.add(tokens[i].trim());
-                    }
-                }
-
-                Set<String> permissions = permissionDef.getPermissions().stream().map(Permission::getName)
-                        .collect(Collectors.toSet());
-
-                AndroidMethod sensitiveDef = new AndroidMethod(targetName, parameters, returnType,
-                        permissionDef.getClassName(), permissions);
+                AndroidMethod sensitiveDef = toAndroidMethod(permissionDef);
                 xmlSensitives.add(sensitiveDef);
             }
         }
         return xmlSensitives;
     }
 
-    public Set<AndroidMethod> getSensitiveDefs() {
-        return sensitiveDefs;
+    private static AndroidMethod toAndroidMethod(PermissionDef permissionDef) {
+        int firstSpace = permissionDef.getTarget().indexOf(' ');
+        String returnType = permissionDef.getTarget().substring(0, firstSpace);
+        String nameAndParams = permissionDef.getTarget().substring(firstSpace).trim();
+        String[] nameThenParams = nameAndParams.split("[\\(\\)]");
+        String methodName = nameThenParams[0];
+
+        //deleting all spaces here. If array length is 1, then param lsit is empty.
+        String params = nameThenParams.length == 2 ? nameThenParams[1].replaceAll("\\s+", "") : "";
+        List<String> paramList = Arrays.asList(params.split(","));
+
+        Set<String> permissions = permissionDef.getPermissions().stream().map(Permission::getName)
+                .collect(Collectors.toSet());
+
+        return new AndroidMethod(methodName, paramList, returnType, permissionDef.getClassName(), permissions);
     }
 }

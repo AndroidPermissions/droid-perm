@@ -538,7 +538,7 @@ public class DroidPermMain {
             List<Set<AndroidMethod>> permDefSources = new ArrayList<>();
             permDefSources.add(txtPermDefProvider.getSensitiveDefs());
             if (xmlPermDefFile != null) {
-                permDefSources.add(new XMLPermissionDefParser(xmlPermDefFile).getSensitiveDefs());
+                permDefSources.add(XMLPermissionDefParser.buildSensitiveDefs(xmlPermDefFile));
             }
             if (useAnnoPermDef) {
                 permDefSources.add(PermAnnotationService.getSensitiveDefs());

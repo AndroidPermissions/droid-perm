@@ -69,6 +69,10 @@ public class PermissionDef {
         this.permissions.add(permission);
     }
 
+    public String getSubsignature() {
+        return target;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
