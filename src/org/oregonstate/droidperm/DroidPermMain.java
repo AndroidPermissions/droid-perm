@@ -9,12 +9,7 @@ package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
-import org.oregonstate.droidperm.perm.AnnoPermissionDefProvider;
-import org.oregonstate.droidperm.perm.IPermissionDefProvider;
-import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
-import org.oregonstate.droidperm.perm.XMLPermissionDefProvider;
-import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
-import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
+import org.oregonstate.droidperm.perm.*;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
@@ -535,23 +530,15 @@ public class DroidPermMain {
 
     public static IPermissionDefProvider getPermDefProvider() throws IOException {
         try {
-            List<Set<AndroidMethod>> methodPermDefSources = new ArrayList<>();
-            List<Set<FieldSensitiveDef>> fieldPermDefSources = new ArrayList<>();
-
-            TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
-            methodPermDefSources.add(txtPermDefProvider.getMethodSensitiveDefs());
-            fieldPermDefSources.add(txtPermDefProvider.getFieldSensitiveDefs());
+            List<IPermissionDefProvider> providers = new ArrayList<>();
+            providers.add(new TxtPermissionDefProvider(txtPermDefFile));
             if (xmlPermDefFile != null) {
-                XMLPermissionDefProvider xmlProvider = new XMLPermissionDefProvider(xmlPermDefFile);
-                methodPermDefSources.add(xmlProvider.getMethodSensitiveDefs());
-                fieldPermDefSources.add(xmlProvider.getFieldSensitiveDefs());
+                providers.add(new XMLPermissionDefProvider(xmlPermDefFile));
             }
             if (useAnnoPermDef) {
-                methodPermDefSources.add(AnnoPermissionDefProvider.getInstance().getMethodSensitiveDefs());
-                fieldPermDefSources.add(AnnoPermissionDefProvider.getInstance().getFieldSensitiveDefs());
+                providers.add(AnnoPermissionDefProvider.getInstance());
             }
-            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
-                    methodPermDefSources, fieldPermDefSources);
+            return new AggregatePermDefProvider(providers);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }

@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;

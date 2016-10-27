@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 

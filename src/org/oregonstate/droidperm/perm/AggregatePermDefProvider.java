@@ -1,6 +1,5 @@
-package org.oregonstate.droidperm.perm.miner;
+package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.android.data.AndroidMethod;
@@ -9,6 +8,7 @@ import soot.jimple.infoflow.data.SootMethodAndClass;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/14/2016.
@@ -21,24 +21,27 @@ public class AggregatePermDefProvider implements IPermissionDefProvider {
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
 
-    public AggregatePermDefProvider(Set<SootMethodAndClass> permCheckerDefs,
-                                    List<Set<AndroidMethod>> methodSensitiveDefSetList,
-                                    List<Set<FieldSensitiveDef>> fieldSensitiveDefList) {
-        this.permCheckerDefs = Collections.unmodifiableSet(permCheckerDefs);
-        this.methodSensitiveDefs = Collections.unmodifiableSet(
-                computeAndVerifyUniqueSet(methodSensitiveDefSetList, SootMethodAndClass::getSignature,
-                        "method sensitive defs"));
-        this.fieldSensitiveDefs = Collections.unmodifiableSet(
-                computeAndVerifyUniqueSet(fieldSensitiveDefList, FieldSensitiveDef::getPseudoSignature,
-                        "field sensitive defs"));
+    public AggregatePermDefProvider(List<IPermissionDefProvider> sourceProviders) {
+        this.permCheckerDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
+                sourceProviders.stream().map(IPermissionDefProvider::getPermCheckerDefs),
+                SootMethodAndClass::getSignature,
+                "permission checker defs"));
+        this.methodSensitiveDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
+                sourceProviders.stream().map(IPermissionDefProvider::getMethodSensitiveDefs),
+                SootMethodAndClass::getSignature,
+                "method sensitive defs"));
+        this.fieldSensitiveDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
+                sourceProviders.stream().map(IPermissionDefProvider::getFieldSensitiveDefs),
+                FieldSensitiveDef::getPseudoSignature,
+                "field sensitive defs"));
     }
 
-    private static <T> Set<T> computeAndVerifyUniqueSet(Collection<Set<T>> inputSetList,
+    private static <T> Set<T> computeAndVerifyUniqueSet(Stream<Set<T>> inputSetList,
                                                         Function<T, String> sigFunction,
                                                         final String itemsNameForLogging) {
         Set<T> result = new LinkedHashSet<>();
         Set<String> resultSigs = new HashSet<>();
-        for (Set<T> itemSetToAdd : inputSetList) {
+        inputSetList.forEach(itemSetToAdd -> {
             Set<String> sigSetToAdd = itemSetToAdd.stream().map(sigFunction)
                     .collect(Collectors.toSet());
             if (Collections.disjoint(resultSigs, sigSetToAdd)) {
@@ -51,7 +54,7 @@ public class AggregatePermDefProvider implements IPermissionDefProvider {
                 intersection.forEach(System.err::println);
                 throw new RuntimeException("Common " + itemsNameForLogging + " found in 2 sources");
             }
-        }
+        });
         return result;
     }
 

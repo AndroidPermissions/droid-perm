@@ -1,6 +1,5 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.Scene;
@@ -16,7 +15,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -141,7 +143,7 @@ public class AnnoPermissionDefProvider implements IPermissionDefProvider {
 
     @Override
     public Set<SootMethodAndClass> getPermCheckerDefs() {
-        return Collections.emptySet();
+        return xmlPermissionDefProvider.getPermCheckerDefs();
     }
 
     @Override

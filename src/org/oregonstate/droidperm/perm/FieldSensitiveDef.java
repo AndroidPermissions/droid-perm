@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.perm.miner;
+package org.oregonstate.droidperm.perm;
 
 import java.util.Set;
 
