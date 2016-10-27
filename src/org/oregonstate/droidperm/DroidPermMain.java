@@ -542,7 +542,7 @@ public class DroidPermMain {
             methodPermDefSources.add(txtPermDefProvider.getMethodSensitiveDefs());
             fieldPermDefSources.add(txtPermDefProvider.getFieldSensitiveDefs());
             if (xmlPermDefFile != null) {
-                methodPermDefSources.add(XMLPermissionDefParser.buildSensitiveDefs(xmlPermDefFile));
+                methodPermDefSources.add(new XMLPermissionDefParser(xmlPermDefFile).getMethodSensitiveDefs());
             }
             if (useAnnoPermDef) {
                 methodPermDefSources.add(PermAnnotationUtil.getSensitiveDefs());

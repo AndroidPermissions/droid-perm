@@ -1,38 +1,41 @@
 package org.oregonstate.droidperm.perm;
 
+import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import soot.jimple.infoflow.android.data.AndroidMethod;
+import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
  */
-public class XMLPermissionDefParser {
+public class XMLPermissionDefParser implements IPermissionDefProvider {
 
-    public static Set<AndroidMethod> buildSensitiveDefs(File xmlPermDefFile) throws JAXBException {
-        return buildSensitiveDefs(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
+    private final Set<AndroidMethod> methodSensitiveDefs;
+    private final Set<FieldSensitiveDef> fieldSensitiveDefs;
+
+    public XMLPermissionDefParser(File xmlPermDefFile) throws JAXBException {
+        this(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
     }
 
-    public static Set<AndroidMethod> buildSensitiveDefs(List<PermissionDef> permissionDefs) {
-        Set<AndroidMethod> xmlSensitives = new LinkedHashSet<>();
-        for (PermissionDef permissionDef : permissionDefs) {
-            //todo permissions targeting fields are ignored for the moment
-            if (permissionDef.getTargetKind() == PermTargetKind.Method) {
-                AndroidMethod sensitiveDef = toAndroidMethod(permissionDef);
-                xmlSensitives.add(sensitiveDef);
-            }
-        }
-        return xmlSensitives;
+    public XMLPermissionDefParser(List<PermissionDef> permissionDefs) {
+        methodSensitiveDefs = permissionDefs.stream()
+                .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Method)
+                .map(XMLPermissionDefParser::toAndroidMethod).collect(Collectors.toCollection(LinkedHashSet::new));
+        fieldSensitiveDefs = permissionDefs.stream()
+                .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Field)
+                .map(XMLPermissionDefParser::toFieldSensitiveDef).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private static FieldSensitiveDef toFieldSensitiveDef(PermissionDef permissionDef) {
+        return null;//fixme
     }
 
     private static AndroidMethod toAndroidMethod(PermissionDef permissionDef) {
@@ -50,5 +53,20 @@ public class XMLPermissionDefParser {
                 .collect(Collectors.toSet());
 
         return new AndroidMethod(methodName, paramList, returnType, permissionDef.getClassName(), permissions);
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getPermCheckerDefs() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<AndroidMethod> getMethodSensitiveDefs() {
+        return methodSensitiveDefs;
+    }
+
+    @Override
+    public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
+        return fieldSensitiveDefs;
     }
 }

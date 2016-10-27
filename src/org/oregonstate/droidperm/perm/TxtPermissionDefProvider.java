@@ -31,7 +31,7 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 
     private Set<SootMethodAndClass> permCheckerDefs = new LinkedHashSet<>();
-    private Set<AndroidMethod> methodSensitiveDefs = new LinkedHashSet<>();
+    private final Set<AndroidMethod> methodSensitiveDefs = new LinkedHashSet<>();
     private final Set<FieldSensitiveDef> fieldSensitiveDefs = new LinkedHashSet<>();
 
     private List<String> lines;
