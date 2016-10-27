@@ -5,6 +5,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 6/20/2016.
@@ -69,8 +71,8 @@ public class PermissionDef {
         this.permissions.add(permission);
     }
 
-    public String getSubsignature() {
-        return target;
+    public Set<String> getPermissionNames() {
+        return getPermissions().stream().map(Permission::getName).collect(Collectors.toSet());
     }
 
     @Override

@@ -535,14 +535,16 @@ public class DroidPermMain {
 
     public static IPermissionDefProvider getPermDefProvider() throws IOException {
         try {
-            TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
             List<Set<AndroidMethod>> methodPermDefSources = new ArrayList<>();
             List<Set<FieldSensitiveDef>> fieldPermDefSources = new ArrayList<>();
 
+            TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
             methodPermDefSources.add(txtPermDefProvider.getMethodSensitiveDefs());
             fieldPermDefSources.add(txtPermDefProvider.getFieldSensitiveDefs());
             if (xmlPermDefFile != null) {
-                methodPermDefSources.add(new XMLPermissionDefProvider(xmlPermDefFile).getMethodSensitiveDefs());
+                XMLPermissionDefProvider xmlProvider = new XMLPermissionDefProvider(xmlPermDefFile);
+                methodPermDefSources.add(xmlProvider.getMethodSensitiveDefs());
+                fieldPermDefSources.add(xmlProvider.getFieldSensitiveDefs());
             }
             if (useAnnoPermDef) {
                 methodPermDefSources.add(PermAnnotationUtil.getSensitiveDefs());
