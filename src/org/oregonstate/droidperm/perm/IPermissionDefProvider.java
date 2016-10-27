@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.perm;
 
+import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
@@ -12,5 +13,7 @@ public interface IPermissionDefProvider {
 
     Set<SootMethodAndClass> getPermCheckerDefs();
 
-    Set<AndroidMethod> getSensitiveDefs();
+    Set<AndroidMethod> getMethodSensitiveDefs();
+
+    Set<FieldSensitiveDef> getFieldSensitiveDefs();
 }

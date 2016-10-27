@@ -7,6 +7,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm.perm;
 
+import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
@@ -30,16 +31,28 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 
     private Set<SootMethodAndClass> permCheckerDefs = new LinkedHashSet<>();
-    private Set<AndroidMethod> sensitiveDefs = new LinkedHashSet<>();
+    private Set<AndroidMethod> methodSensitiveDefs = new LinkedHashSet<>();
+    private final Set<FieldSensitiveDef> fieldSensitiveDefs = new LinkedHashSet<>();
 
     private List<String> lines;
 
     /**
-     * Groups: 1 = defining class, 2 = return type, 3 = method name, 4 = parameters, 5 = either _PERM_CHECKER_ or a list
-     * of comma-separated permissions
+     * Groups: 1 = method or field sig, 2 = either _PERM_CHECKER_ or a list of comma-separated permissions
      */
-    private static final String regex = "^<(.+):\\s*(.+)\\s+(.+)\\s*\\((.*)\\)>\\s+->\\s+(.+)$";
-    private static final Pattern pattern = Pattern.compile(regex);
+    private static final String mappingRegex = "^(.+)\\s+->\\s+(.+)$";
+    private static final Pattern mappingPattern = Pattern.compile(mappingRegex);
+
+    /**
+     * Groups: 1 = defining class, 2 = return type, 3 = method name, 4 = parameters
+     */
+    private static final String methodSigRegex = "<(.+):\\s*(.+)\\s+(.+)\\s*\\((.*)\\)>";
+    private static final Pattern methodSigPattern = Pattern.compile(methodSigRegex);
+
+    /**
+     * Groups: 1 = defining class, 2 = return type, 3 = method name, 4 = parameters
+     */
+    private static final String fieldSigRegex = "<(.+):\\s*(.+)\\s+(.+)>";
+    private static final Pattern fieldSigPattern = Pattern.compile(fieldSigRegex);
 
     /**
      * Creates a TxtPermissionDefProvider loading data from a file.
@@ -67,31 +80,44 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
                 continue;
             }
 
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                AndroidMethod parsedDef = parsePermissionDef(matcher);
+            boolean parsed = false;
+            Matcher mappingMatcher = mappingPattern.matcher(line);
+            if (mappingMatcher.find()) {
+                Matcher methodSigMatcher = methodSigPattern.matcher(mappingMatcher.group(1));
+                if (methodSigMatcher.find()) {
+                    AndroidMethod parsedDef = parseMethodSensitiveDef(mappingMatcher, methodSigMatcher);
+                    parsed = true;
 
-                if (parsedDef.isSource()) {
-                    permCheckerDefs.add(parsedDef);
-                } else if (parsedDef.isSink()) {
-                    sensitiveDefs.add(parsedDef);
+                    if (parsedDef.isSource()) {
+                        permCheckerDefs.add(parsedDef);
+                    } else if (parsedDef.isSink()) {
+                        methodSensitiveDefs.add(parsedDef);
+                    }
+                } else {
+                    Matcher fieldSigMatcher = fieldSigPattern.matcher(mappingMatcher.group(1));
+                    if (fieldSigMatcher.find()) {
+                        FieldSensitiveDef parsedDef = parseFieldSensitiveDef(mappingMatcher, fieldSigMatcher);
+                        parsed = true;
+                        fieldSensitiveDefs.add(parsedDef);
+                    }
                 }
-            } else {
-                throw new RuntimeException("Line does not match: " + line);
+            }
+            if (!parsed) {
+                throw new RuntimeException("Could not parse the line: " + line);
             }
         }
     }
 
-    private AndroidMethod parsePermissionDef(Matcher matcher) {
-        String className = matcher.group(1).trim();
-        String returnType = matcher.group(2).trim();
-        String methodName = matcher.group(3).trim();
-        String paramsSource = matcher.group(4).trim();
+    private AndroidMethod parseMethodSensitiveDef(Matcher mappingMatcher, Matcher methodSigMatcher) {
+        String className = methodSigMatcher.group(1).trim();
+        String returnType = methodSigMatcher.group(2).trim();
+        String methodName = methodSigMatcher.group(3).trim();
+        String paramsSource = methodSigMatcher.group(4).trim();
         List<String> methodParameters =
                 Arrays.stream(paramsSource.split(",")).map(String::trim).collect(Collectors.toList());
 
         //either CONST_PERM_CHECKER, or a list of permission defs separated by ","
-        String checkerOrPermList = matcher.group(5).trim();
+        String checkerOrPermList = mappingMatcher.group(2).trim();
         AndroidMethod androidMethodDef;
 
         if (checkerOrPermList.equals(CONST_PERM_CHECKER)) {
@@ -99,15 +125,32 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
                     new AndroidMethod(methodName, methodParameters, returnType, className, Collections.emptySet());
             androidMethodDef.setSource(true);
         } else {
-            Set<String> permissions = Arrays.stream(checkerOrPermList.split(","))
-                    .map(String::trim)
-                    .map(TxtPermissionDefProvider::parsePermission).collect(Collectors.toSet());
+            Set<String> permissions = parsePermissions(checkerOrPermList);
             androidMethodDef =
                     new AndroidMethod(methodName, methodParameters, returnType, className, permissions);
             androidMethodDef.setSink(true);
         }
 
         return androidMethodDef;
+    }
+
+    private FieldSensitiveDef parseFieldSensitiveDef(Matcher mappingMatcher, Matcher fieldSigMatcher) {
+        String className = fieldSigMatcher.group(1).trim();
+        String type = fieldSigMatcher.group(2).trim();
+        String name = fieldSigMatcher.group(3).trim();
+        String permList = mappingMatcher.group(2).trim();
+        Set<String> permissions = parsePermissions(permList);
+
+        return new FieldSensitiveDef(className, type, name, permissions);
+    }
+
+    /**
+     * Parses a list of permission defs separated by ","
+     */
+    private Set<String> parsePermissions(String permList) {
+        return Arrays.stream(permList.split(","))
+                .map(String::trim)
+                .map(TxtPermissionDefProvider::parsePermission).collect(Collectors.toSet());
     }
 
     private static String parsePermission(String permDef) {
@@ -126,7 +169,12 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
     }
 
     @Override
-    public Set<AndroidMethod> getSensitiveDefs() {
-        return sensitiveDefs;
+    public Set<AndroidMethod> getMethodSensitiveDefs() {
+        return methodSensitiveDefs;
+    }
+
+    @Override
+    public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
+        return fieldSensitiveDefs;
     }
 }

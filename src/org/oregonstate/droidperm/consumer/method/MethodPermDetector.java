@@ -118,7 +118,7 @@ public class MethodPermDetector {
         }
 
         permCheckerDefs = permDefProvider.getPermCheckerDefs();
-        sensitiveDefs = permDefProvider.getSensitiveDefs();
+        sensitiveDefs = permDefProvider.getMethodSensitiveDefs();
 
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));

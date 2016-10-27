@@ -7,13 +7,14 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
-import org.oregonstate.droidperm.perm.PermAnnotationUtil;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.PermAnnotationUtil;
 import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
 import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
+import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
@@ -504,7 +505,7 @@ public class DroidPermMain {
         }
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            Set<AndroidMethod> sensitiveDefs = getPermDefProvider().getSensitiveDefs();
+            Set<AndroidMethod> sensitiveDefs = getPermDefProvider().getMethodSensitiveDefs();
             SensitiveCollectorService.printHierarchySensitives(sensitiveDefs);
             return;
         }
@@ -535,17 +536,20 @@ public class DroidPermMain {
     public static IPermissionDefProvider getPermDefProvider() throws IOException {
         try {
             TxtPermissionDefProvider txtPermDefProvider = new TxtPermissionDefProvider(txtPermDefFile);
-            List<Set<AndroidMethod>> permDefSources = new ArrayList<>();
-            permDefSources.add(txtPermDefProvider.getSensitiveDefs());
+            List<Set<AndroidMethod>> methodPermDefSources = new ArrayList<>();
+            List<Set<FieldSensitiveDef>> fieldPermDefSources = new ArrayList<>();
+
+            methodPermDefSources.add(txtPermDefProvider.getMethodSensitiveDefs());
+            fieldPermDefSources.add(txtPermDefProvider.getFieldSensitiveDefs());
             if (xmlPermDefFile != null) {
-                permDefSources.add(XMLPermissionDefParser.buildSensitiveDefs(xmlPermDefFile));
+                methodPermDefSources.add(XMLPermissionDefParser.buildSensitiveDefs(xmlPermDefFile));
             }
             if (useAnnoPermDef) {
-                permDefSources.add(PermAnnotationUtil.getSensitiveDefs());
+                methodPermDefSources.add(PermAnnotationUtil.getSensitiveDefs());
             }
             //noinspection unchecked
-            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
-                    permDefSources.toArray(new Set[permDefSources.size()]));
+            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(), methodPermDefSources,
+                    fieldPermDefSources);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
