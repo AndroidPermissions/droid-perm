@@ -8,23 +8,17 @@ import java.util.Set;
 public class FieldSensitiveDef {
 
     private final String className;
-    private final String type;
     private final String name;
     private final Set<String> permissions;
 
-    public FieldSensitiveDef(String className, String type, String name, Set<String> permissions) {
+    public FieldSensitiveDef(String className, String name, Set<String> permissions) {
         this.className = className;
-        this.type = type;
         this.name = name;
         this.permissions = permissions;
     }
 
     public String getClassName() {
         return className;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public String getName() {
@@ -35,8 +29,8 @@ public class FieldSensitiveDef {
         return permissions;
     }
 
-    public String getSignature() {
-        String sb = "<" + className + ": " + type + " " + name + ">";
+    public String getPseudoSignature() {
+        String sb = "<" + className + ": " + name + ">";
         return sb.intern();
     }
 
@@ -50,13 +44,12 @@ public class FieldSensitiveDef {
         }
 
         FieldSensitiveDef that = (FieldSensitiveDef) o;
-        return className.equals(that.className) && type.equals(that.type) && name.equals(that.name);
+        return className.equals(that.className) && name.equals(that.name);
     }
 
     @Override
     public int hashCode() {
         int result = className.hashCode();
-        result = 31 * result + type.hashCode();
         result = 31 * result + name.hashCode();
         return result;
     }
@@ -65,7 +58,6 @@ public class FieldSensitiveDef {
     public String toString() {
         return "FieldSensitiveDef{" +
                 "className='" + className + '\'' +
-                ", type='" + type + '\'' +
                 ", name='" + name + '\'' +
                 ", permissions=" + permissions +
                 '}';

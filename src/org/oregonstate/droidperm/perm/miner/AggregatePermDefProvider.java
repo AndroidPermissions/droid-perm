@@ -29,7 +29,7 @@ public class AggregatePermDefProvider implements IPermissionDefProvider {
                 computeAndVerifyUniqueSet(methodSensitiveDefSetList, SootMethodAndClass::getSignature,
                         "method sensitive defs"));
         this.fieldSensitiveDefs = Collections.unmodifiableSet(
-                computeAndVerifyUniqueSet(fieldSensitiveDefList, FieldSensitiveDef::getSignature,
+                computeAndVerifyUniqueSet(fieldSensitiveDefList, FieldSensitiveDef::getPseudoSignature,
                         "field sensitive defs"));
     }
 

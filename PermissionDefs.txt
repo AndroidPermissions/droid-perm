@@ -79,7 +79,7 @@
 % ----------------------------------
 <android.hardware.Camera: android.hardware.Camera open()> -> CAMERA
 <android.hardware.Camera: android.hardware.Camera open(int)> -> CAMERA
-<android.provider.MediaStore: java.lang.String ACTION_IMAGE_CAPTURE> -> CAMERA
+<android.provider.MediaStore: ACTION_IMAGE_CAPTURE> -> CAMERA
 
 % GET_ACCOUNTS
 % ==================================

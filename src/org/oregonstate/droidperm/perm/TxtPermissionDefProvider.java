@@ -45,13 +45,13 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
     /**
      * Groups: 1 = defining class, 2 = return type, 3 = method name, 4 = parameters
      */
-    private static final String methodSigRegex = "<(.+):\\s*(.+)\\s+(.+)\\s*\\((.*)\\)>";
+    private static final String methodSigRegex = "<([^\\s]+):\\s*([^\\s]+)\\s+([^\\s]+)\\s*\\((.*)\\)>";
     private static final Pattern methodSigPattern = Pattern.compile(methodSigRegex);
 
     /**
      * Groups: 1 = defining class, 2 = return type, 3 = method name, 4 = parameters
      */
-    private static final String fieldSigRegex = "<(.+):\\s*(.+)\\s+(.+)>";
+    private static final String fieldSigRegex = "<([^\\s]+):\\s*([^\\s]+)>";
     private static final Pattern fieldSigPattern = Pattern.compile(fieldSigRegex);
 
     /**
@@ -136,12 +136,11 @@ public class TxtPermissionDefProvider implements IPermissionDefProvider {
 
     private FieldSensitiveDef parseFieldSensitiveDef(Matcher mappingMatcher, Matcher fieldSigMatcher) {
         String className = fieldSigMatcher.group(1).trim();
-        String type = fieldSigMatcher.group(2).trim();
-        String name = fieldSigMatcher.group(3).trim();
+        String name = fieldSigMatcher.group(2).trim();
         String permList = mappingMatcher.group(2).trim();
         Set<String> permissions = parsePermissions(permList);
 
-        return new FieldSensitiveDef(className, type, name, permissions);
+        return new FieldSensitiveDef(className, name, permissions);
     }
 
     /**
