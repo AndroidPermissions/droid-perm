@@ -9,8 +9,8 @@ package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
+import org.oregonstate.droidperm.perm.AnnoPermissionDefProvider;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
-import org.oregonstate.droidperm.perm.PermAnnotationUtil;
 import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
 import org.oregonstate.droidperm.perm.XMLPermissionDefProvider;
 import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
@@ -500,7 +500,7 @@ public class DroidPermMain {
 
         if (collectPermAnnoMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            PermAnnotationUtil.collectPermAnno(xmlOut);
+            AnnoPermissionDefProvider.getInstance().collectPermAnno(xmlOut);
             return;
         }
         if (collectSensitivesMode) {
@@ -526,7 +526,7 @@ public class DroidPermMain {
 
         //Run DroidPerm
         if (printAnnoPermDef) {
-            PermAnnotationUtil.printAnnoPermDefs();
+            AnnoPermissionDefProvider.getInstance().printAnnoPermDefs();
         }
         IPermissionDefProvider permDefProvider = getPermDefProvider();
         new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
@@ -547,11 +547,11 @@ public class DroidPermMain {
                 fieldPermDefSources.add(xmlProvider.getFieldSensitiveDefs());
             }
             if (useAnnoPermDef) {
-                methodPermDefSources.add(PermAnnotationUtil.getSensitiveDefs());
+                methodPermDefSources.add(AnnoPermissionDefProvider.getInstance().getMethodSensitiveDefs());
+                fieldPermDefSources.add(AnnoPermissionDefProvider.getInstance().getFieldSensitiveDefs());
             }
-            //noinspection unchecked
-            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(), methodPermDefSources,
-                    fieldPermDefSources);
+            return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),
+                    methodPermDefSources, fieldPermDefSources);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }

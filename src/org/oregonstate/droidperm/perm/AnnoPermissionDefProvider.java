@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.perm;
 
+import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.Scene;
@@ -7,6 +8,7 @@ import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod;
+import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.tagkit.*;
 
 import javax.xml.bind.JAXBContext;
@@ -20,15 +22,23 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/13/2016.
  */
-public class PermAnnotationUtil {
+public class AnnoPermissionDefProvider implements IPermissionDefProvider {
 
-    private static List<PermissionDef> permissionDefs;
+    private static AnnoPermissionDefProvider instance;
 
-    public static List<PermissionDef> getPermissionDefs() {
-        if (permissionDefs == null) {
-            permissionDefs = Collections.unmodifiableList(extractAnnotations());
+    private final List<PermissionDef> permissionDefs;
+    private final XMLPermissionDefProvider xmlPermissionDefProvider;
+
+    public static AnnoPermissionDefProvider getInstance() {
+        if (instance == null) {
+            instance = new AnnoPermissionDefProvider();
         }
-        return permissionDefs;
+        return instance;
+    }
+
+    public AnnoPermissionDefProvider() {
+        permissionDefs = extractAnnotations();
+        xmlPermissionDefProvider = new XMLPermissionDefProvider(permissionDefs);
     }
 
     private static List<PermissionDef> extractAnnotations() {
@@ -101,13 +111,12 @@ public class PermAnnotationUtil {
         return null;
     }
 
-    public static void printAnnoPermDefs() {
-        List<PermissionDef> permDefs = getPermissionDefs();
-        System.out.println("\nRequiresPermission annotations: " + permDefs.size()
+    public void printAnnoPermDefs() {
+        System.out.println("\nRequiresPermission annotations: " + permissionDefs.size()
                 + "\n========================================================================\n");
 
         PermissionDefList pdList = new PermissionDefList();
-        pdList.setPermissionDefs(permDefs);
+        pdList.setPermissionDefs(permissionDefs);
 
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(PermissionDefList.class);
@@ -121,16 +130,27 @@ public class PermAnnotationUtil {
         }
     }
 
-    public static Set<AndroidMethod> getSensitiveDefs() {
-        return new XMLPermissionDefProvider(getPermissionDefs()).getMethodSensitiveDefs();
-    }
-
-    public static void collectPermAnno(File xmlOut) throws JAXBException, IOException {
+    public void collectPermAnno(File xmlOut) throws JAXBException, IOException {
         printAnnoPermDefs();
         if (xmlOut != null) {
             PermissionDefList out = new PermissionDefList();
-            out.setPermissionDefs(getPermissionDefs());
+            out.setPermissionDefs(permissionDefs);
             XmlPermDefMiner.save(out, xmlOut);
         }
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getPermCheckerDefs() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<AndroidMethod> getMethodSensitiveDefs() {
+        return xmlPermissionDefProvider.getMethodSensitiveDefs();
+    }
+
+    @Override
+    public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
+        return xmlPermissionDefProvider.getFieldSensitiveDefs();
     }
 }
