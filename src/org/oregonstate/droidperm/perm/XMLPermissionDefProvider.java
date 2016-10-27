@@ -16,22 +16,22 @@ import java.util.stream.Collectors;
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
  */
-public class XMLPermissionDefParser implements IPermissionDefProvider {
+public class XMLPermissionDefProvider implements IPermissionDefProvider {
 
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
 
-    public XMLPermissionDefParser(File xmlPermDefFile) throws JAXBException {
+    public XMLPermissionDefProvider(File xmlPermDefFile) throws JAXBException {
         this(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
     }
 
-    public XMLPermissionDefParser(List<PermissionDef> permissionDefs) {
+    public XMLPermissionDefProvider(List<PermissionDef> permissionDefs) {
         methodSensitiveDefs = permissionDefs.stream()
                 .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Method)
-                .map(XMLPermissionDefParser::toAndroidMethod).collect(Collectors.toCollection(LinkedHashSet::new));
+                .map(XMLPermissionDefProvider::toAndroidMethod).collect(Collectors.toCollection(LinkedHashSet::new));
         fieldSensitiveDefs = permissionDefs.stream()
                 .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Field)
-                .map(XMLPermissionDefParser::toFieldSensitiveDef).collect(Collectors.toCollection(LinkedHashSet::new));
+                .map(XMLPermissionDefProvider::toFieldSensitiveDef).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static FieldSensitiveDef toFieldSensitiveDef(PermissionDef permissionDef) {

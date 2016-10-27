@@ -12,7 +12,7 @@ import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermAnnotationUtil;
 import org.oregonstate.droidperm.perm.TxtPermissionDefProvider;
-import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
+import org.oregonstate.droidperm.perm.XMLPermissionDefProvider;
 import org.oregonstate.droidperm.perm.miner.AggregatePermDefProvider;
 import org.oregonstate.droidperm.perm.miner.FieldSensitiveDef;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
@@ -542,7 +542,7 @@ public class DroidPermMain {
             methodPermDefSources.add(txtPermDefProvider.getMethodSensitiveDefs());
             fieldPermDefSources.add(txtPermDefProvider.getFieldSensitiveDefs());
             if (xmlPermDefFile != null) {
-                methodPermDefSources.add(new XMLPermissionDefParser(xmlPermDefFile).getMethodSensitiveDefs());
+                methodPermDefSources.add(new XMLPermissionDefProvider(xmlPermDefFile).getMethodSensitiveDefs());
             }
             if (useAnnoPermDef) {
                 methodPermDefSources.add(PermAnnotationUtil.getSensitiveDefs());
