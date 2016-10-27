@@ -7,7 +7,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm;
 
-import org.oregonstate.droidperm.anno.PermAnnotationService;
+import org.oregonstate.droidperm.perm.PermAnnotationUtil;
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
@@ -499,7 +499,7 @@ public class DroidPermMain {
 
         if (collectPermAnnoMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            PermAnnotationService.collectPermAnno(xmlOut);
+            PermAnnotationUtil.collectPermAnno(xmlOut);
             return;
         }
         if (collectSensitivesMode) {
@@ -525,7 +525,7 @@ public class DroidPermMain {
 
         //Run DroidPerm
         if (printAnnoPermDef) {
-            PermAnnotationService.printAnnoPermDefs();
+            PermAnnotationUtil.printAnnoPermDefs();
         }
         IPermissionDefProvider permDefProvider = getPermDefProvider();
         new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
@@ -541,7 +541,7 @@ public class DroidPermMain {
                 permDefSources.add(XMLPermissionDefParser.buildSensitiveDefs(xmlPermDefFile));
             }
             if (useAnnoPermDef) {
-                permDefSources.add(PermAnnotationService.getSensitiveDefs());
+                permDefSources.add(PermAnnotationUtil.getSensitiveDefs());
             }
             //noinspection unchecked
             return new AggregatePermDefProvider(txtPermDefProvider.getPermCheckerDefs(),

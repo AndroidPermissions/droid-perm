@@ -1,6 +1,5 @@
-package org.oregonstate.droidperm.anno;
+package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.XMLPermissionDefParser;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.Scene;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/13/2016.
  */
-public class PermAnnotationService {
+public class PermAnnotationUtil {
 
     private static List<PermissionDef> permissionDefs;
 
@@ -44,7 +43,8 @@ public class PermAnnotationService {
                 }
             }
             for (SootField field : sootClass.getFields()) {
-                PermissionDef permDef = getPermissionDef(field, sootClass.getName(), field.getName(), PermTargetKind.Field);
+                PermissionDef permDef =
+                        getPermissionDef(field, sootClass.getName(), field.getName(), PermTargetKind.Field);
                 if (permDef != null) {
                     list.add(permDef);
                 }
