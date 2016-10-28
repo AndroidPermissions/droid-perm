@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.consumer.method;
 import com.google.common.collect.Iterators;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.PointsToUtil;
+import org.oregonstate.droidperm.util.SortUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,16 +22,19 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 3/28/2016.
  */
-public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
+public class ContextSensOutflowCPHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(ContextSensOutflowCPHolder.class);
-    protected final PointsToAnalysis pointsToAnalysis;
-    protected final CallGraph callGraph = Scene.v().getCallGraph();
 
+    protected MethodOrMethodContext dummyMainMethod;
+    protected Set<MethodOrMethodContext> sensitives;
     /**
      * Methods ignored by the outflow algorithm
      */
     private Set<SootMethod> outflowIgnoreSet;
+
+    protected final PointsToAnalysis pointsToAnalysis;
+    protected final CallGraph callGraph = Scene.v().getCallGraph();
 
     private long time = System.currentTimeMillis();
     private Set<MethodOrMethodContext> uiCallbacks;
@@ -65,9 +69,15 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
      */
     private Map<MethodInContext, Set<MethodOrMethodContext>> sensitiveInCToCallbacksMap;
 
+    /**
+     * Elements are unique
+     */
+    private List<MethodOrMethodContext> reachableCallbacks;
+
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
                                       Set<SootMethod> outflowIgnoreSet) {
-        super(dummyMainMethod, sensitives);
+        this.dummyMainMethod = dummyMainMethod;
+        this.sensitives = sensitives;
         this.outflowIgnoreSet = outflowIgnoreSet;
 
         pointsToAnalysis = Scene.v().getPointsToAnalysis();
@@ -76,8 +86,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
 
         callbackToOutflowMap = buildCallbackToOutflowMap();
-        sensitiveInCToCallbacksMap = buildSensitiveToCallbacksMap();
+        sensitiveInCToCallbacksMap = buildSensitiveInCToCallbacksMap();
         buildReachableSensitives();
+        reachableCallbacks = getSensitiveToCallbacksMap().values().stream().flatMap(Collection::stream)
+                .distinct().sorted(SortUtil.methodOrMCComparator).collect(Collectors.toList());
     }
 
     private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
@@ -219,7 +231,7 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 */
     }
 
-    private Map<MethodInContext, Set<MethodOrMethodContext>> buildSensitiveToCallbacksMap() {
+    private Map<MethodInContext, Set<MethodOrMethodContext>> buildSensitiveInCToCallbacksMap() {
         return sensitivesInContext.stream().collect(Collectors.toMap(
                 sensitiveInContext -> sensitiveInContext,
                 sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
@@ -251,7 +263,6 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         }
     }
 
-    @Override
     public void printPathsFromCallbackToSensitive() {
         System.out.println("\nPaths from each callback to each sensitive");
         System.out.println("========================================================================\n");
@@ -356,12 +367,10 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         return PointsToUtil.getPointsToIfVirtualCall(stmt, context, pointsToAnalysis);
     }
 
-    @Override
     public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
         return reachableSensitives.get(new MethodInContext(edge));
     }
 
-    @Override
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
         //toperf cg.findEdge() is potentially expensive. Better keep edges in the outflow.
         CallGraph cg = Scene.v().getCallGraph();
@@ -370,7 +379,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 .collect(Collectors.toSet());
     }
 
-    @Override
+    /**
+     * For 1-CFA analysis. Map from call to its parent calls, for each call to sensitive in this calblack.
+     */
     public Map<Edge, Set<Edge>> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
         return sensitivesInContext.stream().collect(Collectors.toMap(
                 sensInC -> sensInC.edge,
@@ -378,7 +389,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
         ));
     }
 
-    @Override
+    /**
+     * There might be multiple calls to meth in one callback, that's why list is needed.
+     */
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         CallGraph cg = Scene.v().getCallGraph();
         return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
@@ -386,7 +399,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 .collect(Collectors.toList());
     }
 
-    @Override
+    /**
+     * To be used for checkers only. this method does not check points-to consistency between parent edges and child
+     * edges.
+     * <p>
+     * For methods executed directly inside callback, parent will be the edge from dummy main to callback.
+     */
     public Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback) {
         MethodInContext methInC = new MethodInContext(edge);
         if (!callbackToOutflowMap.get(callback).containsKey(methInC)) {
@@ -400,7 +418,9 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
                 .collect(Collectors.toSet());
     }
 
-    @Override
+    /**
+     * Map from reachable sensitives to sets of callbacks.
+     */
     public Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
         return sensitiveInCToCallbacksMap.keySet().stream().collect(Collectors.toMap(
                 sensInC -> sensInC.method,
@@ -420,5 +440,12 @@ public class ContextSensOutflowCPHolder extends AbstractCallPathHolder {
 
     public Set<MethodOrMethodContext> getUiCallbacks() {
         return uiCallbacks;
+    }
+
+    /**
+     * We also sort the callbacks by their class name followed by method declaration line number.
+     */
+    public List<MethodOrMethodContext> getReachableCallbacks() {
+        return reachableCallbacks;
     }
 }

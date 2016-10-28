@@ -20,7 +20,7 @@ public class CheckerUtil {
     private static final Logger logger = LoggerFactory.getLogger(CheckerUtil.class);
 
     static Map<MethodOrMethodContext, Set<String>> buildCallbackToCheckedPermsMap(
-            CallPathHolder checkerPathsHolder) {
+            ContextSensOutflowCPHolder checkerPathsHolder) {
         return checkerPathsHolder.getReachableCallbacks().stream().collect(Collectors.toMap(
                 callback -> callback,
                 //here getCallsToSensitiveFor actually means calls to checkers

@@ -106,7 +106,6 @@ public class MethodPermDetector {
         //select one of the call path algorithms.
         //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
         //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
-        //sensitivePathsHolder = new PartialPointsToCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
@@ -416,7 +415,7 @@ public class MethodPermDetector {
         return pathsHolder.getReachingCallbacks(new MethodInContext(target));
     }
 
-    public CallPathHolder getSensitivePathsHolder() {
+    public ContextSensOutflowCPHolder getSensitivePathsHolder() {
         return sensitivePathsHolder;
     }
 
