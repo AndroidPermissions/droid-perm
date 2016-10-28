@@ -9,7 +9,7 @@ package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
-import org.oregonstate.droidperm.perm.AnnoPermissionDefProvider;
+import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
 import org.oregonstate.droidperm.perm.ScenePermissionDefService;
@@ -497,7 +497,7 @@ public class DroidPermMain {
 
         if (collectPermAnnoMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            AnnoPermissionDefProvider.getInstance().collectPermAnno(xmlOut);
+            AnnoPermissionDefUtil.collectPermAnno(xmlOut);
             return;
         }
         if (collectSensitivesMode) {
@@ -522,7 +522,7 @@ public class DroidPermMain {
 
         //Run DroidPerm
         if (printAnnoPermDef) {
-            AnnoPermissionDefProvider.getInstance().printAnnoPermDefs();
+            AnnoPermissionDefUtil.printAnnoPermDefs();
         }
         new MethodPermDetector(txtOut, xmlOut, new ScenePermissionDefService(getPermDefProvider())).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");

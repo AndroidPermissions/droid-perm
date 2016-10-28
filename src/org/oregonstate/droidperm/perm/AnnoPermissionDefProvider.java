@@ -1,7 +1,9 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionRel;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
@@ -10,11 +12,6 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.tagkit.*;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,14 +21,14 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/13/2016.
  */
-public class AnnoPermissionDefProvider implements IPermissionDefProvider {
+class AnnoPermissionDefProvider implements IPermissionDefProvider {
 
     private static AnnoPermissionDefProvider instance;
 
     private final List<PermissionDef> permissionDefs;
     private final XMLPermissionDefProvider xmlPermissionDefProvider;
 
-    public static AnnoPermissionDefProvider getInstance() {
+    protected static AnnoPermissionDefProvider getInstance() {
         if (instance == null) {
             instance = new AnnoPermissionDefProvider();
         }
@@ -113,32 +110,8 @@ public class AnnoPermissionDefProvider implements IPermissionDefProvider {
         return null;
     }
 
-    public void printAnnoPermDefs() {
-        System.out.println("\nRequiresPermission annotations: " + permissionDefs.size()
-                + "\n========================================================================\n");
-
-        PermissionDefList pdList = new PermissionDefList();
-        pdList.setPermissionDefs(permissionDefs);
-
-        try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(PermissionDefList.class);
-            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-
-            // output pretty printed
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            jaxbMarshaller.marshal(pdList, System.out);
-        } catch (JAXBException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void collectPermAnno(File xmlOut) throws JAXBException, IOException {
-        printAnnoPermDefs();
-        if (xmlOut != null) {
-            PermissionDefList out = new PermissionDefList();
-            out.setPermissionDefs(permissionDefs);
-            XmlPermDefMiner.save(out, xmlOut);
-        }
+    protected List<PermissionDef> getPermissionDefs() {
+        return permissionDefs;
     }
 
     @Override

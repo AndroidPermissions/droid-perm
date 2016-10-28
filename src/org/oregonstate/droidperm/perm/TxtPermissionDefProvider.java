@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * @author Siegfried Rasthofer, Denis Bogdanas
  * @see soot.jimple.infoflow.android.data.parsers.PermissionMethodParser
  */
-public class TxtPermissionDefProvider implements IPermissionDefProvider {
+class TxtPermissionDefProvider implements IPermissionDefProvider {
 
     public static final String CONST_PERM_CHECKER = "_PERM_CHECKER_";
 

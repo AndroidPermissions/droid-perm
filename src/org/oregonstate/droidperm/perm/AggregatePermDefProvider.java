@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/14/2016.
  */
-public class AggregatePermDefProvider implements IPermissionDefProvider {
+class AggregatePermDefProvider implements IPermissionDefProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(AggregatePermDefProvider.class);
 

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
  */
-public class XMLPermissionDefProvider implements IPermissionDefProvider {
+class XMLPermissionDefProvider implements IPermissionDefProvider {
 
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
