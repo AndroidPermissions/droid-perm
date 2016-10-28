@@ -79,11 +79,11 @@ public class UndetectedItemsUtil {
 
         return scenePermDef.getPermissionSets().stream().collect(Collectors.toMap(
                 permSet -> permSet,
-                permSet -> scenePermDef.getPermissionToSensitivesMap().get(permSet).stream()
-                        .collect(HashMultiMap::new,
-                                (multiMap, meth) -> multiMap.putAll(meth, undetectedSens.get(meth)),
-                                AbstractMultiMap::putAll
-                        )
+                permSet -> scenePermDef.getSensitivesFor(permSet).stream().collect(
+                        HashMultiMap::new,
+                        (multiMap, meth) -> multiMap.putAll(meth, undetectedSens.get(meth)),
+                        AbstractMultiMap::putAll
+                )
         ));
     }
 
