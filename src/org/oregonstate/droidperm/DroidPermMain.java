@@ -521,6 +521,10 @@ public class DroidPermMain {
         }
 
         //Run DroidPerm
+
+        //Prevents PointsToAnalysis from being released. Also required for HierarchyUtil.
+        Options.v().set_allow_phantom_refs(false);
+
         if (printAnnoPermDef) {
             AnnoPermissionDefUtil.printAnnoPermDefs();
         }

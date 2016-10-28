@@ -8,7 +8,6 @@ import soot.Unit;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
-import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
@@ -25,14 +24,14 @@ public class CallGraphUtil {
 
     private static Map<Unit, SootMethod> stmtToMethodMap;
 
-    public static <T extends SootMethodAndClass> Map<T, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
-            Map<T, List<SootMethod>> sceneSensitivesMap) {
-        Map<T, Set<MethodOrMethodContext>> result = new HashMap<>();
-        for (T methodDef : sceneSensitivesMap.keySet()) {
-            Set<MethodOrMethodContext> methods = getNodesFor(sceneSensitivesMap.get(methodDef));
+    public static Map<SootMethod, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
+            List<SootMethod> sceneSensitives) {
+        Map<SootMethod, Set<MethodOrMethodContext>> result = new HashMap<>();
+        for (SootMethod sootMethod : sceneSensitives) {
+            Set<MethodOrMethodContext> cgMethods = getNodesFor(sootMethod);
 
-            if (!methods.isEmpty()) {
-                result.put(methodDef, methods);
+            if (!cgMethods.isEmpty()) {
+                result.put(sootMethod, cgMethods);
             }
         }
         return result;

@@ -3,7 +3,6 @@ package org.oregonstate.droidperm.util;
 import org.oregonstate.droidperm.perm.ScenePermissionDefService;
 import soot.SootMethod;
 import soot.jimple.Stmt;
-import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 import soot.util.AbstractMultiMap;
@@ -75,15 +74,12 @@ public class UndetectedItemsUtil {
 
     public static Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> buildPermToUndetectedSensMap(
             ScenePermissionDefService scenePermDef, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
-        Map<Set<String>, List<AndroidMethod>> permissionToSensitiveDefMap = scenePermDef.getMethodSensitiveDefs()
-                .stream().collect(Collectors.groupingBy(AndroidMethod::getPermissions));
-
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, outflowIgnoreSet);
-        return permissionToSensitiveDefMap.keySet().stream().collect(Collectors.toMap(
+
+        return scenePermDef.getPermissionSets().stream().collect(Collectors.toMap(
                 permSet -> permSet,
-                permSet -> permissionToSensitiveDefMap.get(permSet).stream()
-                        .flatMap(androMeth -> scenePermDef.getSceneSensitivesMap().get(androMeth).stream())
+                permSet -> scenePermDef.getPermissionToSensitivesMap().get(permSet).stream()
                         .collect(HashMultiMap::new,
                                 (multiMap, meth) -> multiMap.putAll(meth, undetectedSens.get(meth)),
                                 AbstractMultiMap::putAll

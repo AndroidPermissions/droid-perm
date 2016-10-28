@@ -8,10 +8,8 @@ import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
-import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.options.Options;
 import soot.toolkits.scalar.Pair;
 
 import javax.xml.bind.JAXBException;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
  */
 public class MethodPermDetector {
 
-    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
     private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
 
@@ -61,18 +58,12 @@ public class MethodPermDetector {
      */
     private Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> permsToCheckersMap;
 
-    private Map<AndroidMethod, Set<MethodOrMethodContext>> resolvedSensitiveDefs;
-    private Map<MethodOrMethodContext, AndroidMethod> sensitiveToSensitiveDefMap;
+    private Map<MethodOrMethodContext, Set<String>> sensitiveToPermissionsMap;
 
     /**
      * This set is sorted.
      */
     private LinkedHashSet<MethodOrMethodContext> sensitives;
-
-    /**
-     * A map from permission sets to sets of resolved sensitive method definitions requiring this permission set.
-     */
-    private Map<Set<String>, Set<AndroidMethod>> permissionToResolvedSensitiveDefMap;
 
     private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> permsToSensitivesMap;
     private ContextSensOutflowCPHolder sensitivePathsHolder;
@@ -108,7 +99,6 @@ public class MethodPermDetector {
     }
 
     private void analyze() {
-        Options.v().set_allow_phantom_refs(false); // prevents PointsToAnalysis from being released
         try {
             outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
         } catch (Exception e) {
@@ -118,8 +108,9 @@ public class MethodPermDetector {
         dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(scenePermDef.getPermCheckers());
 
-        resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(scenePermDef.getSceneSensitivesMap());
-        sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
+        Map<SootMethod, Set<MethodOrMethodContext>> sootToCgSensitivesMap =
+                CallGraphUtil.resolveCallGraphEntriesToMap(scenePermDef.getSceneMethodSensitives());
+        sensitives = sootToCgSensitivesMap.values().stream().flatMap(Collection::stream)
                 .sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -134,8 +125,7 @@ public class MethodPermDetector {
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         //sensitives
-        sensitiveToSensitiveDefMap = buildSensitiveToSensitiveDefMap();
-        permissionToResolvedSensitiveDefMap = buildPermissionToSensitiveDefMap(resolvedSensitiveDefs.keySet());
+        sensitiveToPermissionsMap = buildSensitiveToPermissionsMap(sootToCgSensitivesMap);
         permsToSensitivesMap = buildPermsToSensitivesMap();
 
         logger.info("Processing sensitives");
@@ -213,28 +203,20 @@ public class MethodPermDetector {
                 Collectors.groupingBy(this::getPermissionsFor, Collectors.toCollection(LinkedHashSet::new)));
     }
 
+    private Map<MethodOrMethodContext, Set<String>> buildSensitiveToPermissionsMap(
+            Map<SootMethod, Set<MethodOrMethodContext>> sootToCgSensitivesMap) {
+        return sootToCgSensitivesMap.keySet().stream()
+                .map(sootMethod -> sootToCgSensitivesMap.get(sootMethod).stream()
+                        .collect(Collectors.toMap(sens -> sens, sens -> scenePermDef.getPermissionsFor(sootMethod)))
+                ).collect(MyCollectors.toFlatMap());
+    }
+
     private Set<String> getPermissionsFor(MethodOrMethodContext sensitive) {
-        return permissionToResolvedSensitiveDefMap.keySet().stream().filter(
-                permSet -> {
-                    Set<AndroidMethod> sensitiveDefs = permissionToResolvedSensitiveDefMap.get(permSet);
-                    return sensitiveDefs.stream().map(sensDef -> resolvedSensitiveDefs.get(sensDef))
-                            .anyMatch(methSet -> methSet.contains(sensitive));
-                }
-        ).findAny().orElse(null);
+        return sensitiveToPermissionsMap.get(sensitive);
     }
 
-    private Map<MethodOrMethodContext, AndroidMethod> buildSensitiveToSensitiveDefMap() {
-        return resolvedSensitiveDefs.keySet().stream().map(def ->
-                resolvedSensitiveDefs.get(def).stream().collect(Collectors.toMap(sens -> sens, sens -> def))
-        ).collect(MyCollectors.toFlatMap());
-    }
-
-    private Map<Set<String>, Set<AndroidMethod>> buildPermissionToSensitiveDefMap(Set<AndroidMethod> permissionDefs) {
-        return permissionDefs.stream().collect(Collectors.toMap(
-                sensitiveDef -> new HashSet<>(sensitiveDef.getPermissions()),
-                sensitiveDef -> new HashSet<>(Collections.singleton(sensitiveDef)),
-                StreamUtil::mutableUnion //merge function for values
-        ));
+    public Set<String> getPermissionsFor(Collection<MethodOrMethodContext> sensitives) {
+        return sensitives.stream().map(this::getPermissionsFor).collect(MyCollectors.toFlatSet());
     }
 
     private static MethodOrMethodContext getDummyMain() {
@@ -302,11 +284,6 @@ public class MethodPermDetector {
                         + jaxbStmt.getCallFullSignature() + " : " + jaxbStmt.getPermDisplayStrings() + checkMsg);
             }
         }
-    }
-
-    public Set<String> getPermissionsFor(Collection<MethodOrMethodContext> sensitives) {
-        return sensitives.stream().map(sens -> sensitiveToSensitiveDefMap.get(sens)).map(AndroidMethod::getPermissions)
-                .collect(MyCollectors.toFlatSet());
     }
 
     /**
@@ -492,26 +469,14 @@ public class MethodPermDetector {
     }
 
     public enum PermCheckStatus {
-        CHECK_DETECTED("Permission check detected"),
-        CHECK_NOT_DETECTED("No permission check detected");
-
-        private String description;
-
-        PermCheckStatus(String description) {
-            this.description = description;
-        }
-
-        @SuppressWarnings("unused")
-        public String description() {
-            return description;
-        }
+        CHECK_DETECTED, CHECK_NOT_DETECTED
     }
 
     private Map<MethodOrMethodContext, Set<String>> buildCallbackToRequiredPermsMap() {
         return sensitivePathsHolder.getReachableCallbacks().stream().collect(Collectors.toMap(
                 callback -> callback,
                 callback -> sensitivePathsHolder.getCallsToSensitiveFor(callback).stream()
-                        .map(sensitiveCall -> sensitiveToSensitiveDefMap.get(sensitiveCall.getTgt()).getPermissions())
+                        .map(sensitiveCall -> sensitiveToPermissionsMap.get(sensitiveCall.getTgt()))
                         .collect(MyCollectors.toFlatSet())
         ));
     }
