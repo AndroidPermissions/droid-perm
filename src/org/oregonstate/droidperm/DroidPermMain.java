@@ -34,7 +34,6 @@ import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
 
-import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -489,7 +488,7 @@ public class DroidPermMain {
         }
     }
 
-    private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws IOException, JAXBException {
+    private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws Exception {
         initTime = System.nanoTime();
 
         // Directory handling

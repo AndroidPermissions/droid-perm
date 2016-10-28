@@ -30,11 +30,15 @@ public class JaxbUtil {
      */
     public static JaxbCallbackList buildJaxbData(MethodPermDetector detector) {
         CallGraph cg = Scene.v().getCallGraph();
-        JaxbCallbackList jaxbCallbackList = new JaxbCallbackList();
+        //Map from callback to lvl 2 map describing checked permissions in this callback.
+        //Lvl2 map: from checked permissions to usage status of this check: used, unused or possibly used through ICC.
+        Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> callbackCheckerStatusMap =
+                buildCheckerStatusMap(detector);
 
+        JaxbCallbackList jaxbCallbackList = new JaxbCallbackList();
         for (MethodOrMethodContext callback : detector.getSensitivePathsHolder().getReachableCallbacks()) {
             JaxbCallback jaxbCallback = new JaxbCallback(callback.method());
-            jaxbCallback.setCheckerStatusMap(detector.getCheckerStatusMap(callback));
+            jaxbCallback.setCheckerStatusMap(callbackCheckerStatusMap.get(callback));
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
                 Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
                         .map(edge -> detector.getSensitivePathsHolder().getReacheableSensitives(edge))
@@ -55,6 +59,21 @@ public class JaxbUtil {
             jaxbCallbackList.addCallback(jaxbCallback);
         }
         return jaxbCallbackList;
+    }
+
+    private static Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> buildCheckerStatusMap(
+            MethodPermDetector detector) {
+        return detector.getCallbackToCheckedPermsMap().keySet().stream().collect(Collectors.toMap(
+                callback -> callback,
+                callback -> {
+                    Set<String> perms = detector.getCallbackToCheckedPermsMap().get(callback);
+
+                    return perms.stream().collect(Collectors.toMap(
+                            perm -> perm,
+                            perm -> detector.getCheckUsageStatus(callback, perm)
+                    ));
+                }
+        ));
     }
 
     public static void save(JaxbCallbackList data, File file) throws JAXBException {

@@ -10,8 +10,6 @@ import soot.jimple.ThisRef;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.jimple.toolkits.callgraph.Targets;
-import soot.jimple.toolkits.callgraph.TransitiveTargets;
 import soot.util.Chain;
 import soot.util.MultiMap;
 
@@ -28,28 +26,6 @@ import java.util.stream.Stream;
  */
 public class DebugUtil {
     private static final Logger logger = LoggerFactory.getLogger(DebugUtil.class);
-
-    public static void printTransitiveTargets(MethodOrMethodContext meth) {
-        System.out.println("\nTransitive targets for " + meth);
-        StreamUtil.asStream(new TransitiveTargets(Scene.v().getCallGraph()).iterator(meth))
-                .forEach(tgt -> System.out.println("  " + tgt));
-    }
-
-    public static void printTransitiveTargets(Set<MethodOrMethodContext> consumers) {
-        System.out.println("\n\nTransitive targets for each consumer \n====================================");
-        consumers.stream().forEach(DebugUtil::printTransitiveTargets);
-    }
-
-    public static void printTargets(MethodOrMethodContext meth) {
-        System.out.println("\nDirect targets for " + meth);
-        StreamUtil.asStream(new Targets(Scene.v().getCallGraph().edgesOutOf(meth)))
-                .forEach(tgt -> System.out.println("  " + tgt));
-    }
-
-    public static void printTargets(Set<MethodOrMethodContext> consumers) {
-        System.out.println("\n\nDirect targets for each consumer \n====================================");
-        consumers.stream().forEach(DebugUtil::printTargets);
-    }
 
     public static void pointsToTest() {
         SootClass threadClass = Scene.v().getSootClass("java.lang.Thread");

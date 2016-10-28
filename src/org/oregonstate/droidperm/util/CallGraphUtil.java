@@ -24,19 +24,6 @@ public class CallGraphUtil {
 
     private static Map<Unit, SootMethod> stmtToMethodMap;
 
-    public static Map<SootMethod, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
-            List<SootMethod> sceneSensitives) {
-        Map<SootMethod, Set<MethodOrMethodContext>> result = new HashMap<>();
-        for (SootMethod sootMethod : sceneSensitives) {
-            Set<MethodOrMethodContext> cgMethods = getNodesFor(sootMethod);
-
-            if (!cgMethods.isEmpty()) {
-                result.put(sootMethod, cgMethods);
-            }
-        }
-        return result;
-    }
-
     /**
      * Return the subset of methods (eventually in their context) contained in the call graph, out of the input
      * collection.
