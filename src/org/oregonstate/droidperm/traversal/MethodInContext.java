@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.consumer.method;
+package org.oregonstate.droidperm.traversal;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/5/2016.

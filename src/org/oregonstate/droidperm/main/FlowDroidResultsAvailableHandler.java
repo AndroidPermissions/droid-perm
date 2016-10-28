@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm;
+package org.oregonstate.droidperm.main;
 
 import com.google.common.base.Strings;
 import org.oregonstate.droidperm.util.CallGraphUtil;

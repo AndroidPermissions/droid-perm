@@ -1,6 +1,9 @@
-package org.oregonstate.droidperm.util;
+package org.oregonstate.droidperm.debug;
 
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
+import org.oregonstate.droidperm.util.PointsToUtil;
+import org.oregonstate.droidperm.util.SortUtil;
+import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;

@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.unused;
+package org.oregonstate.droidperm.debug;
 
 import java.io.File;
 

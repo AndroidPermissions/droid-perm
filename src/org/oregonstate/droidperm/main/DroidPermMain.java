@@ -5,17 +5,17 @@
  * <p>
  * Contributors: Christian Fritz, Steven Arzt, Siegfried Rasthofer, Eric Bodden, and others.
  ******************************************************************************/
-package org.oregonstate.droidperm;
+package org.oregonstate.droidperm.main;
 
-import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
+import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
-import org.oregonstate.droidperm.perm.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
-import org.oregonstate.droidperm.util.DebugUtil;
+import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

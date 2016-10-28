@@ -1,6 +1,6 @@
 package org.oregonstate.droidperm.jaxb;
 
-import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
+import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.MethodOrMethodContext;

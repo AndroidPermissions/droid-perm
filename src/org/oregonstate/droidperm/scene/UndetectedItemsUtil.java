@@ -1,6 +1,5 @@
-package org.oregonstate.droidperm.util;
+package org.oregonstate.droidperm.scene;
 
-import org.oregonstate.droidperm.perm.ScenePermissionDefService;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;

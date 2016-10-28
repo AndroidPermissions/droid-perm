@@ -31,7 +31,7 @@
   <target name="jar" depends="compile">
     <jar destfile="${droid-perm.jar}" basedir="out/production">
       <manifest>
-        <attribute name="Main-Class" value="org.oregonstate.droidperm.DroidPermMain"/>
+        <attribute name="Main-Class" value="org.oregonstate.droidperm.main.DroidPermMain"/>
       </manifest>
     </jar>
   </target>

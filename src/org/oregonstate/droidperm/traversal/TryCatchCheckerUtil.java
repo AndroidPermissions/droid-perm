@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.consumer.method;
+package org.oregonstate.droidperm.traversal;
 
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.*;

@@ -1,7 +1,7 @@
 package org.oregonstate.droidperm.sens;
 
-import org.oregonstate.droidperm.perm.ScenePermissionDefService;
-import org.oregonstate.droidperm.util.UndetectedItemsUtil;
+import org.oregonstate.droidperm.scene.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.toolkits.scalar.Pair;

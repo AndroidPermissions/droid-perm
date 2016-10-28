@@ -1,7 +1,9 @@
-package org.oregonstate.droidperm.consumer.method;
+package org.oregonstate.droidperm.traversal;
 
+import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
-import org.oregonstate.droidperm.perm.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,9 +105,6 @@ public class MethodPermDetector {
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         logger.info("Processing sensitives");
-        //select one of the call path algorithms.
-        //sensitivePathsHolder = new OutflowCPHolder(dummyMainMethod, sensitives);
-        //sensitivePathsHolder = new InflowCPHolder(dummyMainMethod, sensitives);
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 

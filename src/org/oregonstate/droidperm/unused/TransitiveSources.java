@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm.util;
+package org.oregonstate.droidperm.unused;
 
 import soot.MethodOrMethodContext;
 import soot.jimple.toolkits.callgraph.CallGraph;

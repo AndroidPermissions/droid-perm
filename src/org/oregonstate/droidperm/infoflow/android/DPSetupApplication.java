@@ -11,7 +11,7 @@
 package org.oregonstate.droidperm.infoflow.android;
 
 import heros.InterproceduralCFG;
-import org.oregonstate.droidperm.DroidPermMain;
+import org.oregonstate.droidperm.main.DroidPermMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;

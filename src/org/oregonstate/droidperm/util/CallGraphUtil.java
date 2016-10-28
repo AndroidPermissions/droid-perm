@@ -57,24 +57,6 @@ public class CallGraphUtil {
         }
     }
 
-    public static List<MethodOrMethodContext> getInflow(Set<MethodOrMethodContext> methods) {
-        return new TransitiveSources(Scene.v().getCallGraph()).getInflow(methods);
-    }
-
-    public static List<Edge> getInflowCallGraph(MethodOrMethodContext method) {
-        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(Collections.singletonList(method));
-    }
-
-    public static List<Edge> getInflowCallGraph(Set<MethodOrMethodContext> methods) {
-        return new InflowBuilder(Scene.v().getCallGraph()).getInflow(methods);
-    }
-
-    public static MethodOrMethodContext getContainingMethod(Unit unit) {
-        CallGraph cg = Scene.v().getCallGraph();
-        Iterator<Edge> edgeIterator = cg.edgesOutOf(unit);
-        return edgeIterator.hasNext() ? edgeIterator.next().getSrc() : null;
-    }
-
     /**
      * Algorithm to infer the containing method for each statement in a dataflow.
      * <p>
@@ -170,7 +152,7 @@ public class CallGraphUtil {
                 result.values().stream().distinct().collect(Collectors.toMap(pair -> pair, pair -> pair));
 
         //Normalizing result map values. Replacing multiple instances corresponding to same pair with one instance.
-        result.keySet().stream().forEach(key -> result.put(key, valuesToValues.get(result.get(key))));
+        result.keySet().forEach(key -> result.put(key, valuesToValues.get(result.get(key))));
 
         //Normalizing indents. Increasing all indents so that the minimal one is always 0.
         valuesToValues.keySet().forEach(pair -> pair.setO2(pair.getO2() - minIndent));
@@ -187,6 +169,17 @@ public class CallGraphUtil {
         } else {
             return result.get(dataflow[stmtIndex - 1]).getO2();
         }
+    }
+
+    /**
+     * Returns a map from all statements in the analysis classpath to their containing methods. Only methods reachable
+     * through the call graph are included in this map.
+     */
+    public static Map<Unit, SootMethod> getStmtToMethodMap() {
+        if (stmtToMethodMap == null) {
+            stmtToMethodMap = buildStmtToMethodMap();
+        }
+        return stmtToMethodMap;
     }
 
     /**
@@ -214,16 +207,5 @@ public class CallGraphUtil {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Returns a map from all statements in the analysis classpath to their containing methods. Only methods reachable
-     * through the call graph are included in this map.
-     */
-    public static Map<Unit, SootMethod> getStmtToMethodMap() {
-        if (stmtToMethodMap == null) {
-            stmtToMethodMap = buildStmtToMethodMap();
-        }
-        return stmtToMethodMap;
     }
 }

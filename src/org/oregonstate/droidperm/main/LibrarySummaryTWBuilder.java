@@ -1,4 +1,4 @@
-package org.oregonstate.droidperm;
+package org.oregonstate.droidperm.main;
 
 import soot.SootMethod;
 import soot.jimple.Stmt;

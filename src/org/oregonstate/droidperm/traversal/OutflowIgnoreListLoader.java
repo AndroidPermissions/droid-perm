@@ -1,6 +1,6 @@
-package org.oregonstate.droidperm.consumer.method;
+package org.oregonstate.droidperm.traversal;
 
-import org.oregonstate.droidperm.util.SceneUtil;
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.SootMethod;

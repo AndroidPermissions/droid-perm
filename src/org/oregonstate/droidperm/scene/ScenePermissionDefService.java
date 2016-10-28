@@ -1,5 +1,6 @@
-package org.oregonstate.droidperm.perm;
+package org.oregonstate.droidperm.scene;
 
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import soot.SootMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod;
