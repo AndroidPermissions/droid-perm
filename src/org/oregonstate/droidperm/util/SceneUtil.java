@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
-import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -120,8 +122,7 @@ public class SceneUtil {
         return result;
     }
 
-    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(
-            Collection<? extends SootMethodAndClass> methodDefs) {
-        return resolveMethodUsages(new HashSet<SootMethod>(HierarchyUtil.resolveAbstractDispatches(methodDefs)));
+    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(List<SootMethod> sootMethods) {
+        return resolveMethodUsages(new HashSet<>(sootMethods));
     }
 }

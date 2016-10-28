@@ -9,7 +9,10 @@ package org.oregonstate.droidperm;
 
 import org.oregonstate.droidperm.consumer.method.MethodPermDetector;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
-import org.oregonstate.droidperm.perm.*;
+import org.oregonstate.droidperm.perm.AnnoPermissionDefProvider;
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.PermDefProviderFactory;
+import org.oregonstate.droidperm.perm.ScenePermissionDefService;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.DebugUtil;
@@ -23,7 +26,6 @@ import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
-import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.android.source.AndroidSourceSinkManager.LayoutMatchingMode;
 import soot.jimple.infoflow.data.pathBuilders.DefaultPathBuilderFactory.PathBuilder;
 import soot.jimple.infoflow.ipc.IIPCManager;
@@ -500,8 +502,7 @@ public class DroidPermMain {
         }
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            Set<AndroidMethod> sensitiveDefs = getPermDefProvider().getMethodSensitiveDefs();
-            SensitiveCollectorService.printHierarchySensitives(sensitiveDefs);
+            SensitiveCollectorService.printHierarchySensitives(new ScenePermissionDefService(getPermDefProvider()));
             return;
         }
 
@@ -523,25 +524,14 @@ public class DroidPermMain {
         if (printAnnoPermDef) {
             AnnoPermissionDefProvider.getInstance().printAnnoPermDefs();
         }
-        IPermissionDefProvider permDefProvider = getPermDefProvider();
-        new MethodPermDetector(txtOut, xmlOut, permDefProvider).analyzeAndPrint();
+        new MethodPermDetector(txtOut, xmlOut, new ScenePermissionDefService(getPermDefProvider())).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
 
-    public static IPermissionDefProvider getPermDefProvider() throws IOException {
-        try {
-            List<IPermissionDefProvider> providers = new ArrayList<>();
-            providers.add(new TxtPermissionDefProvider(txtPermDefFile));
-            if (xmlPermDefFile != null) {
-                providers.add(new XMLPermissionDefProvider(xmlPermDefFile));
-            }
-            if (useAnnoPermDef) {
-                providers.add(AnnoPermissionDefProvider.getInstance());
-            }
-            return new AggregatePermDefProvider(providers);
-        } catch (JAXBException e) {
-            throw new RuntimeException(e);
-        }
+    public static IPermissionDefProvider getPermDefProvider() {
+        List<File> providerFiles = new ArrayList<>(Arrays.asList(txtPermDefFile, xmlPermDefFile));
+        providerFiles.removeIf(Objects::isNull);
+        return PermDefProviderFactory.create(providerFiles, useAnnoPermDef);
     }
 
     private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {

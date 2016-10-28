@@ -26,10 +26,10 @@ public class CallGraphUtil {
     private static Map<Unit, SootMethod> stmtToMethodMap;
 
     public static <T extends SootMethodAndClass> Map<T, Set<MethodOrMethodContext>> resolveCallGraphEntriesToMap(
-            Collection<T> methodDefs) {
+            Map<T, List<SootMethod>> sceneSensitivesMap) {
         Map<T, Set<MethodOrMethodContext>> result = new HashMap<>();
-        for (T methodDef : methodDefs) {
-            Set<MethodOrMethodContext> methods = getNodesFor(HierarchyUtil.resolveAbstractDispatch(methodDef));
+        for (T methodDef : sceneSensitivesMap.keySet()) {
+            Set<MethodOrMethodContext> methods = getNodesFor(sceneSensitivesMap.get(methodDef));
 
             if (!methods.isEmpty()) {
                 result.put(methodDef, methods);
@@ -56,7 +56,7 @@ public class CallGraphUtil {
             return caCallGraph.getNodes(method);
         } else {
             return callGraph.edgesInto(method).hasNext() || callGraph.edgesOutOf(method).hasNext()
-                    ? Collections.singleton(method) : Collections.emptySet();
+                   ? Collections.singleton(method) : Collections.emptySet();
         }
     }
 
@@ -151,8 +151,8 @@ public class CallGraphUtil {
                     j--;
                 }
                 return j >= 0 ? result.get(dataflow[j])
-                        //case 4 - use stmtToMethodMap to infer container method
-                        : new Pair<>(getStmtToMethodMap().get(stmt), getNewIndent(i, dataflow, result, false));
+                       //case 4 - use stmtToMethodMap to infer container method
+                              : new Pair<>(getStmtToMethodMap().get(stmt), getNewIndent(i, dataflow, result, false));
             };
 
             result.put(stmt, containerCheckAlg.get());

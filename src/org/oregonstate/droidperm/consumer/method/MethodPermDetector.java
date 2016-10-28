@@ -1,7 +1,7 @@
 package org.oregonstate.droidperm.consumer.method;
 
 import org.oregonstate.droidperm.jaxb.*;
-import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.ScenePermissionDefService;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +9,6 @@ import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod;
-import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
@@ -34,10 +33,9 @@ public class MethodPermDetector {
 
     private File txtOut;
     private File xmlOut;
-    private IPermissionDefProvider permDefProvider;
+    private ScenePermissionDefService scenePermDef;
+
     private Set<SootMethod> outflowIgnoreSet;
-    private Set<SootMethodAndClass> permCheckerDefs;
-    private Set<AndroidMethod> sensitiveDefs;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -91,10 +89,10 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
-    public MethodPermDetector(File txtOut, File xmlOut, IPermissionDefProvider permDefProvider) {
+    public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef) {
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
-        this.permDefProvider = permDefProvider;
+        this.scenePermDef = scenePermDef;
     }
 
     public void analyzeAndPrint() {
@@ -117,14 +115,10 @@ public class MethodPermDetector {
             throw new RuntimeException(e);
         }
 
-        permCheckerDefs = permDefProvider.getPermCheckerDefs();
-        sensitiveDefs = permDefProvider.getMethodSensitiveDefs();
-
         dummyMainMethod = getDummyMain();
-        permCheckers = CallGraphUtil.getNodesFor(HierarchyUtil.resolveAbstractDispatches(permCheckerDefs));
+        permCheckers = CallGraphUtil.getNodesFor(scenePermDef.getPermCheckers());
 
-        //todo use resolveAbstractDispatchesToMap() instead
-        resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(sensitiveDefs);
+        resolvedSensitiveDefs = CallGraphUtil.resolveCallGraphEntriesToMap(scenePermDef.getSceneSensitivesMap());
         sensitives = resolvedSensitiveDefs.values().stream().flatMap(Collection::stream)
                 .sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -133,8 +127,6 @@ public class MethodPermDetector {
         outflowIgnoreSet.addAll(
                 sensitives.stream().map(MethodOrMethodContext::method).collect(Collectors.toList())
         );
-
-        //checkers
 
         logger.info("Processing checkers");
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
@@ -168,8 +160,8 @@ public class MethodPermDetector {
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
-        UndetectedItemsUtil.printUndetectedCheckers(permCheckerDefs, getPrintedCheckEdges(), outflowIgnoreSet);
-        UndetectedItemsUtil.printUndetectedSensitives(sensitiveDefs, getPrintedSensitiveEdges(), outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedSensitives(scenePermDef, getPrintedSensitiveEdges(), outflowIgnoreSet);
 
         //printPermCheckStatusPerCallbacks();
         printCheckersInContext(true);
