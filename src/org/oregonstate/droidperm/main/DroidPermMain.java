@@ -7,15 +7,15 @@
  ******************************************************************************/
 package org.oregonstate.droidperm.main;
 
-import org.oregonstate.droidperm.traversal.MethodPermDetector;
+import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
+import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.util.CallGraphUtil;
-import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -741,6 +741,7 @@ public class DroidPermMain {
         Options.v().set_process_dir(Collections.singletonList(apkFilePath));
         Options.v().set_process_multiple_dex(true);
         Options.v().set_soot_classpath(getClasspath(androidJarORSdkDir, apkFile));
+        Options.v().set_whole_program(true); //required by HierarchyUtil.
         Main.v().autoSetOptions();
         Scene.v().loadNecessaryClasses();
 

@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
+import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
@@ -8,6 +9,7 @@ import soot.util.AbstractMultiMap;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +19,78 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 8/4/2016.
  */
 public class UndetectedItemsUtil {
+
+    /**
+     * todo this will be getUndetectedFields
+     */
+    private static MultiMap<SootField, Pair<Stmt, SootMethod>> getFieldUsages(
+            Collection<SootField> sootFields, Set<SootMethod> outflowIgnoreSet) {
+        MultiMap<SootField, Pair<Stmt, SootMethod>> undetected = SceneUtil.resolveFieldUsages(sootFields);
+        MultiMap<SootField, Pair<Stmt, SootMethod>> copy = new HashMultiMap<>(undetected);
+
+        //filter out ignored
+        for (SootField sensField : copy.keySet()) {
+            copy.get(sensField).stream().filter(pair -> outflowIgnoreSet.contains(pair.getO2()))
+                    .forEach(pair -> undetected.remove(sensField, pair));
+        }
+
+        //todo filter out detected
+        return undetected;
+    }
+
+    /**
+     * Map lvl 1: from permission sets to undetected sensitives having this set.
+     * <p>
+     * Map lvl2: from sensitive to its calling context: method and stmt.
+     */
+    public static Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> buildPermToUndetectedFieldSensMap(
+            ScenePermissionDefService scenePermDef, Set<SootMethod> outflowIgnoreSet) {
+        MultiMap<SootField, Pair<Stmt, SootMethod>> undetectedSens =
+                getFieldUsages(scenePermDef.getSceneFieldSensitives(), outflowIgnoreSet);
+
+        return scenePermDef.getFieldPermissionSets().stream().collect(Collectors.toMap(
+                permSet -> permSet,
+                permSet -> scenePermDef.getFieldSensitivesFor(permSet).stream().collect(
+                        HashMultiMap::new,
+                        (multiMap, field) -> multiMap.putAll(field, undetectedSens.get(field)),
+                        AbstractMultiMap::putAll
+                )
+        ));
+    }
+
+    public static void printUndetectedFieldSensitives(
+            Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap,
+            final String header) {
+        int count = permToUndetectedFieldSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
+
+        System.out.println("\n\n" + header + " : " + count + "\n"
+                + "========================================================================");
+        for (Set<String> permSet : permToUndetectedFieldSensMap.keySet()) {
+            MultiMap<SootField, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedFieldSensMap.get(permSet);
+            if (currentSensMMap.isEmpty()) {
+                continue;
+            }
+            System.out.println("\n" + permSet + "\n------------------------------------");
+            for (SootField sensF : currentSensMMap.keySet()) {
+                System.out.println(sensF);
+                for (Pair<Stmt, SootMethod> call : currentSensMMap.get(sensF)) {
+                    System.out.println("\tfrom " + call.getO2() + " : " + call.getO1().getJavaSourceStartLineNumber());
+                }
+            }
+        }
+    }
+
+    public static void printUndetectedFieldSensitives(ScenePermissionDefService scenePermDef,
+                                                      Set<SootMethod> outflowIgnoreSet) {
+        long startTime = System.currentTimeMillis();
+
+        Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap =
+                buildPermToUndetectedFieldSensMap(scenePermDef, outflowIgnoreSet);
+        printUndetectedFieldSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
+
+        System.out.println("\nUndetected field sensitives execution time: "
+                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
+    }
 
     /**
      * todo detected should be a map from units to container methods (methods are only for debugging)
@@ -71,14 +145,19 @@ public class UndetectedItemsUtil {
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
+    /**
+     * Map lvl 1: from permission sets to undetected sensitives having this set.
+     * <p>
+     * Map lvl2: from sensitive to its callign context: method and stmt.
+     */
     public static Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> buildPermToUndetectedSensMap(
             ScenePermissionDefService scenePermDef, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, outflowIgnoreSet);
 
-        return scenePermDef.getPermissionSets().stream().collect(Collectors.toMap(
+        return scenePermDef.getMethodPermissionSets().stream().collect(Collectors.toMap(
                 permSet -> permSet,
-                permSet -> scenePermDef.getSensitivesFor(permSet).stream().collect(
+                permSet -> scenePermDef.getMethodSensitivesFor(permSet).stream().collect(
                         HashMultiMap::new,
                         (multiMap, meth) -> multiMap.putAll(meth, undetectedSens.get(meth)),
                         AbstractMultiMap::putAll

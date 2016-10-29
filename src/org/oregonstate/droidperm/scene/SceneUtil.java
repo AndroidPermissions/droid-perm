@@ -4,19 +4,19 @@ import org.oregonstate.droidperm.util.MyCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
+import soot.jimple.AssignStmt;
+import soot.jimple.FieldRef;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 5/30/2016.
@@ -123,7 +123,62 @@ public class SceneUtil {
         return result;
     }
 
-    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(List<SootMethod> sootMethods) {
+    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Collection<SootMethod> sootMethods) {
         return resolveMethodUsages(new HashSet<>(sootMethods));
+    }
+
+    /**
+     * @return A map from fields to actual statements in context possibly referring that fields.
+     */
+    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Set<SootField> sensFields) {
+        MultiMap<SootField, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
+        for (SootClass sc : Scene.v().getApplicationClasses()) {
+            if (sc.isConcrete()) {
+                for (SootMethod contextMeth : sc.getMethods()) {
+                    if (!contextMeth.isConcrete()) {
+                        continue;
+                    }
+
+                    Body body;
+                    try {
+                        body = contextMeth.retrieveActiveBody();
+                    } catch (NullPointerException e) {
+                        //Redundant.
+                        //This one is thrown after other types of exceptions were thrown previously for same method.
+                        continue;
+                    } catch (Exception e) {
+                        logger.warn("Exception in retrieveActiveBody() for " + contextMeth + " : " + e.toString());
+                        continue;
+                    }
+
+                    for (Unit u : body.getUnits()) {
+                        Stmt stmt = (Stmt) u;
+                        List<SootField> fields = getReferredFields(stmt);
+                        //noinspection Convert2streamapi
+                        for (SootField field : fields) {
+                            if (sensFields.contains(field)) {
+                                result.put(field, new Pair<>(stmt, contextMeth));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Collection<SootField> sensFields) {
+        return resolveFieldUsages(new HashSet<>(sensFields));
+    }
+
+    private static List<SootField> getReferredFields(Stmt stmt) {
+        if (stmt instanceof AssignStmt) {
+            AssignStmt assign = (AssignStmt) stmt;
+            return Stream.of(assign.getLeftOp(), assign.getRightOp())
+                    .filter(val -> val instanceof FieldRef)
+                    .map(fieldRef -> ((FieldRef) fieldRef).getField())
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }
