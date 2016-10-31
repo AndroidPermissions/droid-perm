@@ -2,17 +2,16 @@ package org.oregonstate.droidperm.sens;
 
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.toolkits.scalar.Pair;
 import soot.util.MultiMap;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,7 +20,8 @@ import java.util.stream.Stream;
  */
 public class SensitiveCollectorService {
 
-    public static void printHierarchySensitives(ScenePermissionDefService scenePermDef) throws IOException {
+    public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef, File apkFile)
+            throws Exception {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedMethodSensMap =
@@ -40,16 +40,23 @@ public class SensitiveCollectorService {
                 permToUndetectedFieldSensMap.keySet().stream()
                         .filter(permSet -> !permToUndetectedFieldSensMap.get(permSet).isEmpty())
         ).collect(Collectors.toCollection(LinkedHashSet::new));
-        printCoveredPermSet(coveredPermissionSets);
+        printCollection(coveredPermissionSets, "Permission sets covered by sensitives");
+
+        Set<String> declaredPermissions = getDeclaredPermissions(apkFile);
+        printCollection(declaredPermissions, "Permissions declared in manifest");
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
-    private static void printCoveredPermSet(Set<Set<String>> coveredPermissionSets) {
-        System.out
-                .println("\n\n" + "Permission sets covered by sensitives" + " : " + coveredPermissionSets.size() + "\n"
-                        + "========================================================================");
-        coveredPermissionSets.forEach(System.out::println);
+    private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {
+        DPProcessManifest manifest = new DPProcessManifest(apkFile);
+        return manifest.getDeclaredPermissions();
+    }
+
+    private static <T> void printCollection(Collection<T> collection, String header) {
+        System.out.println("\n\n" + header + " : " + collection.size() + "\n"
+                + "========================================================================");
+        collection.forEach(System.out::println);
     }
 }

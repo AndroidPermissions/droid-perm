@@ -501,7 +501,8 @@ public class DroidPermMain {
         }
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            SensitiveCollectorService.printHierarchySensitives(new ScenePermissionDefService(getPermDefProvider()));
+            SensitiveCollectorService
+                    .hierarchySensitivesAnalysis(new ScenePermissionDefService(getPermDefProvider()), apkFile);
             return;
         }
 
