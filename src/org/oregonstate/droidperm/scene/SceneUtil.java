@@ -5,9 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.AssignStmt;
-import soot.jimple.FieldRef;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
+import soot.jimple.StringConstant;
+import soot.tagkit.StringConstantValueTag;
 import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
@@ -16,7 +17,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 5/30/2016.
@@ -131,6 +131,7 @@ public class SceneUtil {
      * @return A map from fields to actual statements in context possibly referring that fields.
      */
     public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Set<SootField> sensFields) {
+        Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFields);
         MultiMap<SootField, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
         for (SootClass sc : Scene.v().getApplicationClasses()) {
             if (sc.isConcrete()) {
@@ -153,7 +154,7 @@ public class SceneUtil {
 
                     for (Unit u : body.getUnits()) {
                         Stmt stmt = (Stmt) u;
-                        List<SootField> fields = getReferredFields(stmt);
+                        List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
                         //noinspection Convert2streamapi
                         for (SootField field : fields) {
                             if (sensFields.contains(field)) {
@@ -167,18 +168,53 @@ public class SceneUtil {
         return result;
     }
 
+    private static Map<String, SootField> buildConstantFieldsMap(Set<SootField> sensFields) {
+        //If there are multiple sensitive fields initialized with same constant, exception will be thrown.
+        return sensFields.stream().filter(field -> getConstantValue(field) != null).collect(Collectors.toMap(
+                SceneUtil::getConstantValue,
+                field -> field
+        ));
+    }
+
+    private static String getConstantValue(SootField field) {
+        return field.getTags().stream().filter(tag -> tag instanceof StringConstantValueTag)
+                .map(constTag -> ((StringConstantValueTag) constTag).getStringValue())
+                .findAny().orElse(null);
+    }
+
     public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Collection<SootField> sensFields) {
         return resolveFieldUsages(new HashSet<>(sensFields));
     }
 
-    private static List<SootField> getReferredFields(Stmt stmt) {
+    private static List<SootField> getReferredFields(Stmt stmt, Map<String, SootField> constantFieldsMap) {
+        List<SootField> result = new ArrayList<>();
+        if (stmt.containsFieldRef()) {
+            result.add(stmt.getFieldRef().getField());
+        }
+        //If the referred field is a constant, it will be inlined into the statement using it.
+        //Thus we have to serch it among the constants.
+        getStringConstantsIfAny(stmt).stream().filter(constantFieldsMap::containsKey)
+                .forEach(stringConst -> result.add(constantFieldsMap.get(stringConst)));
+        return result;
+    }
+
+    /**
+     * Constants might be contained in either assignments on method calls (to my knowledge).
+     */
+    private static List<String> getStringConstantsIfAny(Stmt stmt) {
+        List<String> result = new ArrayList<>();
+        if (stmt.containsInvokeExpr()) {
+            List<Value> args = stmt.getInvokeExpr().getArgs();
+            args.stream().filter(arg -> arg instanceof StringConstant)
+                    .map(constArg -> ((StringConstant) constArg).value)
+                    .forEach(result::add);
+        }
         if (stmt instanceof AssignStmt) {
             AssignStmt assign = (AssignStmt) stmt;
-            return Stream.of(assign.getLeftOp(), assign.getRightOp())
-                    .filter(val -> val instanceof FieldRef)
-                    .map(fieldRef -> ((FieldRef) fieldRef).getField())
-                    .collect(Collectors.toList());
+            if (assign.getRightOp() instanceof StringConstant) {
+                result.add(((StringConstant) assign.getRightOp()).value);
+            }
         }
-        return Collections.emptyList();
+        return result;
     }
 }
