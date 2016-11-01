@@ -12,9 +12,9 @@ import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.traversal.MethodPermDetector;
-import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -717,7 +717,7 @@ public class DroidPermMain {
 
                 System.out.println("\nCollected sources:");
                 for (Stmt stmt : sortedSources) {
-                    System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
+                    System.out.println("\t" + SceneUtil.getMethodOf(stmt));
                     System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
                     System.out.println("\t\tSourceType: " + setupApplication.getSourceType(stmt));
                 }
@@ -728,7 +728,7 @@ public class DroidPermMain {
 
                 System.out.println("\nCollected sinks:");
                 for (Stmt stmt : sortedSinks) {
-                    System.out.println("\t" + CallGraphUtil.getStmtToMethodMap().get(stmt));
+                    System.out.println("\t" + SceneUtil.getMethodOf(stmt));
                     System.out.println("\t\t" + stmt + " : " + stmt.getJavaSourceStartLineNumber());
                 }
             }

@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.scene;
 
 import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -8,11 +9,14 @@ import soot.jimple.AssignStmt;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
+import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
 import soot.tagkit.StringConstantValueTag;
 import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -25,6 +29,7 @@ public class SceneUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(SceneUtil.class);
     public static final String EXTENDS_PREFIX = "? extends ";
+    private static Map<Unit, SootMethod> stmtToMethodMap;
 
     /**
      * For entries starting with "? extends ", all implementing methods will be grabbed.
@@ -216,5 +221,43 @@ public class SceneUtil {
             }
         }
         return result;
+    }
+
+    /**
+     * @return The container method of the given unit.
+     */
+    public static SootMethod getMethodOf(Unit unit) {
+        if (stmtToMethodMap == null) {
+            stmtToMethodMap = buildStmtToMethodMap();
+        }
+        return stmtToMethodMap.get(unit);
+    }
+
+    /**
+     * Builds a map from all statements in the analysis classpath to their containing methods. Only methods reachable
+     * through the call graph are included in this map.
+     */
+    private static Map<Unit, SootMethod> buildStmtToMethodMap() {
+        //todo get all statements from Scene instead of call graph only.
+        try {
+            Class<?> cgClazz = CallGraph.class;
+            Field tgtToEdgeField = cgClazz.getDeclaredField("tgtToEdge");
+            tgtToEdgeField.setAccessible(true);
+
+            //this collection is taken from CallGraph internals.
+            @SuppressWarnings("unchecked")
+            Map<MethodOrMethodContext, Edge> tgtToEdge =
+                    (Map<MethodOrMethodContext, Edge>) tgtToEdgeField.get(Scene.v().getCallGraph());
+
+            Map<Unit, SootMethod> result;
+            result = tgtToEdge.keySet().stream().map(MethodOrMethodContext::method)
+                    .filter(SootMethod::hasActiveBody) //only SootMethod in CG with active body here
+                    .collect(HashMap::new, (Map<Unit, SootMethod> map, SootMethod meth)
+                                    -> meth.getActiveBody().getUnits().forEach(unit -> map.put(unit, meth)),
+                            StreamUtil::mutableMapCombiner);
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

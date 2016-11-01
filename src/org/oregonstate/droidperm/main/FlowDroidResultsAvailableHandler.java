@@ -1,9 +1,13 @@
 package org.oregonstate.droidperm.main;
 
 import com.google.common.base.Strings;
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
-import soot.*;
+import soot.MethodOrMethodContext;
+import soot.Scene;
+import soot.SootClass;
+import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.results.InfoflowResults;
@@ -42,7 +46,6 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
      */
     private void printResults(IInfoflowCFG cfg, InfoflowResults results) {
         Map<Integer, String> indentCache = new HashMap<>();
-        Map<Unit, SootMethod> stmtToMethodMap = CallGraphUtil.getStmtToMethodMap();
 
         System.out.println("\n\nFlowDroid: detected flows \n" +
                 "========================================================================\n");
@@ -58,7 +61,7 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
             System.out.println("\n"
                     + "+----------------------------------------------------------------------\n"
                     + "| Flows to sink " + sinkStmt + " : " + sinkStmt.getJavaSourceStartLineNumber() + "\n"
-                    + "| \tin " + stmtToMethodMap.get(sinkStmt)
+                    + "| \tin " + SceneUtil.getMethodOf(sinkStmt)
                     + ", from sources:\n"
                     + "+----------------------------------------------------------------------");
             List<ResultSourceInfo> sortedSources = results.getResults().get(sink).stream()

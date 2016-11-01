@@ -1,10 +1,10 @@
 package org.oregonstate.droidperm.util;
 
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
-import soot.Unit;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
@@ -12,7 +12,6 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,8 +20,6 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/15/2016.
  */
 public class CallGraphUtil {
-
-    private static Map<Unit, SootMethod> stmtToMethodMap;
 
     /**
      * Return the subset of methods (eventually in their context) contained in the call graph, out of the input
@@ -120,7 +117,9 @@ public class CallGraphUtil {
                 }
                 return j >= 0 ? result.get(dataflow[j])
                        //case 4 - use stmtToMethodMap to infer container method
-                              : new Pair<>(getStmtToMethodMap().get(stmt), getNewIndent(i, dataflow, result, false));
+                              : new Pair<>(
+                                      SceneUtil.getMethodOf(stmt),
+                                      getNewIndent(i, dataflow, result, false));
             };
 
             result.put(stmt, containerCheckAlg.get());
@@ -168,44 +167,6 @@ public class CallGraphUtil {
             return result.get(dataflow[stmtIndex - 1]).getO2() - 1;
         } else {
             return result.get(dataflow[stmtIndex - 1]).getO2();
-        }
-    }
-
-    /**
-     * Returns a map from all statements in the analysis classpath to their containing methods. Only methods reachable
-     * through the call graph are included in this map.
-     */
-    public static Map<Unit, SootMethod> getStmtToMethodMap() {
-        if (stmtToMethodMap == null) {
-            stmtToMethodMap = buildStmtToMethodMap();
-        }
-        return stmtToMethodMap;
-    }
-
-    /**
-     * Builds a map from all statements in the analysis classpath to their containing methods. Only methods reachable
-     * through the call graph are included in this map.
-     */
-    private static Map<Unit, SootMethod> buildStmtToMethodMap() {
-        try {
-            Class<?> cgClazz = CallGraph.class;
-            Field tgtToEdgeField = cgClazz.getDeclaredField("tgtToEdge");
-            tgtToEdgeField.setAccessible(true);
-
-            //this collection is taken from CallGraph internals.
-            @SuppressWarnings("unchecked")
-            Map<MethodOrMethodContext, Edge> tgtToEdge =
-                    (Map<MethodOrMethodContext, Edge>) tgtToEdgeField.get(Scene.v().getCallGraph());
-
-            Map<Unit, SootMethod> result;
-            result = tgtToEdge.keySet().stream().map(MethodOrMethodContext::method)
-                    .filter(SootMethod::hasActiveBody) //only SootMethod in CG with active body here
-                    .collect(HashMap::new, (Map<Unit, SootMethod> map, SootMethod meth)
-                                    -> meth.getActiveBody().getUnits().forEach(unit -> map.put(unit, meth)),
-                            StreamUtil::mutableMapCombiner);
-            return result;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }
