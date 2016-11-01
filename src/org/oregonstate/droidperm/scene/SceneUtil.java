@@ -14,6 +14,7 @@ import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -64,68 +65,78 @@ public class SceneUtil {
     }
 
     /**
+     * Traverse all statements in the given classes and apply stmtConsumer to each of them.
+     */
+    private static void traverseClasses(Collection<SootClass> classes, BiConsumer<Stmt, SootMethod> stmtConsumer) {
+        classes.stream()
+                .filter(SootClass::isConcrete)
+                .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete)
+                .map(SceneUtil::retrieveBody).filter(body -> body != null)
+                .forEach(body -> body.getUnits().forEach(unit -> {
+                    Stmt stmt = (Stmt) unit;
+                    stmtConsumer.accept(stmt, body.getMethod());
+                }));
+    }
+
+    private static Body retrieveBody(SootMethod meth) {
+        try {
+            return meth.retrieveActiveBody();
+        } catch (NullPointerException e) {
+            //Redundant.
+            //This one is thrown after other types of exceptions were thrown previously for same method.
+        } catch (Exception e) {
+            logger.warn("Exception in retrieveActiveBody() for " + meth + " : " + e.toString());
+        }
+        return null;
+    }
+
+    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Collection<SootMethod> sootMethods) {
+        return resolveMethodUsages(new HashSet<>(sootMethods));
+    }
+
+    /**
      * @return A map from sensitives to actual Statements in context possibly invoking that sensitive.
      */
-    @SuppressWarnings("Convert2streamapi")
     public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Set<SootMethod> sensitives) {
-        Hierarchy hier = Scene.v().getActiveHierarchy();
 
         //for performance optimization
         Set<String> sensSubsignatures =
                 sensitives.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
 
         MultiMap<SootMethod, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
-        for (SootClass sc : Scene.v().getApplicationClasses()) {
-            if (sc.isConcrete()) {
-                for (SootMethod contextMeth : sc.getMethods()) {
-                    if (!contextMeth.isConcrete()) {
-                        continue;
-                    }
-
-                    Body body;
-                    try {
-                        body = contextMeth.retrieveActiveBody();
-                    } catch (NullPointerException e) {
-                        //Redundant.
-                        //This one is thrown after other types of exceptions were thrown previously for same method.
-                        continue;
-                    } catch (Exception e) {
-                        logger.warn("Exception in retrieveActiveBody() for " + contextMeth + " : " + e.toString());
-                        continue;
-                    }
-
-                    for (Unit u : body.getUnits()) {
-                        Stmt stmt = (Stmt) u;
-                        if (stmt.containsInvokeExpr()) {
-                            InvokeExpr invoke = stmt.getInvokeExpr();
-                            SootMethod invokeMethod;
-                            try {
-                                invokeMethod = invoke.getMethod();
-                            } catch (Exception e) {
-                                logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
-                                continue;
-                            }
-
-                            if (sensSubsignatures.contains(invokeMethod.getSubSignature())) {
-                                List<SootMethod> resolvedMethods = hier.resolveAbstractDispatch(
-                                        invokeMethod.getDeclaringClass(), invokeMethod);
-                                if (!Collections.disjoint(resolvedMethods, sensitives)) {
-                                    //this unit calls a sensitive.
-                                    SootMethod sens = resolvedMethods.stream().filter(sensitives::contains).findAny()
-                                            .orElse(null);
-                                    result.put(sens, new Pair<>(stmt, contextMeth));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        traverseClasses(Scene.v().getApplicationClasses(),
+                (stmt, method) -> collectResolvedMethods(sensitives, sensSubsignatures, result, stmt, method));
         return result;
     }
 
-    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Collection<SootMethod> sootMethods) {
-        return resolveMethodUsages(new HashSet<>(sootMethods));
+    private static void collectResolvedMethods(Set<SootMethod> sensitives, Set<String> sensSubsignatures,
+                                               MultiMap<SootMethod, Pair<Stmt, SootMethod>> result,
+                                               Stmt stmt, SootMethod contextMeth) {
+        if (stmt.containsInvokeExpr()) {
+            InvokeExpr invoke = stmt.getInvokeExpr();
+            SootMethod invokeMethod;
+            try {
+                invokeMethod = invoke.getMethod();
+            } catch (Exception e) {
+                logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
+                return;
+            }
+
+            if (sensSubsignatures.contains(invokeMethod.getSubSignature())) {
+                List<SootMethod> resolvedMethods = Scene.v().getActiveHierarchy().resolveAbstractDispatch(
+                        invokeMethod.getDeclaringClass(), invokeMethod);
+                if (!Collections.disjoint(resolvedMethods, sensitives)) {
+                    //this unit calls a sensitive.
+                    SootMethod sens = resolvedMethods.stream().filter(sensitives::contains).findAny()
+                            .orElse(null);
+                    result.put(sens, new Pair<>(stmt, contextMeth));
+                }
+            }
+        }
+    }
+
+    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Collection<SootField> sensFields) {
+        return resolveFieldUsages(new HashSet<>(sensFields));
     }
 
     /**
@@ -134,39 +145,18 @@ public class SceneUtil {
     public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Set<SootField> sensFields) {
         Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFields);
         MultiMap<SootField, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
-        for (SootClass sc : Scene.v().getApplicationClasses()) {
-            if (sc.isConcrete()) {
-                for (SootMethod contextMeth : sc.getMethods()) {
-                    if (!contextMeth.isConcrete()) {
-                        continue;
-                    }
-
-                    Body body;
-                    try {
-                        body = contextMeth.retrieveActiveBody();
-                    } catch (NullPointerException e) {
-                        //Redundant.
-                        //This one is thrown after other types of exceptions were thrown previously for same method.
-                        continue;
-                    } catch (Exception e) {
-                        logger.warn("Exception in retrieveActiveBody() for " + contextMeth + " : " + e.toString());
-                        continue;
-                    }
-
-                    for (Unit u : body.getUnits()) {
-                        Stmt stmt = (Stmt) u;
-                        List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
-                        //noinspection Convert2streamapi
-                        for (SootField field : fields) {
-                            if (sensFields.contains(field)) {
-                                result.put(field, new Pair<>(stmt, contextMeth));
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        traverseClasses(Scene.v().getApplicationClasses(),
+                (stmt, method) -> collectResolvedFields(sensFields, constantFieldsMap, result, stmt, method));
         return result;
+    }
+
+    private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> constantFieldsMap,
+                                              MultiMap<SootField, Pair<Stmt, SootMethod>> result,
+                                              Stmt stmt, SootMethod method) {
+        List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
+        fields.stream().filter(sensFields::contains).forEach(field ->
+                result.put(field, new Pair<>(stmt, method))
+        );
     }
 
     private static Map<String, SootField> buildConstantFieldsMap(Set<SootField> sensFields) {
@@ -181,10 +171,6 @@ public class SceneUtil {
         return field.getTags().stream().filter(tag -> tag instanceof StringConstantValueTag)
                 .map(constTag -> ((StringConstantValueTag) constTag).getStringValue())
                 .findAny().orElse(null);
-    }
-
-    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Collection<SootField> sensFields) {
-        return resolveFieldUsages(new HashSet<>(sensFields));
     }
 
     private static List<SootField> getReferredFields(Stmt stmt, Map<String, SootField> constantFieldsMap) {
@@ -235,24 +221,7 @@ public class SceneUtil {
      */
     private static Map<Unit, SootMethod> buildStmtToMethodMap() {
         Map<Unit, SootMethod> result = new HashMap<>();
-        Scene.v().getClasses().stream().filter(SootClass::isConcrete)
-                .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete)
-                .map(SceneUtil::retrieveBody).filter(body -> body != null)
-                .forEach(body -> body.getUnits().forEach(
-                        unit -> result.put(unit, body.getMethod()))
-                );
+        traverseClasses(Scene.v().getClasses(), result::put);
         return result;
-    }
-
-    private static Body retrieveBody(SootMethod meth) {
-        try {
-            return meth.retrieveActiveBody();
-        } catch (NullPointerException e) {
-            //Redundant.
-            //This one is thrown after other types of exceptions were thrown previously for same method.
-        } catch (Exception e) {
-            logger.warn("Exception in retrieveActiveBody() for " + meth + " : " + e.toString());
-        }
-        return null;
     }
 }
