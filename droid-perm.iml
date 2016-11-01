@@ -24,15 +24,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="com.google.guava:guava:19.0" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/jcommander-1.58.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" name="com.beust:jcommander:1.58" level="project" />
   </component>
 </module>
