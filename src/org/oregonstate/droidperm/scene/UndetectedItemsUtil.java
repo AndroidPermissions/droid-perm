@@ -4,7 +4,6 @@ import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.toolkits.scalar.Pair;
 import soot.util.AbstractMultiMap;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
@@ -23,14 +22,14 @@ public class UndetectedItemsUtil {
     /**
      * todo this will be getUndetectedFields
      */
-    private static MultiMap<SootField, Pair<Stmt, SootMethod>> getFieldUsages(
+    private static MultiMap<SootField, Stmt> getFieldUsages(
             Collection<SootField> sootFields, Set<SootMethod> outflowIgnoreSet) {
-        MultiMap<SootField, Pair<Stmt, SootMethod>> undetected = SceneUtil.resolveFieldUsages(sootFields);
-        MultiMap<SootField, Pair<Stmt, SootMethod>> copy = new HashMultiMap<>(undetected);
+        MultiMap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields);
+        MultiMap<SootField, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
         for (SootField sensField : copy.keySet()) {
-            copy.get(sensField).stream().filter(pair -> outflowIgnoreSet.contains(pair.getO2()))
+            copy.get(sensField).stream().filter(stmt -> outflowIgnoreSet.contains(SceneUtil.getMethodOf(stmt)))
                     .forEach(pair -> undetected.remove(sensField, pair));
         }
 
@@ -43,9 +42,9 @@ public class UndetectedItemsUtil {
      * <p>
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
-    public static Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> buildPermToUndetectedFieldSensMap(
+    public static Map<Set<String>, MultiMap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
             ScenePermissionDefService scenePermDef, Set<SootMethod> outflowIgnoreSet) {
-        MultiMap<SootField, Pair<Stmt, SootMethod>> undetectedSens =
+        MultiMap<SootField, Stmt> undetectedSens =
                 getFieldUsages(scenePermDef.getSceneFieldSensitives(), outflowIgnoreSet);
 
         return scenePermDef.getFieldPermissionSets().stream().collect(Collectors.toMap(
@@ -62,7 +61,7 @@ public class UndetectedItemsUtil {
                                                       Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
 
-        Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap =
+        Map<Set<String>, MultiMap<SootField, Stmt>> permToUndetectedFieldSensMap =
                 buildPermToUndetectedFieldSensMap(scenePermDef, outflowIgnoreSet);
         printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
 
@@ -76,35 +75,35 @@ public class UndetectedItemsUtil {
      * @param outflowIgnoreSet - entries from this list are used to filter out call contexts. Works for
      *                         TwilightManager.
      */
-    private static MultiMap<SootMethod, Pair<Stmt, SootMethod>> getUndetectedCalls(
+    private static MultiMap<SootMethod, Stmt> getUndetectedCalls(
             List<SootMethod> sootMethods, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
-        MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetected = SceneUtil.resolveMethodUsages(sootMethods);
-        MultiMap<SootMethod, Pair<Stmt, SootMethod>> copy = new HashMultiMap<>(undetected);
+        MultiMap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods);
+        MultiMap<SootMethod, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
         for (SootMethod sens : copy.keySet()) {
-            copy.get(sens).stream().filter(pair -> outflowIgnoreSet.contains(pair.getO2()))
+            copy.get(sens).stream().filter(stmt -> outflowIgnoreSet.contains(SceneUtil.getMethodOf(stmt)))
                     .forEach(pair -> undetected.remove(sens, pair));
         }
 
         //filter out detected
-        detected.forEach(
-                edge -> undetected.remove(edge.tgt(), new Pair<>(edge.srcStmt(), edge.src())));
+        detected.forEach(edge -> undetected.remove(edge.tgt(), edge.srcStmt()));
         return undetected;
     }
 
     public static void printUndetectedCheckers(ScenePermissionDefService scenePermDef,
                                                Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
-        MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedCheckers =
+        MultiMap<SootMethod, Stmt> undetectedCheckers =
                 getUndetectedCalls(scenePermDef.getPermCheckers(), detected, outflowIgnoreSet);
 
         System.out.println("\n\nUndetected checkers : " + undetectedCheckers.values().size() + "\n"
                 + "========================================================================");
         for (SootMethod checker : undetectedCheckers.keySet()) {
             System.out.println(checker);
-            for (Pair<Stmt, SootMethod> call : undetectedCheckers.get(checker)) {
-                System.out.println("\tfrom " + call.getO2() + " : " + call.getO1().getJavaSourceStartLineNumber());
+            for (Stmt stmt : undetectedCheckers.get(checker)) {
+                System.out.println(
+                        "\tfrom " + SceneUtil.getMethodOf(stmt) + " : " + stmt.getJavaSourceStartLineNumber());
             }
         }
         System.out.println("\nUndetected checkers execution time: "
@@ -115,7 +114,7 @@ public class UndetectedItemsUtil {
                                                  Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
 
-        Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap =
+        Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedSensMap =
                 buildPermToUndetectedSensMap(scenePermDef, detected, outflowIgnoreSet);
         printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
 
@@ -128,9 +127,9 @@ public class UndetectedItemsUtil {
      * <p>
      * Map lvl2: from sensitive to its callign context: method and stmt.
      */
-    public static Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> buildPermToUndetectedSensMap(
+    public static Map<Set<String>, MultiMap<SootMethod, Stmt>> buildPermToUndetectedSensMap(
             ScenePermissionDefService scenePermDef, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
-        MultiMap<SootMethod, Pair<Stmt, SootMethod>> undetectedSens =
+        MultiMap<SootMethod, Stmt> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, outflowIgnoreSet);
 
         return scenePermDef.getMethodPermissionSets().stream().collect(Collectors.toMap(
@@ -146,15 +145,14 @@ public class UndetectedItemsUtil {
     /**
      * @param <T> Type representing a sensitive. Either SootMethod or SootField.
      */
-    public static <T> void printUndetectedSensitives(
-            Map<Set<String>, MultiMap<T, Pair<Stmt, SootMethod>>> permToUndetectedSensMap,
-            final String header) {
+    public static <T> void printUndetectedSensitives(Map<Set<String>, MultiMap<T, Stmt>> permToUndetectedSensMap,
+                                                     final String header) {
         int count = permToUndetectedSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
 
         System.out.println("\n\n" + header + " : " + count + "\n"
                 + "========================================================================");
         for (Set<String> permSet : permToUndetectedSensMap.keySet()) {
-            MultiMap<T, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedSensMap.get(permSet);
+            MultiMap<T, Stmt> currentSensMMap = permToUndetectedSensMap.get(permSet);
             if (currentSensMMap.isEmpty()) {
                 continue;
             }
@@ -162,8 +160,9 @@ public class UndetectedItemsUtil {
                     + "\n------------------------------------------------------------------------");
             for (T sens : currentSensMMap.keySet()) {
                 System.out.println(sens);
-                for (Pair<Stmt, SootMethod> call : currentSensMMap.get(sens)) {
-                    System.out.println("\tfrom " + call.getO2() + " : " + call.getO1().getJavaSourceStartLineNumber());
+                for (Stmt stmt : currentSensMMap.get(sens)) {
+                    System.out.println(
+                            "\tfrom " + SceneUtil.getMethodOf(stmt) + " : " + stmt.getJavaSourceStartLineNumber());
                 }
             }
         }

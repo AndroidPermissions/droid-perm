@@ -9,7 +9,6 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.tagkit.StringConstantValueTag;
-import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
@@ -90,28 +89,27 @@ public class SceneUtil {
         return null;
     }
 
-    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Collection<SootMethod> sootMethods) {
+    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods) {
         return resolveMethodUsages(new HashSet<>(sootMethods));
     }
 
     /**
      * @return A map from sensitives to actual Statements in context possibly invoking that sensitive.
      */
-    public static MultiMap<SootMethod, Pair<Stmt, SootMethod>> resolveMethodUsages(Set<SootMethod> sensitives) {
+    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Set<SootMethod> sensitives) {
 
         //for performance optimization
         Set<String> sensSubsignatures =
                 sensitives.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
 
-        MultiMap<SootMethod, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
+        MultiMap<SootMethod, Stmt> result = new HashMultiMap<>();
         traverseClasses(Scene.v().getApplicationClasses(),
-                (stmt, method) -> collectResolvedMethods(sensitives, sensSubsignatures, result, stmt, method));
+                (stmt, method) -> collectResolvedMethods(sensitives, sensSubsignatures, result, stmt));
         return result;
     }
 
     private static void collectResolvedMethods(Set<SootMethod> sensitives, Set<String> sensSubsignatures,
-                                               MultiMap<SootMethod, Pair<Stmt, SootMethod>> result,
-                                               Stmt stmt, SootMethod contextMeth) {
+                                               MultiMap<SootMethod, Stmt> result, Stmt stmt) {
         if (stmt.containsInvokeExpr()) {
             InvokeExpr invoke = stmt.getInvokeExpr();
             SootMethod invokeMethod;
@@ -127,35 +125,33 @@ public class SceneUtil {
                         invokeMethod.getDeclaringClass(), invokeMethod);
                 if (!Collections.disjoint(resolvedMethods, sensitives)) {
                     //this unit calls a sensitive.
-                    SootMethod sens = resolvedMethods.stream().filter(sensitives::contains).findAny()
-                            .orElse(null);
-                    result.put(sens, new Pair<>(stmt, contextMeth));
+                    SootMethod sens = resolvedMethods.stream().filter(sensitives::contains).findAny().orElse(null);
+                    result.put(sens, stmt);
                 }
             }
         }
     }
 
-    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Collection<SootField> sensFields) {
+    public static MultiMap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields) {
         return resolveFieldUsages(new HashSet<>(sensFields));
     }
 
     /**
      * @return A map from fields to actual statements in context possibly referring that fields.
      */
-    public static MultiMap<SootField, Pair<Stmt, SootMethod>> resolveFieldUsages(Set<SootField> sensFields) {
+    public static MultiMap<SootField, Stmt> resolveFieldUsages(Set<SootField> sensFields) {
         Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFields);
-        MultiMap<SootField, Pair<Stmt, SootMethod>> result = new HashMultiMap<>();
+        MultiMap<SootField, Stmt> result = new HashMultiMap<>();
         traverseClasses(Scene.v().getApplicationClasses(),
-                (stmt, method) -> collectResolvedFields(sensFields, constantFieldsMap, result, stmt, method));
+                (stmt, method) -> collectResolvedFields(sensFields, constantFieldsMap, result, stmt));
         return result;
     }
 
     private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> constantFieldsMap,
-                                              MultiMap<SootField, Pair<Stmt, SootMethod>> result,
-                                              Stmt stmt, SootMethod method) {
+                                              MultiMap<SootField, Stmt> result, Stmt stmt) {
         List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
         fields.stream().filter(sensFields::contains).forEach(field ->
-                result.put(field, new Pair<>(stmt, method))
+                result.put(field, stmt)
         );
     }
 

@@ -9,7 +9,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
-import soot.toolkits.scalar.Pair;
 import soot.util.MultiMap;
 
 import java.io.File;
@@ -30,14 +29,12 @@ public class SensitiveCollectorService {
             throws Exception {
         long startTime = System.currentTimeMillis();
 
-        Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedMethodSensMap =
-                UndetectedItemsUtil
-                        .buildPermToUndetectedSensMap(scenePermDef, Collections.emptySet(), Collections.emptySet());
+        Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedMethodSensMap = UndetectedItemsUtil
+                .buildPermToUndetectedSensMap(scenePermDef, Collections.emptySet(), Collections.emptySet());
         UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedMethodSensMap, "Collected method sensitives");
 
-        Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap =
-                UndetectedItemsUtil
-                        .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet());
+        Map<Set<String>, MultiMap<SootField, Stmt>> permToUndetectedFieldSensMap = UndetectedItemsUtil
+                .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet());
         UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedFieldSensMap, "Collected field sensitives");
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(
