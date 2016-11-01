@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.PrintUtil;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
@@ -13,9 +14,10 @@ import soot.util.MultiMap;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,7 +38,7 @@ public class SensitiveCollectorService {
         Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap =
                 UndetectedItemsUtil
                         .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet());
-        UndetectedItemsUtil.printUndetectedFieldSensitives(permToUndetectedFieldSensMap, "Collected field sensitives");
+        UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedFieldSensMap, "Collected field sensitives");
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(
                 permToUndetectedMethodSensMap.keySet().stream()
@@ -44,21 +46,22 @@ public class SensitiveCollectorService {
                 permToUndetectedFieldSensMap.keySet().stream()
                         .filter(permSet -> !permToUndetectedFieldSensMap.get(permSet).isEmpty())
         ).collect(Collectors.toCollection(LinkedHashSet::new));
-        printCollection(sensitivePermissionSets, "Permission sets required by sensitives");
+        PrintUtil.printCollection(sensitivePermissionSets, "Permission sets required by sensitives");
 
         Set<String> declaredPermissions = getDeclaredPermissions(apkFile);
-        printCollection(declaredPermissions, "Permissions declared in manifest");
+        PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        printCollection(undeclaredPermissionSets, "Permissions sets used by sensitives but not declared in manifest");
+        PrintUtil.printCollection(undeclaredPermissionSets,
+                "Permissions sets used by sensitives but not declared in manifest");
 
         Set<String> usedPermissions = sensitivePermissionSets.stream().collect(MyCollectors.toFlatSet());
         Set<String> unusedPermissions = Sets.difference(declaredPermissions, usedPermissions);
-        printCollection(unusedPermissions, "Permissions declared but not used by sensitives");
+        PrintUtil.printCollection(unusedPermissions, "Permissions declared but not used by sensitives");
         if (txtOut != null) {
-            printCollectionToFile(unusedPermissions, txtOut);
+            PrintUtil.printCollectionToFile(unusedPermissions, txtOut);
         }
 
         System.out.println("\nTime to collect sensitives: "
@@ -68,20 +71,5 @@ public class SensitiveCollectorService {
     private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {
         DPProcessManifest manifest = new DPProcessManifest(apkFile);
         return manifest.getDeclaredPermissions();
-    }
-
-    private static <T> void printCollection(Collection<T> collection, String header) {
-        System.out.println("\n\n" + header + " : " + collection.size() + "\n"
-                + "========================================================================");
-        collection.forEach(System.out::println);
-    }
-
-    /**
-     * Print the elements of a collection to file, one per line.
-     */
-    private static <T> void printCollectionToFile(Collection<T> collection, File file) throws IOException {
-        List<String> itemsAsStrings =
-                collection.stream().map(Object::toString).collect(Collectors.toList());
-        Files.write(file.toPath(), itemsAsStrings, Charset.defaultCharset());
     }
 }

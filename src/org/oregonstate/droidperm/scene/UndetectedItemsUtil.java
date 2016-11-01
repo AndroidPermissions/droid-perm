@@ -58,35 +58,13 @@ public class UndetectedItemsUtil {
         ));
     }
 
-    public static void printUndetectedFieldSensitives(
-            Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap,
-            final String header) {
-        int count = permToUndetectedFieldSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
-
-        System.out.println("\n\n" + header + " : " + count + "\n"
-                + "========================================================================");
-        for (Set<String> permSet : permToUndetectedFieldSensMap.keySet()) {
-            MultiMap<SootField, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedFieldSensMap.get(permSet);
-            if (currentSensMMap.isEmpty()) {
-                continue;
-            }
-            System.out.println("\n" + permSet + "\n------------------------------------");
-            for (SootField sensF : currentSensMMap.keySet()) {
-                System.out.println(sensF);
-                for (Pair<Stmt, SootMethod> call : currentSensMMap.get(sensF)) {
-                    System.out.println("\tfrom " + call.getO2() + " : " + call.getO1().getJavaSourceStartLineNumber());
-                }
-            }
-        }
-    }
-
     public static void printUndetectedFieldSensitives(ScenePermissionDefService scenePermDef,
                                                       Set<SootMethod> outflowIgnoreSet) {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootField, Pair<Stmt, SootMethod>>> permToUndetectedFieldSensMap =
                 buildPermToUndetectedFieldSensMap(scenePermDef, outflowIgnoreSet);
-        printUndetectedFieldSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
+        printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
 
         System.out.println("\nUndetected field sensitives execution time: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
@@ -165,20 +143,24 @@ public class UndetectedItemsUtil {
         ));
     }
 
-    public static void printUndetectedSensitives(
-            Map<Set<String>, MultiMap<SootMethod, Pair<Stmt, SootMethod>>> permToUndetectedSensMap,
+    /**
+     * @param <T> Type representing a sensitive. Either SootMethod or SootField.
+     */
+    public static <T> void printUndetectedSensitives(
+            Map<Set<String>, MultiMap<T, Pair<Stmt, SootMethod>>> permToUndetectedSensMap,
             final String header) {
         int count = permToUndetectedSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
 
         System.out.println("\n\n" + header + " : " + count + "\n"
                 + "========================================================================");
         for (Set<String> permSet : permToUndetectedSensMap.keySet()) {
-            MultiMap<SootMethod, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedSensMap.get(permSet);
+            MultiMap<T, Pair<Stmt, SootMethod>> currentSensMMap = permToUndetectedSensMap.get(permSet);
             if (currentSensMMap.isEmpty()) {
                 continue;
             }
-            System.out.println("\n" + permSet + "\n------------------------------------");
-            for (SootMethod sens : currentSensMMap.keySet()) {
+            System.out.println("\n" + permSet
+                    + "\n------------------------------------------------------------------------");
+            for (T sens : currentSensMMap.keySet()) {
                 System.out.println(sens);
                 for (Pair<Stmt, SootMethod> call : currentSensMMap.get(sens)) {
                     System.out.println("\tfrom " + call.getO2() + " : " + call.getO1().getJavaSourceStartLineNumber());
