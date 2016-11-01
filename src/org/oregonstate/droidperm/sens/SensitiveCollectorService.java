@@ -1,7 +1,9 @@
 package org.oregonstate.droidperm.sens;
 
+import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.oregonstate.droidperm.util.MyCollectors;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
@@ -47,22 +49,20 @@ public class SensitiveCollectorService {
         Set<String> declaredPermissions = getDeclaredPermissions(apkFile);
         printCollection(declaredPermissions, "Permissions declared in manifest");
 
-        Set<Set<String>> uncoveredPermissionSets = sensitivePermissionSets.stream()
+        Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        printCollection(uncoveredPermissionSets, "Permissions sets not covered by declared permissions");
+        printCollection(undeclaredPermissionSets, "Permissions sets used by sensitives but not declared in manifest");
+
+        Set<String> usedPermissions = sensitivePermissionSets.stream().collect(MyCollectors.toFlatSet());
+        Set<String> unusedPermissions = Sets.difference(declaredPermissions, usedPermissions);
+        printCollection(unusedPermissions, "Permissions declared but not used by sensitives");
         if (txtOut != null) {
-            printToFile(uncoveredPermissionSets, txtOut);
+            printCollectionToFile(unusedPermissions, txtOut);
         }
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
-    }
-
-    private static void printToFile(Set<Set<String>> uncoveredPermissionSets, File txtOut) throws IOException {
-        List<String> permSetStrings =
-                uncoveredPermissionSets.stream().map(Object::toString).collect(Collectors.toList());
-        Files.write(txtOut.toPath(), permSetStrings, Charset.defaultCharset());
     }
 
     private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {
@@ -74,5 +74,14 @@ public class SensitiveCollectorService {
         System.out.println("\n\n" + header + " : " + collection.size() + "\n"
                 + "========================================================================");
         collection.forEach(System.out::println);
+    }
+
+    /**
+     * Print the elements of a collection to file, one per line.
+     */
+    private static <T> void printCollectionToFile(Collection<T> collection, File file) throws IOException {
+        List<String> itemsAsStrings =
+                collection.stream().map(Object::toString).collect(Collectors.toList());
+        Files.write(file.toPath(), itemsAsStrings, Charset.defaultCharset());
     }
 }
