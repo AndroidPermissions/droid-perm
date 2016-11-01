@@ -10,7 +10,6 @@ package org.oregonstate.droidperm.main;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
-import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
@@ -35,9 +34,13 @@ import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Adapted from FlowDroid Test class.
@@ -63,8 +66,7 @@ public class DroidPermMain {
     private static String flowDroidXmlOut;
 
     private static String additionalClasspath = "";
-    private static File txtPermDefFile = new File("PermissionDefs.txt");
-    private static File xmlPermDefFile;
+    private static List<File> permDefFiles = Collections.singletonList(new File("PermissionDefs.txt"));
     private static boolean useAnnoPermDef;//whether to use permission annotations.
     private static File txtOut;
     private static File xmlOut;
@@ -319,11 +321,8 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--code-elimination-mode")) {
                 config.setCodeEliminationMode(InfoflowConfiguration.CodeEliminationMode.valueOf(args[i + 1]));
                 i += 2;
-            } else if (args[i].equalsIgnoreCase("--PERM-DEF-FILE")) {
-                txtPermDefFile = new File(args[i + 1]);
-                i += 2;
-            } else if (args[i].equalsIgnoreCase("--XML-PERM-DEF-FILE")) {
-                xmlPermDefFile = new File(args[i + 1]);
+            } else if (args[i].equalsIgnoreCase("--PERM-DEF-FILES")) {
+                permDefFiles = buildPermDefFiles(args[i + 1]);
                 i += 2;
             } else if (args[i].equalsIgnoreCase("--USE-ANNO-PERM-DEF")) {
                 useAnnoPermDef = true;
@@ -365,8 +364,13 @@ public class DroidPermMain {
             return false;
         }
 
-        if (!txtPermDefFile.exists()) {
-            logger.error("FATAL: Txt permission definition file not found: " + txtPermDefFile);
+        if (permDefFiles.isEmpty()) {
+            logger.error("FATAL: Empty list of permission definition files.");
+            return false;
+        }
+        List<File> missingPermFiles = permDefFiles.stream().filter(file -> !file.exists()).collect(Collectors.toList());
+        if (!missingPermFiles.isEmpty()) {
+            logger.error("FATAL: Permission definition files not found: " + missingPermFiles);
             return false;
         }
         return true;
@@ -402,10 +406,8 @@ public class DroidPermMain {
         System.out.println();
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
-        System.out.println("\t--PERM-DEF-FILE Path to permission definitions file. Default is PermissionDefs.txt");
-        System.out
-                .println("\t--XML-PERM-DEF-FILE Path to xml permission definitions file. Optional. Even if specified, "
-                        + "a txt perm def file is also necessary for checker definitions.");
+        System.out.println("\t--PERM-DEF-FILES A list of txt or xml files containing permission definitions. "
+                + "Multiple files are separated by \";\" Default is PermissionDefs.txt");
         System.out.println(
                 "\t--USE-ANNO-PERM-DEF Use permission definitions provided as @RequiresPermission annotations.");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
@@ -488,6 +490,10 @@ public class DroidPermMain {
         }
     }
 
+    private static List<File> buildPermDefFiles(String fileListArg) {
+        return Stream.of(fileListArg.split(";")).map(name -> new File(name.trim())).collect(Collectors.toList());
+    }
+
     private static void runAnalysisForFile(String androidJarORSdkDir, File apkFile) throws Exception {
         initTime = System.nanoTime();
 
@@ -502,7 +508,8 @@ public class DroidPermMain {
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
             SensitiveCollectorService
-                    .hierarchySensitivesAnalysis(new ScenePermissionDefService(getPermDefProvider()), apkFile, txtOut);
+                    .hierarchySensitivesAnalysis(new ScenePermissionDefService(
+                            PermDefProviderFactory.create(permDefFiles, useAnnoPermDef)), apkFile, txtOut);
             return;
         }
 
@@ -528,14 +535,10 @@ public class DroidPermMain {
         if (printAnnoPermDef) {
             AnnoPermissionDefUtil.printAnnoPermDefs();
         }
-        new MethodPermDetector(txtOut, xmlOut, new ScenePermissionDefService(getPermDefProvider())).analyzeAndPrint();
+        new MethodPermDetector(txtOut, xmlOut,
+                new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef)))
+                .analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
-    }
-
-    public static IPermissionDefProvider getPermDefProvider() {
-        List<File> providerFiles = new ArrayList<>(Arrays.asList(txtPermDefFile, xmlPermDefFile));
-        providerFiles.removeIf(Objects::isNull);
-        return PermDefProviderFactory.create(providerFiles, useAnnoPermDef);
     }
 
     private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
