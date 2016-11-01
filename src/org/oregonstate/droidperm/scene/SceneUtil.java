@@ -1,7 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
 import org.oregonstate.droidperm.util.MyCollectors;
-import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -9,14 +8,11 @@ import soot.jimple.AssignStmt;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
-import soot.jimple.toolkits.callgraph.CallGraph;
-import soot.jimple.toolkits.callgraph.Edge;
 import soot.tagkit.StringConstantValueTag;
 import soot.toolkits.scalar.Pair;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -238,26 +234,25 @@ public class SceneUtil {
      * through the call graph are included in this map.
      */
     private static Map<Unit, SootMethod> buildStmtToMethodMap() {
-        //todo get all statements from Scene instead of call graph only.
+        Map<Unit, SootMethod> result = new HashMap<>();
+        Scene.v().getClasses().stream().filter(SootClass::isConcrete)
+                .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete)
+                .map(SceneUtil::retrieveBody).filter(body -> body != null)
+                .forEach(body -> body.getUnits().forEach(
+                        unit -> result.put(unit, body.getMethod()))
+                );
+        return result;
+    }
+
+    private static Body retrieveBody(SootMethod meth) {
         try {
-            Class<?> cgClazz = CallGraph.class;
-            Field tgtToEdgeField = cgClazz.getDeclaredField("tgtToEdge");
-            tgtToEdgeField.setAccessible(true);
-
-            //this collection is taken from CallGraph internals.
-            @SuppressWarnings("unchecked")
-            Map<MethodOrMethodContext, Edge> tgtToEdge =
-                    (Map<MethodOrMethodContext, Edge>) tgtToEdgeField.get(Scene.v().getCallGraph());
-
-            Map<Unit, SootMethod> result;
-            result = tgtToEdge.keySet().stream().map(MethodOrMethodContext::method)
-                    .filter(SootMethod::hasActiveBody) //only SootMethod in CG with active body here
-                    .collect(HashMap::new, (Map<Unit, SootMethod> map, SootMethod meth)
-                                    -> meth.getActiveBody().getUnits().forEach(unit -> map.put(unit, meth)),
-                            StreamUtil::mutableMapCombiner);
-            return result;
+            return meth.retrieveActiveBody();
+        } catch (NullPointerException e) {
+            //Redundant.
+            //This one is thrown after other types of exceptions were thrown previously for same method.
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            logger.warn("Exception in retrieveActiveBody() for " + meth + " : " + e.toString());
         }
+        return null;
     }
 }
