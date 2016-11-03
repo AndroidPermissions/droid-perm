@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
+import org.oregonstate.droidperm.util.PrintUtil;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -102,8 +103,7 @@ public class UndetectedItemsUtil {
         for (SootMethod checker : undetectedCheckers.keySet()) {
             System.out.println(checker);
             for (Stmt stmt : undetectedCheckers.get(checker)) {
-                System.out.println(
-                        "\tfrom " + SceneUtil.getMethodOf(stmt) + " : " + stmt.getJavaSourceStartLineNumber());
+                System.out.println("\tfrom " + PrintUtil.toMethodLogString(stmt));
             }
         }
         System.out.println("\nUndetected checkers execution time: "
@@ -161,8 +161,7 @@ public class UndetectedItemsUtil {
             for (T sens : currentSensMMap.keySet()) {
                 System.out.println(sens);
                 for (Stmt stmt : currentSensMMap.get(sens)) {
-                    System.out.println(
-                            "\tfrom " + SceneUtil.getMethodOf(stmt) + " : " + stmt.getJavaSourceStartLineNumber());
+                    System.out.println("\tfrom " + PrintUtil.toMethodLogString(stmt));
                 }
             }
         }

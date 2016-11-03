@@ -1,5 +1,8 @@
 package org.oregonstate.droidperm.util;
 
+import org.oregonstate.droidperm.scene.SceneUtil;
+import soot.jimple.Stmt;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -29,5 +32,16 @@ public class PrintUtil {
         List<String> itemsAsStrings =
                 collection.stream().map(Object::toString).collect(Collectors.toList());
         Files.write(file.toPath(), itemsAsStrings, Charset.defaultCharset());
+    }
+
+    public static String toLogString(Stmt stmt) {
+        return stmt + " : " + stmt.getJavaSourceStartLineNumber();
+    }
+
+    /**
+     * Print containing method and this statement line number.
+     */
+    public static String toMethodLogString(Stmt stmt) {
+        return SceneUtil.getMethodOf(stmt) + " : " + stmt.getJavaSourceStartLineNumber();
     }
 }

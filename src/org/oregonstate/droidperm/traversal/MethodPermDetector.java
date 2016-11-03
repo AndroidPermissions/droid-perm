@@ -246,7 +246,7 @@ public class MethodPermDetector {
                             System.out.println("\nSensitive " + sens);
                             printed = true;
                         }
-                        System.out.println("\tfrom " + edgeInto.getSrc());
+                        System.out.println("\tfrom " + PrintUtil.toMethodLogString(edgeInto.srcStmt()));
                         if (TryCatchCheckerUtil.isTryCatchChecked(edgeInto)) {
                             System.out.println("\t\tTRY-CATCH CHECKED");
                         }
@@ -335,8 +335,9 @@ public class MethodPermDetector {
                         System.out.println("\nChecker " + checkerMeth);
                         oldSens = checkerMeth;
                     }
-                    System.out.println("\tfrom lvl1 " + checkerEdge.getSrc());
-                    System.out.println("\tfrom lvl2 " + (parent != null ? parent.getSrc() : null));
+                    System.out.println("\tfrom lvl1 " + PrintUtil.toMethodLogString(checkerEdge.srcStmt()));
+                    System.out.println("\tfrom lvl2 "
+                            + (parent != null ? PrintUtil.toMethodLogString(parent.srcStmt()) : null));
                     if (!permsToCheckersMap.get(perm).get(checkerPair)) {
                         System.out.println("\t\tPoints-to certainty: UNCERTAIN");
                     }

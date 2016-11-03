@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.main;
 import com.google.common.base.Strings;
 import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.util.CallGraphUtil;
+import org.oregonstate.droidperm.util.PrintUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
 import soot.MethodOrMethodContext;
 import soot.Scene;
@@ -60,7 +61,7 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
             Stmt sinkStmt = sink.getSink();
             System.out.println("\n"
                     + "+----------------------------------------------------------------------\n"
-                    + "| Flows to sink " + sinkStmt + " : " + sinkStmt.getJavaSourceStartLineNumber() + "\n"
+                    + "| Flows to sink " + PrintUtil.toLogString(sinkStmt) + "\n"
                     + "| \tin " + SceneUtil.getMethodOf(sinkStmt)
                     + ", from sources:\n"
                     + "+----------------------------------------------------------------------");
@@ -79,7 +80,7 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
                     System.out.println("\n\n+----------------------------------------------------------------------");
                 }
                 System.out.println(""
-                        + "| From source " + sourceStmt + " : " + sourceStmt.getJavaSourceStartLineNumber() + "\n"
+                        + "| From source " + PrintUtil.toLogString(sourceStmt) + "\n"
                         + "| \tin " + sourceContainerMethod
                         + "\n+----------------------------------------------------------------------\n");
                 if (source.getPath() != null) {
@@ -102,7 +103,7 @@ final class FlowDroidResultsAvailableHandler implements ResultsAvailableHandler 
                         } else if (lastIndent != null && !lastIndent.equals(indent)) {
                             System.out.println(indent);
                         }
-                        System.out.println(indent + stmt + " : " + stmt.getJavaSourceStartLineNumber());
+                        System.out.println(indent + PrintUtil.toLogString(stmt));
                         lastIndent = indent;
                     }
                 }
