@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.scene;
 
 import soot.SootMethod;
+import soot.jimple.infoflow.util.SystemClassHandler;
 
 import java.util.Set;
 import java.util.function.Predicate;
@@ -20,6 +21,7 @@ public class ClasspathFilter implements Predicate<SootMethod> {
 
     @Override
     public boolean test(SootMethod sootMethod) {
-        return !ignoreSet.contains(sootMethod);
+        return !SystemClassHandler.isClassInSystemPackage(sootMethod.getDeclaringClass().getName())
+                && !ignoreSet.contains(sootMethod);
     }
 }
