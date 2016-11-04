@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.sens;
 
 import com.google.common.collect.Sets;
+import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
@@ -25,16 +26,17 @@ import java.util.stream.Stream;
  */
 public class SensitiveCollectorService {
 
-    public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef, File apkFile, File txtOut)
+    public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef,
+                                                   ClasspathFilter classpathFilter, File apkFile, File txtOut)
             throws Exception {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedMethodSensMap = UndetectedItemsUtil
-                .buildPermToUndetectedSensMap(scenePermDef, Collections.emptySet(), Collections.emptySet());
+                .buildPermToUndetectedSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedMethodSensMap, "Collected method sensitives");
 
         Map<Set<String>, MultiMap<SootField, Stmt>> permToUndetectedFieldSensMap = UndetectedItemsUtil
-                .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet());
+                .buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedFieldSensMap, "Collected field sensitives");
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(

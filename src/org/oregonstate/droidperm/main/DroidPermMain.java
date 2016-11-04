@@ -11,6 +11,8 @@ import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
+import org.oregonstate.droidperm.scene.ClasspathFilter;
+import org.oregonstate.droidperm.scene.ClasspathFilterService;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
@@ -51,6 +53,8 @@ import java.util.stream.Stream;
 public class DroidPermMain {
 
     private static final Logger logger = LoggerFactory.getLogger(DroidPermMain.class);
+
+    public static final File classpathFilterFile = new File("OutflowIgnoreList.txt");
 
     private static int repeatCount = 1;
     private static int timeout = -1;
@@ -508,9 +512,11 @@ public class DroidPermMain {
         }
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            SensitiveCollectorService
-                    .hierarchySensitivesAnalysis(new ScenePermissionDefService(
-                            PermDefProviderFactory.create(permDefFiles, useAnnoPermDef)), apkFile, txtOut);
+            ScenePermissionDefService scenePermDef =
+                    new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
+            ClasspathFilter classpathFilter =
+                    new ClasspathFilterService(scenePermDef).load(DroidPermMain.classpathFilterFile);
+            SensitiveCollectorService.hierarchySensitivesAnalysis(scenePermDef, classpathFilter, apkFile, txtOut);
             return;
         }
 
@@ -536,9 +542,11 @@ public class DroidPermMain {
         if (printAnnoPermDef) {
             AnnoPermissionDefUtil.printAnnoPermDefs();
         }
-        new MethodPermDetector(txtOut, xmlOut,
-                new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef)))
-                .analyzeAndPrint();
+        ScenePermissionDefService scenePermDef =
+                new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
+        ClasspathFilter classpathFilter
+                = new ClasspathFilterService(scenePermDef).load(DroidPermMain.classpathFilterFile);
+        new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
 

@@ -2,6 +2,7 @@ package org.oregonstate.droidperm.traversal;
 
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
+import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.*;
@@ -9,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
-import soot.SootMethod;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
@@ -26,13 +26,12 @@ import java.util.stream.Collectors;
 public class MethodPermDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
-    private static final File outflowIgnoreListFile = new File("OutflowIgnoreList.txt");
 
     private File txtOut;
     private File xmlOut;
     private ScenePermissionDefService scenePermDef;
 
-    private Set<SootMethod> outflowIgnoreSet;
+    private ClasspathFilter classpathFilter;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MethodOrMethodContext dummyMainMethod;
@@ -70,10 +69,12 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
-    public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef) {
+    public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef,
+                              ClasspathFilter classpathFilter) {
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
         this.scenePermDef = scenePermDef;
+        this.classpathFilter = classpathFilter;
     }
 
     public void analyzeAndPrint() throws Exception {
@@ -95,17 +96,13 @@ public class MethodPermDetector {
                 .sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        outflowIgnoreSet = OutflowIgnoreListLoader.load(outflowIgnoreListFile);
-        //sensitives should be added to ignore method list, to prevent their body from being analyzed
-        sensitives.forEach(sens -> outflowIgnoreSet.add(sens.method()));
-
         logger.info("Processing checkers");
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, outflowIgnoreSet);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, classpathFilter);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         logger.info("Processing sensitives");
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, outflowIgnoreSet);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, classpathFilter);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
         //Data structures that combine checkers and sensitives
@@ -120,8 +117,8 @@ public class MethodPermDetector {
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
-        UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), outflowIgnoreSet);
-        UndetectedItemsUtil.printUndetectedSensitives(scenePermDef, getSensitiveEdgesInto(), outflowIgnoreSet);
+        UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
+        UndetectedItemsUtil.printUndetectedSensitives(scenePermDef, getSensitiveEdgesInto(), classpathFilter);
 
         printCheckersInContext(true);
         printSensitivesInContext(true);
@@ -254,7 +251,7 @@ public class MethodPermDetector {
                         MethodInContext sensInC = new MethodInContext(edgeInto);
                         Map<PermCheckStatus, List<MethodOrMethodContext>> permCheckStatusToCallbacks =
                                 getPermCheckStatusToCallbacksMap(sensInC, permSet);
-                        if (outflowIgnoreSet.contains(edgeInto.src())) {
+                        if (!classpathFilter.test(edgeInto.src())) {
                             System.out.println("\t\tCallbacks: BLOCKED");
                         } else if (!permCheckStatusToCallbacks.isEmpty()) {
                             List<MethodOrMethodContext> callbacks = permCheckStatusToCallbacks.values().stream()
@@ -344,8 +341,8 @@ public class MethodPermDetector {
 
                     Map<CheckerUsageStatus, List<MethodOrMethodContext>> checkerUsageStatusToCallbacks =
                             getCheckerUsageStatusToCallbacksMap(checkerPair, perm);
-                    if (outflowIgnoreSet.contains(checkerEdge.src())
-                            || (parent != null && outflowIgnoreSet.contains(parent.src()))) {
+                    if (!classpathFilter.test(checkerEdge.src())
+                            || (parent != null && !classpathFilter.test(parent.src()))) {
                         System.out.println("\t\tCallbacks: BLOCKED");
                     } else if (!checkerUsageStatusToCallbacks.isEmpty()) {
                         List<MethodOrMethodContext> callbacks = checkerUsageStatusToCallbacks.values().stream()

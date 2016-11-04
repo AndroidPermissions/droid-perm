@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.traversal;
 
 import com.google.common.collect.Iterators;
+import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.PointsToUtil;
 import org.oregonstate.droidperm.util.SortUtil;
@@ -31,7 +32,7 @@ public class ContextSensOutflowCPHolder {
     /**
      * Methods ignored by the outflow algorithm
      */
-    private Set<SootMethod> outflowIgnoreSet;
+    private ClasspathFilter classpathFilter;
 
     protected final PointsToAnalysis pointsToAnalysis;
     protected final CallGraph callGraph = Scene.v().getCallGraph();
@@ -75,10 +76,10 @@ public class ContextSensOutflowCPHolder {
     private List<MethodOrMethodContext> reachableCallbacks;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
-                                      Set<SootMethod> outflowIgnoreSet) {
+                                      ClasspathFilter classpathFilter) {
         this.dummyMainMethod = dummyMainMethod;
         this.sensitives = sensitives;
-        this.outflowIgnoreSet = outflowIgnoreSet;
+        this.classpathFilter = classpathFilter;
 
         pointsToAnalysis = Scene.v().getPointsToAnalysis();
         if (pointsToAnalysis.getClass() != GeomPointsTo.class) {
@@ -133,13 +134,12 @@ public class ContextSensOutflowCPHolder {
         queue.add(rootInContext);
         traversed.add(rootInContext);
 
-
         for (MethodInContext meth = queue.poll(); meth != null; meth = queue.poll()) {
             final MethodInContext srcInContext = meth; //to make lambda expressions happy
             MethodOrMethodContext srcMeth = srcInContext.method;
             if (srcMeth.method().hasActiveBody() &&
-                    //do not pass through methods in the ignore list
-                    !outflowIgnoreSet.contains(srcMeth.method())) {
+                    //only analyze the body of methods accepted by classpathFilter
+                    classpathFilter.test(srcMeth.method())) {
                 srcMeth.method().getActiveBody().getUnits().forEach(
                         (Unit unit) -> getUnitEdgeIterator(unit, srcInContext.getContext(), cg)
                                 .forEachRemaining((Edge edge) -> {

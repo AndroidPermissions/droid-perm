@@ -24,13 +24,13 @@ public class UndetectedItemsUtil {
      * todo this will be getUndetectedFields
      */
     private static MultiMap<SootField, Stmt> getFieldUsages(
-            Collection<SootField> sootFields, Set<SootMethod> outflowIgnoreSet) {
+            Collection<SootField> sootFields, ClasspathFilter classpathFilter) {
         MultiMap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields);
         MultiMap<SootField, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
         for (SootField sensField : copy.keySet()) {
-            copy.get(sensField).stream().filter(stmt -> outflowIgnoreSet.contains(SceneUtil.getMethodOf(stmt)))
+            copy.get(sensField).stream().filter(stmt -> !classpathFilter.test(SceneUtil.getMethodOf(stmt)))
                     .forEach(pair -> undetected.remove(sensField, pair));
         }
 
@@ -44,9 +44,9 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
     public static Map<Set<String>, MultiMap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
-            ScenePermissionDefService scenePermDef, Set<SootMethod> outflowIgnoreSet) {
+            ScenePermissionDefService scenePermDef, ClasspathFilter classpathFilter) {
         MultiMap<SootField, Stmt> undetectedSens =
-                getFieldUsages(scenePermDef.getSceneFieldSensitives(), outflowIgnoreSet);
+                getFieldUsages(scenePermDef.getSceneFieldSensitives(), classpathFilter);
 
         return scenePermDef.getFieldPermissionSets().stream().collect(Collectors.toMap(
                 permSet -> permSet,
@@ -59,11 +59,11 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedFieldSensitives(ScenePermissionDefService scenePermDef,
-                                                      Set<SootMethod> outflowIgnoreSet) {
+                                                      ClasspathFilter classpathFilter) {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootField, Stmt>> permToUndetectedFieldSensMap =
-                buildPermToUndetectedFieldSensMap(scenePermDef, outflowIgnoreSet);
+                buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
         printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
 
         System.out.println("\nUndetected field sensitives execution time: "
@@ -71,19 +71,16 @@ public class UndetectedItemsUtil {
     }
 
     /**
-     * todo detected should be a map from units to container methods (methods are only for debugging)
-     *
-     * @param outflowIgnoreSet - entries from this list are used to filter out call contexts. Works for
-     *                         TwilightManager.
+     * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
      */
     private static MultiMap<SootMethod, Stmt> getUndetectedCalls(
-            List<SootMethod> sootMethods, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
+            List<SootMethod> sootMethods, Set<Edge> detected, ClasspathFilter classpathFilter) {
         MultiMap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods);
         MultiMap<SootMethod, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
         for (SootMethod sens : copy.keySet()) {
-            copy.get(sens).stream().filter(stmt -> outflowIgnoreSet.contains(SceneUtil.getMethodOf(stmt)))
+            copy.get(sens).stream().filter(stmt -> !classpathFilter.test(SceneUtil.getMethodOf(stmt)))
                     .forEach(pair -> undetected.remove(sens, pair));
         }
 
@@ -93,10 +90,10 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedCheckers(ScenePermissionDefService scenePermDef,
-                                               Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
+                                               Set<Edge> detected, ClasspathFilter classpathFilter) {
         long startTime = System.currentTimeMillis();
         MultiMap<SootMethod, Stmt> undetectedCheckers =
-                getUndetectedCalls(scenePermDef.getPermCheckers(), detected, outflowIgnoreSet);
+                getUndetectedCalls(scenePermDef.getPermCheckers(), detected, classpathFilter);
 
         System.out.println("\n\nUndetected checkers : " + undetectedCheckers.values().size() + "\n"
                 + "========================================================================");
@@ -111,11 +108,11 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedSensitives(ScenePermissionDefService scenePermDef,
-                                                 Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
+                                                 Set<Edge> detected, ClasspathFilter classpathFilter) {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedSensMap =
-                buildPermToUndetectedSensMap(scenePermDef, detected, outflowIgnoreSet);
+                buildPermToUndetectedSensMap(scenePermDef, detected, classpathFilter);
         printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
 
         System.out.println("\nUndetected sensitives execution time: "
@@ -128,9 +125,9 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its callign context: method and stmt.
      */
     public static Map<Set<String>, MultiMap<SootMethod, Stmt>> buildPermToUndetectedSensMap(
-            ScenePermissionDefService scenePermDef, Set<Edge> detected, Set<SootMethod> outflowIgnoreSet) {
+            ScenePermissionDefService scenePermDef, Set<Edge> detected, ClasspathFilter classpathFilter) {
         MultiMap<SootMethod, Stmt> undetectedSens =
-                getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, outflowIgnoreSet);
+                getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter);
 
         return scenePermDef.getMethodPermissionSets().stream().collect(Collectors.toMap(
                 permSet -> permSet,
