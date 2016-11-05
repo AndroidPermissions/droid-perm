@@ -173,13 +173,7 @@ Updating DroidPerm inside DroidPermPlugin
 
 9. Rename the copied `android-23-cr-stubs.zip` to `android-23-cr+util_io.zip`; replacing the old version
 
-10. Copy the following configuration files from `.../DroidPerm/droid-perm/` to `.../DroidPermPlugin/dp-lib/`:
-    - `AndroidCallbacks.txt`
-    - `EasyTaintWrapperSource.txt`
-    - `OutflowIgnoreList.txt`
-    - `PermissionDefs.txt`
-    - `SourcesAndSinks.txt`
-    - Folder `sootOutput/`
+10. Copy the directory config from `.../DroidPerm/droid-perm/` to `.../DroidPermPlugin/dp-lib/`.
 
 ### Troubleshooting
 

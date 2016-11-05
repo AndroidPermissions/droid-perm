@@ -55,9 +55,16 @@ public class DPBatchRunner {
     @Parameter(names = "--collect-anno-mode", description = "Annotation collection mode. DroidPerm won't be executed.")
     private boolean collectAnnoMode;
 
+    @Parameter(names = "--collect-sensitives-mode",
+            description = "Sensitives collection mode. DroidPerm won't be executed.")
+    private boolean collectSensitivesMode;
+
     @Parameter(names = "--help", help = true)
     private boolean help = false;
 
+    /**
+     * Essentially the set of all collected permission definitions. Map from definitions to themselves.
+     */
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
     /**
@@ -89,6 +96,7 @@ public class DPBatchRunner {
                 jCommander.usage();
                 return;
             }
+            main.validateArgsCustom();
             long startTime = System.currentTimeMillis();
             main.batchRun();
             long endTime = System.currentTimeMillis();
@@ -103,6 +111,13 @@ public class DPBatchRunner {
         }
     }
 
+    private void validateArgsCustom() {
+        if (collectAnnoMode && collectSensitivesMode) {
+            throw new ParameterException("The following parameters cannot be specified together: "
+                    + "--collect-anno-mode, --collect-sensitives-mode");
+        }
+    }
+
     private void batchRun() throws IOException, JAXBException {
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
@@ -111,6 +126,7 @@ public class DPBatchRunner {
         logger.info("cgalgo: " + cgAlgo);
         logger.info("vmArgs: " + vmArgs);
         logger.info("collectAnnoMode: " + collectAnnoMode + "\n");
+        logger.info("collectSensitivesMode: " + collectSensitivesMode + "\n");
 
         Files.createDirectories(logDir);
         Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir).sorted()
@@ -149,10 +165,7 @@ public class DPBatchRunner {
         }
 
         if (collectAnnoMode) {
-            Path aggregateAnnoFile = Paths.get(logDir.toString(), "_collected_perm_anno.xml");
-            PermissionDefList out = new PermissionDefList();
-            out.setPermissionDefs(new ArrayList<>(permissionDefs.keySet()));
-            XmlPermDefMiner.save(out, aggregateAnnoFile.toFile());
+            finalizeCollectAnnoMode();
         }
     }
 
@@ -224,5 +237,15 @@ public class DPBatchRunner {
             logger.info("New annotaions: " + newAnnos);
             newAnnos.forEach(newAnno -> permissionDefs.put(newAnno, newAnno));
         }
+    }
+
+    /**
+     * Save all collected annotations to a file.
+     */
+    private void finalizeCollectAnnoMode() throws JAXBException, IOException {
+        Path aggregateAnnoFile = Paths.get(logDir.toString(), "_collected_perm_anno.xml");
+        PermissionDefList out = new PermissionDefList();
+        out.setPermissionDefs(new ArrayList<>(permissionDefs.keySet()));
+        XmlPermDefMiner.save(out, aggregateAnnoFile.toFile());
     }
 }

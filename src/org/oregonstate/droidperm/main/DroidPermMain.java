@@ -54,7 +54,7 @@ public class DroidPermMain {
 
     private static final Logger logger = LoggerFactory.getLogger(DroidPermMain.class);
 
-    public static final File classpathFilterFile = new File("OutflowIgnoreList.txt");
+    public static final File classpathExclusionListFile = new File("config/ClasspathExclusionList.txt");
 
     private static int repeatCount = 1;
     private static int timeout = -1;
@@ -71,7 +71,7 @@ public class DroidPermMain {
     private static String flowDroidXmlOut;
 
     private static String additionalClasspath = "";
-    private static List<File> permDefFiles = Collections.singletonList(new File("PermissionDefs.txt"));
+    private static List<File> permDefFiles = Collections.singletonList(new File("config/PermissionDefs.txt"));
     private static boolean useAnnoPermDef;//whether to use permission annotations.
     private static File txtOut;
     private static File xmlOut;
@@ -412,7 +412,7 @@ public class DroidPermMain {
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
         System.out.println("\t--PERM-DEF-FILES A list of txt or xml files containing permission definitions. "
-                + "Multiple files are separated by \";\" Default is PermissionDefs.txt");
+                + "Multiple files are separated by \";\" Default is config/PermissionDefs.txt");
         System.out.println(
                 "\t--USE-ANNO-PERM-DEF Use permission definitions provided as @RequiresPermission annotations.");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
@@ -515,7 +515,7 @@ public class DroidPermMain {
             ScenePermissionDefService scenePermDef =
                     new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
             ClasspathFilter classpathFilter =
-                    new ClasspathFilterService(scenePermDef).load(DroidPermMain.classpathFilterFile);
+                    new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
             SensitiveCollectorService.hierarchySensitivesAnalysis(scenePermDef, classpathFilter, apkFile, txtOut);
             return;
         }
@@ -545,7 +545,7 @@ public class DroidPermMain {
         ScenePermissionDefService scenePermDef =
                 new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
         ClasspathFilter classpathFilter
-                = new ClasspathFilterService(scenePermDef).load(DroidPermMain.classpathFilterFile);
+                = new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
         new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
@@ -580,7 +580,7 @@ public class DroidPermMain {
             });
 
             setupApplication.setTaintWrapper(createTaintWrapper());
-            setupApplication.calculateSourcesSinksEntrypoints("SourcesAndSinks.txt");
+            setupApplication.calculateSourcesSinksEntrypoints("config/SourcesAndSinks.txt");
 
             if (DEBUG) {
                 setupApplication.printEntrypoints();
@@ -710,7 +710,7 @@ public class DroidPermMain {
             if (new File("../soot-infoflow/EasyTaintWrapperSource.txt").exists()) {
                 easyTaintWrapper = new EasyTaintWrapper("../soot-infoflow/EasyTaintWrapperSource.txt");
             } else {
-                easyTaintWrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
+                easyTaintWrapper = new EasyTaintWrapper("config/EasyTaintWrapperSource.txt");
             }
             easyTaintWrapper.setAggressiveMode(aggressiveTaintWrapper);
             taintWrapper = easyTaintWrapper;

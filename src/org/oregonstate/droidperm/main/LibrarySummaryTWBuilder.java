@@ -39,7 +39,7 @@ public class LibrarySummaryTWBuilder {
 
             ITaintPropagationWrapper systemClassWrapper = new ITaintPropagationWrapper() {
 
-                private ITaintPropagationWrapper wrapper = new EasyTaintWrapper("EasyTaintWrapperSource.txt");
+                private ITaintPropagationWrapper wrapper = new EasyTaintWrapper("config/EasyTaintWrapperSource.txt");
 
                 private boolean isSystemClass(Stmt stmt) {
                     return stmt.containsInvokeExpr() && SystemClassHandler

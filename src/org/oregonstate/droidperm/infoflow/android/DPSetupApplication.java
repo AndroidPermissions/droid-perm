@@ -94,7 +94,7 @@ public class DPSetupApplication {
 	private Set<Stmt> collectedSinks = null;
 	private Infoflow infoflow;
 
-	private String callbackFile = "AndroidCallbacks.txt"; 
+	private String callbackFile = "config/AndroidCallbacks.txt";
 	
 	/**
 	 * Creates a new instance of the {@link DPSetupApplication} class
