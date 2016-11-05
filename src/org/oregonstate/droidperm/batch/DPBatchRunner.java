@@ -25,10 +25,6 @@ import java.util.stream.Collectors;
 public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
-    private static final String[] COMMON_OPTS = new String[]{};
-    private static final String[] DROID_PERM_MODE_OPTS = new String[]{};
-    private static final String[] TAINT_ANALYSIS_MODE_OPTS =
-            new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks", "--pathalgo", "CONTEXTSENSITIVE"};
 
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
     private Path appsDir;
@@ -160,6 +156,7 @@ public class DPBatchRunner {
         Path logFile = Paths.get(logDir.toString(), appName + ".log");
         Path errorFile = Paths.get(logDir.toString(), appName + ".error.log");
         Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
+        Path txtOut = Paths.get(logDir.toString(), appName + ".out.txt");
 
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("java");
@@ -169,25 +166,23 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList(
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
                 androidClassPath));
-        processBuilderArgs.addAll(Arrays.asList(COMMON_OPTS));
         processBuilderArgs.addAll(Arrays.asList("--cgalgo", cgAlgo.name()));
         switch (mode) {
             case DROID_PERM:
-                processBuilderArgs.addAll(Arrays.asList(DROID_PERM_MODE_OPTS));
                 break;
             case TAINT_ANALYSIS:
-                processBuilderArgs.addAll(Arrays.asList(TAINT_ANALYSIS_MODE_OPTS));
+                processBuilderArgs.addAll(Arrays.asList(
+                        "--taint-analysis-enabled", "true", "--logsourcesandsinks", "--pathalgo", "CONTEXTSENSITIVE"));
                 break;
             case COLLECT_ANNO:
                 processBuilderArgs
                         .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-MODE"));
                 break;
             case COLLECT_SENSITIVES:
-                //todo
-                processBuilderArgs
-                        .addAll(Arrays.asList("--perm-def-files",
-                                "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml",
-                                "--collect-sens-mode"));
+                processBuilderArgs.addAll(Arrays.asList(
+                        "--perm-def-files",
+                        "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml",
+                        "--collect-sens-mode", "--txt-out", txtOut.toString()));
                 break;
         }
 
@@ -208,8 +203,12 @@ public class DPBatchRunner {
             if (exitCode != 0) {
                 logger.error(appName + " analysis returned exit code " + exitCode);
             } else {
-                if (mode == Mode.COLLECT_ANNO) {
-                    collectAnnotations(annoXmlFile);
+                switch (mode) {
+                    case COLLECT_ANNO:
+                        collectAnnotations(annoXmlFile);
+                        break;
+                    case COLLECT_SENSITIVES:
+                        collectUnusedPermissions(txtOut);
                 }
             }
         } catch (InterruptedException e) {
@@ -232,6 +231,13 @@ public class DPBatchRunner {
             logger.info("New annotaions: " + newAnnos.size());
             logger.info("New annotaions: " + newAnnos);
             newAnnos.forEach(newAnno -> permissionDefs.put(newAnno, newAnno));
+        }
+    }
+
+    private void collectUnusedPermissions(Path txtOut) throws IOException {
+        List<String> unusedPerm = Files.readAllLines(txtOut);
+        if (!unusedPerm.isEmpty()) {
+            logger.info("Unused declared permissions: " + unusedPerm.size());
         }
     }
 
