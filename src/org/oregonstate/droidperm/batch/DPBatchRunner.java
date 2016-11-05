@@ -42,9 +42,6 @@ public class DPBatchRunner {
     @Parameter(names = "--log-dir", description = "Directory where log files will be stored", required = true)
     private Path logDir;
 
-    @Parameter(names = "--taint-analysis", description = "If specified, taint analysis will be enabled")
-    private boolean taintAnalysisEnabled;
-
     @Parameter(names = "--cg-algo", description = "The call graph algorithm")
     private InfoflowConfiguration.CallgraphAlgorithm cgAlgo = InfoflowConfiguration.CallgraphAlgorithm.GEOM;
 
@@ -52,12 +49,12 @@ public class DPBatchRunner {
             + "If more than one, they should be included into quotes (\"\").")
     private String vmArgs;
 
-    @Parameter(names = "--collect-anno-mode", description = "Annotation collection mode. DroidPerm won't be executed.")
-    private boolean collectAnnoMode;
+    @Parameter(names = "--mode", description = "DroidPerm execution mode")
+    private Mode mode = Mode.DROID_PERM;
 
-    @Parameter(names = "--collect-sensitives-mode",
-            description = "Sensitives collection mode. DroidPerm won't be executed.")
-    private boolean collectSensitivesMode;
+    private enum Mode {
+        DROID_PERM, TAINT_ANALYSIS, COLLECT_ANNO, COLLECT_SENSITIVES
+    }
 
     @Parameter(names = "--help", help = true)
     private boolean help = false;
@@ -96,7 +93,6 @@ public class DPBatchRunner {
                 jCommander.usage();
                 return;
             }
-            main.validateArgsCustom();
             long startTime = System.currentTimeMillis();
             main.batchRun();
             long endTime = System.currentTimeMillis();
@@ -111,22 +107,13 @@ public class DPBatchRunner {
         }
     }
 
-    private void validateArgsCustom() {
-        if (collectAnnoMode && collectSensitivesMode) {
-            throw new ParameterException("The following parameters cannot be specified together: "
-                    + "--collect-anno-mode, --collect-sensitives-mode");
-        }
-    }
-
     private void batchRun() throws IOException, JAXBException {
+        logger.info("DroidPerm Mode: " + mode);
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
-        logger.info("taintAnalysisEnabled: " + taintAnalysisEnabled);
         logger.info("cgalgo: " + cgAlgo);
-        logger.info("vmArgs: " + vmArgs);
-        logger.info("collectAnnoMode: " + collectAnnoMode + "\n");
-        logger.info("collectSensitivesMode: " + collectSensitivesMode + "\n");
+        logger.info("vmArgs: " + vmArgs + "\n");
 
         Files.createDirectories(logDir);
         Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir).sorted()
@@ -164,7 +151,7 @@ public class DPBatchRunner {
             analyzeApp(appName, apk);
         }
 
-        if (collectAnnoMode) {
+        if (mode == Mode.COLLECT_ANNO) {
             finalizeCollectAnnoMode();
         }
     }
@@ -187,12 +174,17 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
         processBuilderArgs.add(CG_ALGO_OPT);
         processBuilderArgs.add(cgAlgo.name());
-        if (collectAnnoMode) {
-            processBuilderArgs.addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-ONLY"));
-        } else if (taintAnalysisEnabled) {
-            processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
-        } else {
-            processBuilderArgs.addAll(Arrays.asList(TAINT_DISABLED_OPTS));
+        switch (mode) {
+            case DROID_PERM:
+                processBuilderArgs.addAll(Arrays.asList(TAINT_DISABLED_OPTS));
+                break;
+            case TAINT_ANALYSIS:
+                processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
+                break;
+            case COLLECT_ANNO:
+                processBuilderArgs
+                        .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-ONLY"));
+                break;
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(processBuilderArgs)
@@ -212,7 +204,7 @@ public class DPBatchRunner {
             if (exitCode != 0) {
                 logger.error(appName + " analysis returned exit code " + exitCode);
             } else {
-                if (collectAnnoMode) {
+                if (mode == Mode.COLLECT_ANNO) {
                     collectAnnotations(annoXmlFile);
                 }
             }
