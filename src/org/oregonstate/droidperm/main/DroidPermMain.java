@@ -7,6 +7,7 @@
  ******************************************************************************/
 package org.oregonstate.droidperm.main;
 
+import com.beust.jcommander.ParameterException;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
@@ -19,8 +20,6 @@ import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.util.PrintUtil;
 import org.oregonstate.droidperm.util.UnitComparator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.Main;
 import soot.Scene;
@@ -51,8 +50,6 @@ import java.util.stream.Stream;
  * @see soot.jimple.infoflow.android.TestApps.Test
  */
 public class DroidPermMain {
-
-    private static final Logger logger = LoggerFactory.getLogger(DroidPermMain.class);
 
     public static final File classpathExclusionListFile = new File("config/ClasspathExclusionList.txt");
 
@@ -358,24 +355,22 @@ public class DroidPermMain {
 
     private static boolean validateAdditionalOptions() {
         if (timeout > 0 && sysTimeout > 0) {
-            return false;
+            throw new ParameterException("timeout and sysTimeout both specified");
         }
         if (!config.getFlowSensitiveAliasing()
                 && config.getCallgraphAlgorithm() != CallgraphAlgorithm.OnDemand
                 && config.getCallgraphAlgorithm() != CallgraphAlgorithm.AutomaticSelection) {
-            System.err.println("Flow-insensitive aliasing can only be configured for callgraph "
+            throw new ParameterException("Flow-insensitive aliasing can only be configured for callgraph "
                     + "algorithms that support this choice.");
-            return false;
         }
 
         if (permDefFiles.isEmpty()) {
-            logger.error("FATAL: Empty list of permission definition files.");
-            return false;
+            throw new ParameterException("Empty list of permission definition files.");
         }
+
         List<File> missingPermFiles = permDefFiles.stream().filter(file -> !file.exists()).collect(Collectors.toList());
         if (!missingPermFiles.isEmpty()) {
-            logger.error("FATAL: Permission definition files not found: " + missingPermFiles);
-            return false;
+            throw new ParameterException("Permission definition files not found: " + missingPermFiles);
         }
         return true;
     }

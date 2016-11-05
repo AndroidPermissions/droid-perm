@@ -25,12 +25,10 @@ import java.util.stream.Collectors;
 public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
-    private static final String[] EXTRA_OPTS =
-            new String[]{"--pathalgo", "CONTEXTSENSITIVE"};
-    private static final String CG_ALGO_OPT = "--cgalgo";
-    private static final String[] TAINT_ENABLED_OPTS =
-            new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks"};
-    private static final String[] TAINT_DISABLED_OPTS = new String[]{"--taint-analysis-enabled", "false"};
+    private static final String[] COMMON_OPTS = new String[]{};
+    private static final String[] DROID_PERM_MODE_OPTS = new String[]{};
+    private static final String[] TAINT_ANALYSIS_MODE_OPTS =
+            new String[]{"--taint-analysis-enabled", "true", "--logsourcesandsinks", "--pathalgo", "CONTEXTSENSITIVE"};
 
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
     private Path appsDir;
@@ -171,19 +169,25 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList(
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
                 androidClassPath));
-        processBuilderArgs.addAll(Arrays.asList(EXTRA_OPTS));
-        processBuilderArgs.add(CG_ALGO_OPT);
-        processBuilderArgs.add(cgAlgo.name());
+        processBuilderArgs.addAll(Arrays.asList(COMMON_OPTS));
+        processBuilderArgs.addAll(Arrays.asList("--cgalgo", cgAlgo.name()));
         switch (mode) {
             case DROID_PERM:
-                processBuilderArgs.addAll(Arrays.asList(TAINT_DISABLED_OPTS));
+                processBuilderArgs.addAll(Arrays.asList(DROID_PERM_MODE_OPTS));
                 break;
             case TAINT_ANALYSIS:
-                processBuilderArgs.addAll(Arrays.asList(TAINT_ENABLED_OPTS));
+                processBuilderArgs.addAll(Arrays.asList(TAINT_ANALYSIS_MODE_OPTS));
                 break;
             case COLLECT_ANNO:
                 processBuilderArgs
-                        .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-ONLY"));
+                        .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-MODE"));
+                break;
+            case COLLECT_SENSITIVES:
+                //todo
+                processBuilderArgs
+                        .addAll(Arrays.asList("--perm-def-files",
+                                "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml",
+                                "--collect-sens-mode"));
                 break;
         }
 
