@@ -1,3 +1,7 @@
+% This file contains only permission and checker definitions that are not already present in mined XML permission defs.
+% To be used together with mined permission definition files.
+% ==================================
+
 % Permission checkers
 % ==================================
 

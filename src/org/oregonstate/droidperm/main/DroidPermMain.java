@@ -71,11 +71,10 @@ public class DroidPermMain {
     private static String flowDroidXmlOut;
 
     private static String additionalClasspath = "";
-    private static List<File> permDefFiles = Collections.singletonList(new File("config/PermissionDefs.txt"));
+    private static List<File> permDefFiles = Collections.singletonList(new File("config/perm-def-default.txt"));
     private static boolean useAnnoPermDef;//whether to use permission annotations.
     private static File txtOut;
     private static File xmlOut;
-
 
     private static final boolean DEBUG = true;
 
@@ -382,7 +381,7 @@ public class DroidPermMain {
     }
 
     private static void printUsage() {
-        System.out.println("FlowDroid (c) Secure Software Engineering Group @ EC SPRIDE");
+        System.out.println("DroidPerm, developed by SEV @ Oregon State University");
         System.out.println();
         System.out.println("Incorrect arguments: [0] = apk-file, [1] = android-jar-directory");
         System.out.println("Optional further parameters:");
@@ -412,7 +411,7 @@ public class DroidPermMain {
         System.out.println("New in DroidPerm:");
         System.out.println("\t--ADDITIONALCP Additional classpath for API code, besides android.jar");
         System.out.println("\t--PERM-DEF-FILES A list of txt or xml files containing permission definitions. "
-                + "Multiple files are separated by \";\" Default is config/PermissionDefs.txt");
+                + "Multiple files are separated by \";\" Default is config/perm-def-default.txt");
         System.out.println(
                 "\t--USE-ANNO-PERM-DEF Use permission definitions provided as @RequiresPermission annotations.");
         System.out.println("\t--TAINT-ANALYSIS-ENABLED true/false.");
