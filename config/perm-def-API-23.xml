@@ -433,13 +433,13 @@
     <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setBeamPushUrisCallback(android.nfc.NfcAdapter$CreateBeamUrisCallback, android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity$$$)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessageCallback(android.nfc.NfcAdapter$CreateNdefMessageCallback, android.app.Activity, android.app.Activity$$$)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessageCallback(android.nfc.NfcAdapter$CreateNdefMessageCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter$OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity$$$)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter$OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
     <permissionDef className="android.nfc.cardemulation.CardEmulation" permissionRel="AllOf" target="boolean isDefaultServiceForAid(android.content.ComponentName, java.lang.String)" targetKind="Method">

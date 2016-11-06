@@ -1,9 +1,8 @@
 package org.oregonstate.droidperm.util;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Iterators;
+
+import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -25,6 +24,10 @@ public class StreamUtil {
 
     public static <T> Stream<T> asStream(Iterable<T> iterable, boolean parallel) {
         return StreamSupport.stream(iterable.spliterator(), parallel);
+    }
+
+    public static <T> Stream<T> asStream(Enumeration<T> enumeration) {
+        return asStream(Iterators.forEnumeration(enumeration));
     }
 
     public static <T> BinaryOperator<T> throwingMerger() {
