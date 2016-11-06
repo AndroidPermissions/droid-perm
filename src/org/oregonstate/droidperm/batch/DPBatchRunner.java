@@ -6,6 +6,7 @@ import com.beust.jcommander.ParameterException;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
+import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ import java.util.stream.Collectors;
 public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
-    private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
 
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
     private Path appsDir;
@@ -115,7 +115,7 @@ public class DPBatchRunner {
         logger.info("vmArgs: " + vmArgs + "\n");
 
         if (mode == Mode.COLLECT_SENSITIVES) {
-            dangerousPermisisons = loadDangerousPermissions();
+            dangerousPermisisons = SensitiveCollectorService.loadDangerousPermissions();
         }
 
         Files.createDirectories(logDir);
@@ -162,12 +162,6 @@ public class DPBatchRunner {
                 saveCollectSensitivesModeDigest();
                 break;
         }
-    }
-
-    private Set<String> loadDangerousPermissions() throws IOException {
-        return Files.readAllLines(DANGEROUS_PERM_FILE).stream()
-                .filter(line -> !(line.trim().isEmpty() || line.startsWith("%")))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private void analyzeApp(String appName, Path apk) throws IOException, JAXBException {

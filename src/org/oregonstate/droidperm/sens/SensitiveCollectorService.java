@@ -14,6 +14,9 @@ import soot.util.MultiMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -25,6 +28,8 @@ import java.util.stream.Stream;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/21/2016.
  */
 public class SensitiveCollectorService {
+
+    private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
 
     public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef,
                                                    ClasspathFilter classpathFilter, File apkFile, File txtOut)
@@ -63,6 +68,12 @@ public class SensitiveCollectorService {
             PrintUtil.printCollectionToFile(unusedPermissions, txtOut);
         }
 
+        Set<String> definedDangerousPerm = loadDangerousPermissions();
+        Set<String> declaredDangerousPerm = Sets.intersection(declaredPermissions, definedDangerousPerm);
+        Set<String> unusedDangerousPerm = Sets.intersection(unusedPermissions, definedDangerousPerm);
+        PrintUtil.printCollection(declaredDangerousPerm, "Dangerous permissions declared in manifest");
+        PrintUtil.printCollection(unusedDangerousPerm, "Dangerous permissions declared but not used by sensitives");
+
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
@@ -70,5 +81,11 @@ public class SensitiveCollectorService {
     private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {
         DPProcessManifest manifest = new DPProcessManifest(apkFile);
         return manifest.getDeclaredPermissions();
+    }
+
+    public static Set<String> loadDangerousPermissions() throws IOException {
+        return Files.readAllLines(DANGEROUS_PERM_FILE).stream()
+                .filter(line -> !(line.trim().isEmpty() || line.startsWith("%")))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
