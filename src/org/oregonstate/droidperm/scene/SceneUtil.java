@@ -4,10 +4,7 @@ import org.oregonstate.droidperm.util.MyCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
-import soot.jimple.AssignStmt;
-import soot.jimple.InvokeExpr;
-import soot.jimple.Stmt;
-import soot.jimple.StringConstant;
+import soot.jimple.*;
 import soot.tagkit.StringConstantValueTag;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
@@ -174,13 +171,28 @@ public class SceneUtil {
 
         //On incomplete code we might get field references on phantom classes. They should be skipped.
         if (stmt.containsFieldRef() && !stmt.getFieldRef().getFieldRef().declaringClass().isPhantom()) {
-            result.add(stmt.getFieldRef().getField());
+            SootField field = resolve(stmt.getFieldRef());
+            if (field != null) {
+                result.add(field);
+            }
         }
         //If the referred field is a constant, it will be inlined into the statement using it.
         //Thus we have to serch it among the constants.
         getStringConstantsIfAny(stmt).stream().filter(constantFieldsMap::containsKey)
                 .forEach(stringConst -> result.add(constantFieldsMap.get(stringConst)));
         return result;
+    }
+
+    private static SootField resolve(FieldRef fieldRef) {
+        try {
+            return fieldRef.getField();
+        } catch (NullPointerException e) {
+            //Redundant.
+            //This one is thrown after other types of exceptions were thrown previously for same method.
+        } catch (Exception e) {
+            logger.warn("Exception in FieldRef.getField() for " + fieldRef + " : " + e.toString());
+        }
+        return null;
     }
 
     /**
