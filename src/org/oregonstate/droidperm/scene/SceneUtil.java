@@ -171,7 +171,9 @@ public class SceneUtil {
 
     private static List<SootField> getReferredFields(Stmt stmt, Map<String, SootField> constantFieldsMap) {
         List<SootField> result = new ArrayList<>();
-        if (stmt.containsFieldRef()) {
+
+        //On incomplete code we might get field references on phantom classes. They should be skipped.
+        if (stmt.containsFieldRef() && !stmt.getFieldRef().getFieldRef().declaringClass().isPhantom()) {
             result.add(stmt.getFieldRef().getField());
         }
         //If the referred field is a constant, it will be inlined into the statement using it.
