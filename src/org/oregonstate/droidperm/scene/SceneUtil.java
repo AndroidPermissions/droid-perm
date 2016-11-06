@@ -63,10 +63,14 @@ public class SceneUtil {
     /**
      * Traverse all statements in the given classes and apply stmtConsumer to each of them.
      */
-    private static void traverseClasses(Collection<SootClass> classes, BiConsumer<Stmt, SootMethod> stmtConsumer) {
+    private static void traverseClasses(Collection<SootClass> classes, Predicate<SootMethod> classpathFilter,
+                                        BiConsumer<Stmt, SootMethod> stmtConsumer) {
+        if (classpathFilter == null) {
+            classpathFilter = meth -> true;
+        }
         classes.stream()
                 .filter(SootClass::isConcrete)
-                .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete)
+                .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete).filter(classpathFilter)
                 .map(SceneUtil::retrieveBody).filter(body -> body != null)
                 .forEach(body -> body.getUnits().forEach(unit -> {
                     Stmt stmt = (Stmt) unit;
@@ -86,22 +90,17 @@ public class SceneUtil {
         return null;
     }
 
-    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods) {
-        return resolveMethodUsages(new HashSet<>(sootMethods));
-    }
-
-    /**
-     * @return A map from sensitives to actual Statements in context possibly invoking that sensitive.
-     */
-    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Set<SootMethod> sensitives) {
+    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods,
+                                                                 Predicate<SootMethod> classpathFilter) {
+        Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);
 
         //for performance optimization
         Set<String> sensSubsignatures =
-                sensitives.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
+                methodSet.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
 
         MultiMap<SootMethod, Stmt> result = new HashMultiMap<>();
-        traverseClasses(Scene.v().getApplicationClasses(),
-                (stmt, method) -> collectResolvedMethods(sensitives, sensSubsignatures, result, stmt));
+        traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
+                (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
         return result;
     }
 
@@ -129,18 +128,16 @@ public class SceneUtil {
         }
     }
 
-    public static MultiMap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields) {
-        return resolveFieldUsages(new HashSet<>(sensFields));
-    }
-
     /**
      * @return A map from fields to actual statements in context possibly referring that fields.
      */
-    public static MultiMap<SootField, Stmt> resolveFieldUsages(Set<SootField> sensFields) {
-        Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFields);
+    public static MultiMap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
+                                                               Predicate<SootMethod> classpathFilter) {
+        Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
+        Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFieldsSet);
         MultiMap<SootField, Stmt> result = new HashMultiMap<>();
-        traverseClasses(Scene.v().getApplicationClasses(),
-                (stmt, method) -> collectResolvedFields(sensFields, constantFieldsMap, result, stmt));
+        traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
+                (stmt, method) -> collectResolvedFields(sensFieldsSet, constantFieldsMap, result, stmt));
         return result;
     }
 
@@ -231,7 +228,7 @@ public class SceneUtil {
      */
     private static Map<Unit, SootMethod> buildStmtToMethodMap() {
         Map<Unit, SootMethod> result = new HashMap<>();
-        traverseClasses(Scene.v().getClasses(), result::put);
+        traverseClasses(Scene.v().getClasses(), null, result::put);
         return result;
     }
 }

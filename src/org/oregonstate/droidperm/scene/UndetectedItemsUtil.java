@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -24,8 +25,8 @@ public class UndetectedItemsUtil {
      * todo this will be getUndetectedFields
      */
     private static MultiMap<SootField, Stmt> getFieldUsages(
-            Collection<SootField> sootFields, ClasspathFilter classpathFilter) {
-        MultiMap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields);
+            Collection<SootField> sootFields, Predicate<SootMethod> classpathFilter) {
+        MultiMap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields, classpathFilter);
         MultiMap<SootField, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
@@ -44,7 +45,7 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
     public static Map<Set<String>, MultiMap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
-            ScenePermissionDefService scenePermDef, ClasspathFilter classpathFilter) {
+            ScenePermissionDefService scenePermDef, Predicate<SootMethod> classpathFilter) {
         MultiMap<SootField, Stmt> undetectedSens =
                 getFieldUsages(scenePermDef.getSceneFieldSensitives(), classpathFilter);
 
@@ -59,7 +60,7 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedFieldSensitives(ScenePermissionDefService scenePermDef,
-                                                      ClasspathFilter classpathFilter) {
+                                                      Predicate<SootMethod> classpathFilter) {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootField, Stmt>> permToUndetectedFieldSensMap =
@@ -74,8 +75,8 @@ public class UndetectedItemsUtil {
      * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
      */
     private static MultiMap<SootMethod, Stmt> getUndetectedCalls(
-            List<SootMethod> sootMethods, Set<Edge> detected, ClasspathFilter classpathFilter) {
-        MultiMap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods);
+            List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
+        MultiMap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods, classpathFilter);
         MultiMap<SootMethod, Stmt> copy = new HashMultiMap<>(undetected);
 
         //filter out ignored
@@ -90,7 +91,7 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedCheckers(ScenePermissionDefService scenePermDef,
-                                               Set<Edge> detected, ClasspathFilter classpathFilter) {
+                                               Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         long startTime = System.currentTimeMillis();
         MultiMap<SootMethod, Stmt> undetectedCheckers =
                 getUndetectedCalls(scenePermDef.getPermCheckers(), detected, classpathFilter);
@@ -108,7 +109,7 @@ public class UndetectedItemsUtil {
     }
 
     public static void printUndetectedSensitives(ScenePermissionDefService scenePermDef,
-                                                 Set<Edge> detected, ClasspathFilter classpathFilter) {
+                                                 Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedSensMap =
@@ -125,7 +126,7 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its callign context: method and stmt.
      */
     public static Map<Set<String>, MultiMap<SootMethod, Stmt>> buildPermToUndetectedSensMap(
-            ScenePermissionDefService scenePermDef, Set<Edge> detected, ClasspathFilter classpathFilter) {
+            ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         MultiMap<SootMethod, Stmt> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter);
 
