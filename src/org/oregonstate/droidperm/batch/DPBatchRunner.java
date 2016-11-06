@@ -10,6 +10,7 @@ import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.InfoflowConfiguration;
+import soot.toolkits.scalar.Pair;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -57,6 +58,8 @@ public class DPBatchRunner {
      * Essentially the set of all collected permission definitions. Map from definitions to themselves.
      */
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
+
+    private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -145,8 +148,13 @@ public class DPBatchRunner {
             analyzeApp(appName, apk);
         }
 
-        if (mode == Mode.COLLECT_ANNO) {
-            finalizeCollectAnnoMode();
+        switch (mode) {
+            case COLLECT_ANNO:
+                saveCollectAnnoModeDigest();
+                break;
+            case COLLECT_SENSITIVES:
+                saveCollectSensitivesModeDigest();
+                break;
         }
     }
 
@@ -208,7 +216,7 @@ public class DPBatchRunner {
                         collectAnnotations(annoXmlFile);
                         break;
                     case COLLECT_SENSITIVES:
-                        collectUnusedPermissions(txtOut);
+                        collectUnusedPermissions(txtOut, appName);
                 }
             }
         } catch (InterruptedException e) {
@@ -234,20 +242,43 @@ public class DPBatchRunner {
         }
     }
 
-    private void collectUnusedPermissions(Path txtOut) throws IOException {
+    private void collectUnusedPermissions(Path txtOut, String appName) throws IOException {
         List<String> unusedPerm = Files.readAllLines(txtOut);
         if (!unusedPerm.isEmpty()) {
-            logger.info("Unused declared permissions: " + unusedPerm.size());
+            logger.info(appName + " : unused declared permissions: " + unusedPerm.size());
+            appToUnusedPermMap.put(appName, unusedPerm);
         }
     }
 
     /**
      * Save all collected annotations to a file.
      */
-    private void finalizeCollectAnnoMode() throws JAXBException, IOException {
+    private void saveCollectAnnoModeDigest() throws JAXBException, IOException {
         Path aggregateAnnoFile = Paths.get(logDir.toString(), "_collected_perm_anno.xml");
         PermissionDefList out = new PermissionDefList();
         out.setPermissionDefs(new ArrayList<>(permissionDefs.keySet()));
         XmlPermDefMiner.save(out, aggregateAnnoFile.toFile());
+    }
+
+    private void saveCollectSensitivesModeDigest() {
+        //todo it could make sense after all to create a print 2-level collection utility class
+        System.out.println("\n\nApps with unsued sensitives : " + appToUnusedPermMap.size() + "\n"
+                + "========================================================================");
+        for (String app : appToUnusedPermMap.keySet()) {
+            List<String> permList = appToUnusedPermMap.get(app);
+            System.out.println(app + " : " + permList.size());
+            for (String perm : permList) {
+                System.out.println("\t" + perm);
+            }
+        }
+
+        Map<String, Long> unusedPermFrequency = appToUnusedPermMap.keySet().stream()
+                .flatMap(app -> appToUnusedPermMap.get(app).stream().map(perm -> new Pair<>(app, perm)))
+                .collect(Collectors.groupingBy(Pair::getO2, Collectors.counting()));
+        System.out.println("\n\nApps with unsued sensitives : " + unusedPermFrequency.size() + "\n"
+                + "========================================================================");
+        for (String perm : unusedPermFrequency.keySet()) {
+            System.out.println(perm + " : " + unusedPermFrequency.get(perm));
+        }
     }
 }
