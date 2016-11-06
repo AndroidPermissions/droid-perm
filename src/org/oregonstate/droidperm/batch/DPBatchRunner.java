@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class DPBatchRunner {
 
     private static Logger logger = LoggerFactory.getLogger(DPBatchRunner.class);
+    private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
 
     @Parameter(names = "--apps-dir", description = "Directory with apk files, each in a separate dir", required = true)
     private Path appsDir;
@@ -59,6 +60,7 @@ public class DPBatchRunner {
      */
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
+    private Set<String> dangerousPermisisons;
     private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
 
     /**
@@ -112,6 +114,10 @@ public class DPBatchRunner {
         logger.info("cgalgo: " + cgAlgo);
         logger.info("vmArgs: " + vmArgs + "\n");
 
+        if (mode == Mode.COLLECT_SENSITIVES) {
+            dangerousPermisisons = loadDangerousPermissions();
+        }
+
         Files.createDirectories(logDir);
         Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir).sorted()
                 .filter(path -> Files.isDirectory(path))
@@ -156,6 +162,12 @@ public class DPBatchRunner {
                 saveCollectSensitivesModeDigest();
                 break;
         }
+    }
+
+    private Set<String> loadDangerousPermissions() throws IOException {
+        return Files.readAllLines(DANGEROUS_PERM_FILE).stream()
+                .filter(line -> !(line.trim().isEmpty() || line.startsWith("%")))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private void analyzeApp(String appName, Path apk) throws IOException, JAXBException {
@@ -244,9 +256,11 @@ public class DPBatchRunner {
 
     private void collectUnusedPermissions(Path txtOut, String appName) throws IOException {
         List<String> unusedPerm = Files.readAllLines(txtOut);
-        if (!unusedPerm.isEmpty()) {
-            logger.info(appName + " : unused declared permissions: " + unusedPerm.size());
-            appToUnusedPermMap.put(appName, unusedPerm);
+        List<String> dangerousUnusedPerm = unusedPerm.stream().filter(dangerousPermisisons::contains)
+                .collect(Collectors.toList());
+        if (!dangerousUnusedPerm.isEmpty()) {
+            logger.info(appName + " : unused declared permissions: " + dangerousUnusedPerm.size());
+            appToUnusedPermMap.put(appName, dangerousUnusedPerm);
         }
     }
 
