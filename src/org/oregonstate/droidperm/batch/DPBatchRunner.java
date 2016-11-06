@@ -270,7 +270,7 @@ public class DPBatchRunner {
 
     private void saveCollectSensitivesModeDigest() {
         //todo it could make sense after all to create a print 2-level collection utility class
-        System.out.println("\n\nApps with unsued sensitives : " + appToUnusedPermMap.size() + "\n"
+        System.out.println("\n\nApps with unsued permissions : " + appToUnusedPermMap.size() + "\n"
                 + "========================================================================");
         for (String app : appToUnusedPermMap.keySet()) {
             List<String> permList = appToUnusedPermMap.get(app);
@@ -283,7 +283,7 @@ public class DPBatchRunner {
         Map<String, Long> unusedPermFrequency = appToUnusedPermMap.keySet().stream()
                 .flatMap(app -> appToUnusedPermMap.get(app).stream().map(perm -> new Pair<>(app, perm)))
                 .collect(Collectors.groupingBy(Pair::getO2, Collectors.counting()));
-        System.out.println("\n\nApps with unsued sensitives : " + unusedPermFrequency.size() + "\n"
+        System.out.println("\n\nUnused permissions, nr apps for each : " + unusedPermFrequency.size() + "\n"
                 + "========================================================================");
         for (String perm : unusedPermFrequency.keySet()) {
             System.out.println(perm + " : " + unusedPermFrequency.get(perm));
