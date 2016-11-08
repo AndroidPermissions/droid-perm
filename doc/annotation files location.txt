@@ -1,0 +1,6 @@
+Android SDK:
+    c:\Users\bogdanad\AppData\Local\Android\android-sdk\platform-tools\api\annotations.zip
+
+Android Studio:
+    d:\Program Files - portable\android-studio-2.0.beta\plugins\android\lib\androidAnnotations.jar
+
