@@ -510,7 +510,7 @@ public class DroidPermMain {
                     new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
             ClasspathFilter classpathFilter =
                     new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
-            SensitiveCollectorService.hierarchySensitivesAnalysis(scenePermDef, classpathFilter, apkFile, txtOut);
+            SensitiveCollectorService.hierarchySensitivesAnalysis(scenePermDef, classpathFilter, apkFile, xmlOut);
             return;
         }
 

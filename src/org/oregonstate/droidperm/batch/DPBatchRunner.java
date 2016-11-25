@@ -3,9 +3,12 @@ package org.oregonstate.droidperm.batch;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.google.common.collect.Sets;
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
+import org.oregonstate.droidperm.sens.SensitiveCollectorJaxbData;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
@@ -170,7 +173,7 @@ public class DPBatchRunner {
         Path logFile = Paths.get(logDir.toString(), appName + ".log");
         Path errorFile = Paths.get(logDir.toString(), appName + ".error.log");
         Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
-        Path txtOut = Paths.get(logDir.toString(), appName + ".out.txt");
+        Path xmlOut = Paths.get(logDir.toString(), appName + ".out.xml");
 
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("java");
@@ -196,7 +199,7 @@ public class DPBatchRunner {
                 processBuilderArgs.addAll(Arrays.asList(
                         "--perm-def-files",
                         "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml",
-                        "--collect-sens-mode", "--txt-out", txtOut.toString()));
+                        "--collect-sens-mode", "--xml-out", xmlOut.toString()));
                 break;
         }
 
@@ -222,7 +225,7 @@ public class DPBatchRunner {
                         collectAnnotations(annoXmlFile);
                         break;
                     case COLLECT_SENSITIVES:
-                        collectUnusedPermissions(txtOut, appName);
+                        collectUnusedPermissions(xmlOut, appName);
                 }
             }
         } catch (InterruptedException e) {
@@ -248,8 +251,14 @@ public class DPBatchRunner {
         }
     }
 
-    private void collectUnusedPermissions(Path txtOut, String appName) throws IOException {
-        List<String> unusedPerm = Files.readAllLines(txtOut);
+    private void collectUnusedPermissions(Path xmlOut, String appName) throws IOException, JAXBException {
+        SensitiveCollectorJaxbData data =
+                (SensitiveCollectorJaxbData) JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
+        Set<String> declaredPerm =
+                data.getDeclaredPerm() != null ? new LinkedHashSet<>(data.getDeclaredPerm()) : Collections.emptySet();
+        Set<String> permWithSensitives = data.getPermWithSensitives() != null
+                                         ? new LinkedHashSet<>(data.getPermWithSensitives()) : Collections.emptySet();
+        Set<String> unusedPerm = Sets.difference(declaredPerm, permWithSensitives);
         List<String> dangerousUnusedPerm = unusedPerm.stream().filter(dangerousPermisisons::contains)
                 .collect(Collectors.toList());
         if (!dangerousUnusedPerm.isEmpty()) {

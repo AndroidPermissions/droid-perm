@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.sens;
 
 import com.google.common.collect.Sets;
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
@@ -17,10 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,7 +30,7 @@ public class SensitiveCollectorService {
     private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
 
     public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef,
-                                                   ClasspathFilter classpathFilter, File apkFile, File txtOut)
+                                                   ClasspathFilter classpathFilter, File apkFile, File xmlOut)
             throws Exception {
         long startTime = System.currentTimeMillis();
 
@@ -61,18 +59,23 @@ public class SensitiveCollectorService {
         PrintUtil.printCollection(undeclaredPermissionSets,
                 "Permissions sets used by sensitives but not declared in manifest");
 
-        Set<String> usedPermissions = sensitivePermissionSets.stream().collect(MyCollectors.toFlatSet());
-        Set<String> unusedPermissions = Sets.difference(declaredPermissions, usedPermissions);
+        Set<String> allDangerousPerm = loadDangerousPermissions();
+        Set<String> permissionsWithSensitives = sensitivePermissionSets.stream().collect(MyCollectors.toFlatSet());
+        Set<String> dangerousPermWithSensitives = Sets.intersection(permissionsWithSensitives, allDangerousPerm);
+        Set<String> unusedPermissions = Sets.difference(declaredPermissions, permissionsWithSensitives);
         PrintUtil.printCollection(unusedPermissions, "Permissions declared but not used by sensitives");
-        if (txtOut != null) {
-            PrintUtil.printCollectionToFile(unusedPermissions, txtOut);
-        }
 
-        Set<String> definedDangerousPerm = loadDangerousPermissions();
-        Set<String> declaredDangerousPerm = Sets.intersection(declaredPermissions, definedDangerousPerm);
-        Set<String> unusedDangerousPerm = Sets.intersection(unusedPermissions, definedDangerousPerm);
+        Set<String> declaredDangerousPerm = Sets.intersection(declaredPermissions, allDangerousPerm);
+        Set<String> unusedDangerousPerm = Sets.intersection(unusedPermissions, allDangerousPerm);
         PrintUtil.printCollection(declaredDangerousPerm, "Dangerous permissions declared in manifest");
         PrintUtil.printCollection(unusedDangerousPerm, "Dangerous permissions declared but not used by sensitives");
+
+        if (xmlOut != null) {
+            SensitiveCollectorJaxbData data =
+                    new SensitiveCollectorJaxbData(new ArrayList<>(declaredDangerousPerm), null,
+                            new ArrayList<>(dangerousPermWithSensitives));
+            JaxbUtil.save(data, SensitiveCollectorJaxbData.class, xmlOut);
+        }
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");

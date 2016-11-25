@@ -12,6 +12,7 @@ import soot.jimple.toolkits.callgraph.CallGraph;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
@@ -77,12 +78,21 @@ public class JaxbUtil {
     }
 
     public static void save(JaxbCallbackList data, File file) throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(JaxbCallbackList.class);
+        save(data, JaxbCallbackList.class, file);
+    }
+
+    public static <T> void save(T data, Class<T> dataClass, File file) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(dataClass);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         // output pretty printed
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
         jaxbMarshaller.marshal(data, file);
+    }
+
+    public static Object load(Class<?> dataClass, File file) throws JAXBException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(dataClass).createUnmarshaller();
+        return unmarshaller.unmarshal(file);
     }
 }
