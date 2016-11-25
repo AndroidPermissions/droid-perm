@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 public class SensitiveCollectorService {
 
     private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
+    private static Set<String> allDangerousPerm;
 
     public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef,
                                                    ClasspathFilter classpathFilter, File apkFile, File xmlOut)
@@ -53,27 +55,30 @@ public class SensitiveCollectorService {
         Set<String> declaredPermissions = getDeclaredPermissions(apkFile);
         PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
+        Set<String> referredPerm = SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter).keySet();
+        PrintUtil.printCollection(referredPerm, "Permissions referred in the code");
+
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         PrintUtil.printCollection(undeclaredPermissionSets,
                 "Permissions sets used by sensitives but not declared in manifest");
 
-        Set<String> allDangerousPerm = loadDangerousPermissions();
         Set<String> permissionsWithSensitives = sensitivePermissionSets.stream().collect(MyCollectors.toFlatSet());
-        Set<String> dangerousPermWithSensitives = Sets.intersection(permissionsWithSensitives, allDangerousPerm);
+        Set<String> dangerousPermWithSensitives = Sets.intersection(permissionsWithSensitives, getAllDangerousPerm());
         Set<String> unusedPermissions = Sets.difference(declaredPermissions, permissionsWithSensitives);
         PrintUtil.printCollection(unusedPermissions, "Permissions declared but not used by sensitives");
 
-        Set<String> declaredDangerousPerm = Sets.intersection(declaredPermissions, allDangerousPerm);
-        Set<String> unusedDangerousPerm = Sets.intersection(unusedPermissions, allDangerousPerm);
+        Set<String> declaredDangerousPerm = Sets.intersection(declaredPermissions, getAllDangerousPerm());
+        Set<String> unusedDangerousPerm = Sets.intersection(unusedPermissions, getAllDangerousPerm());
         PrintUtil.printCollection(declaredDangerousPerm, "Dangerous permissions declared in manifest");
         PrintUtil.printCollection(unusedDangerousPerm, "Dangerous permissions declared but not used by sensitives");
 
         if (xmlOut != null) {
-            SensitiveCollectorJaxbData data =
-                    new SensitiveCollectorJaxbData(new ArrayList<>(declaredDangerousPerm), null,
-                            new ArrayList<>(dangerousPermWithSensitives));
+            SensitiveCollectorJaxbData data = new SensitiveCollectorJaxbData(
+                    new ArrayList<>(declaredDangerousPerm),
+                    new ArrayList<>(referredPerm),
+                    new ArrayList<>(dangerousPermWithSensitives));
             JaxbUtil.save(data, SensitiveCollectorJaxbData.class, xmlOut);
         }
 
@@ -86,7 +91,18 @@ public class SensitiveCollectorService {
         return manifest.getDeclaredPermissions();
     }
 
-    public static Set<String> loadDangerousPermissions() throws IOException {
+    public static Set<String> getAllDangerousPerm() {
+        if (allDangerousPerm == null) {
+            try {
+                allDangerousPerm = loadDangerousPermissions();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return allDangerousPerm;
+    }
+
+    private static Set<String> loadDangerousPermissions() throws IOException {
         return Files.readAllLines(DANGEROUS_PERM_FILE).stream()
                 .filter(line -> !(line.trim().isEmpty() || line.startsWith("%")))
                 .collect(Collectors.toCollection(LinkedHashSet::new));

@@ -71,7 +71,7 @@ public class SceneUtil {
         classes.stream()
                 .filter(SootClass::isConcrete)
                 .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete).filter(classpathFilter)
-                .map(SceneUtil::retrieveBody).filter(body -> body != null)
+                .map(SceneUtil::retrieveBody).filter(Objects::nonNull)
                 .forEach(body -> body.getUnits().forEach(unit -> {
                     Stmt stmt = (Stmt) unit;
                     stmtConsumer.accept(stmt, body.getMethod());
@@ -157,7 +157,7 @@ public class SceneUtil {
         ));
     }
 
-    private static String getConstantValue(SootField field) {
+    public static String getConstantValue(SootField field) {
         return field.getTags().stream().filter(tag -> tag instanceof StringConstantValueTag)
                 .map(constTag -> ((StringConstantValueTag) constTag).getStringValue())
                 .findAny().orElse(null);
@@ -190,6 +190,22 @@ public class SceneUtil {
             logger.warn("Exception in FieldRef.getField() for " + fieldRef + " : " + e.toString());
         }
         return null;
+    }
+
+    public static MultiMap<String, Stmt> resolveConstantUsages(Collection<String> constants,
+                                                               Predicate<SootMethod> classpathFilter) {
+        Set<String> constantsSet = constants instanceof Set ? (Set) constants : new HashSet<>(constants);
+        MultiMap<String, Stmt> result = new HashMultiMap<>();
+        traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
+                (stmt, method) -> collectResolvedConstants(constantsSet, result, stmt));
+        return result;
+    }
+
+    private static void collectResolvedConstants(Set<String> constantsSet, MultiMap<String, Stmt> result, Stmt stmt) {
+        List<String> referredConst = getStringConstantsIfAny(stmt);
+        referredConst.stream().filter(constantsSet::contains).forEach(constant ->
+                result.put(constant, stmt)
+        );
     }
 
     /**

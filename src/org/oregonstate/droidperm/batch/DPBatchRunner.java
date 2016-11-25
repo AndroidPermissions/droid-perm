@@ -118,7 +118,7 @@ public class DPBatchRunner {
         logger.info("vmArgs: " + vmArgs + "\n");
 
         if (mode == Mode.COLLECT_SENSITIVES) {
-            dangerousPermisisons = SensitiveCollectorService.loadDangerousPermissions();
+            dangerousPermisisons = SensitiveCollectorService.getAllDangerousPerm();
         }
 
         Files.createDirectories(logDir);
@@ -254,15 +254,16 @@ public class DPBatchRunner {
     private void collectUnusedPermissions(Path xmlOut, String appName) throws IOException, JAXBException {
         SensitiveCollectorJaxbData data =
                 (SensitiveCollectorJaxbData) JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
-        Set<String> declaredPerm =
-                data.getDeclaredPerm() != null ? new LinkedHashSet<>(data.getDeclaredPerm()) : Collections.emptySet();
+        Set<String> referredPerm =
+                data.getReferredPerm() != null ? new LinkedHashSet<>(data.getReferredPerm()) : Collections.emptySet();
         Set<String> permWithSensitives = data.getPermWithSensitives() != null
                                          ? new LinkedHashSet<>(data.getPermWithSensitives()) : Collections.emptySet();
-        Set<String> unusedPerm = Sets.difference(declaredPerm, permWithSensitives);
+        Set<String> unusedPerm = Sets.difference(referredPerm, permWithSensitives);
         List<String> dangerousUnusedPerm = unusedPerm.stream().filter(dangerousPermisisons::contains)
                 .collect(Collectors.toList());
         if (!dangerousUnusedPerm.isEmpty()) {
-            logger.info(appName + " : unused declared permissions: " + dangerousUnusedPerm.size());
+            logger.info(appName + " : referred permissions with no corresponding sensitives: "
+                    + dangerousUnusedPerm.size());
             appToUnusedPermMap.put(appName, dangerousUnusedPerm);
         }
     }
