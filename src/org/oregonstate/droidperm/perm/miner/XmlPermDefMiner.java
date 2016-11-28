@@ -5,6 +5,8 @@ import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItem;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItemList;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbVal;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,6 +28,8 @@ import java.util.zip.ZipFile;
  * @author George Harder <harderg@oregonstate.edu> Created on 6/14/2016.
  */
 public class XmlPermDefMiner {
+
+    private static final Logger logger = LoggerFactory.getLogger(XmlPermDefMiner.class);
 
     /**
      * This takes a JaxbItemList object and marshalls it into a .xml file
@@ -109,6 +113,7 @@ public class XmlPermDefMiner {
 
             //some permission defs wrongly have an empty set of permissions. They have to be elliminated here.
             if (!permissionDef.getPermissions().isEmpty()) {
+                logger.warn("Empty permission set for: " + permissionDef);
                 permissionDefList.addPermissionDef(permissionDef);
             }
         }
@@ -148,7 +153,10 @@ public class XmlPermDefMiner {
      */
     private static void extractPermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
         for (JaxbAnnotation jaxbAnnotation : jaxbItem.getAnnotations()) {
-            //noinspection Convert2streamapi
+            //This block handles the extra Read or Write tag that may be attached to a permission
+            OperationKind opKind = jaxbAnnotation.getName().contains("Read") ? OperationKind.Read :
+                                   jaxbAnnotation.getName().contains("Write") ? OperationKind.Write
+                                                                              : null;
             for (JaxbVal jaxbVal : jaxbAnnotation.getVals()) {
                 //When a value has the name 'apis' its value is not a permission, so we don't store it
                 if (!(jaxbVal.getName().contains("apis"))) {
@@ -156,19 +164,8 @@ public class XmlPermDefMiner {
                     String[] tokens = jaxbVal.getVal().split(delims);
 
                     for (String token : tokens) {
-                        Permission permission = new Permission();
                         if (token.length() > 1) {
-                            permission.setName(token.trim());
-
-                            //This block handles the extra Read or Write tag that may be attached to a permission
-                            if (jaxbAnnotation.getName().contains("Read")) {
-                                permission.setOperationKind(OperationKind.Read);
-                            }
-                            if (jaxbAnnotation.getName().contains("Write")) {
-                                permission.setOperationKind(OperationKind.Write);
-                            }
-
-                            permissionDef.addPermission(permission);
+                            permissionDef.addPermission(new Permission(token.trim(), opKind));
                         }
                     }
 
