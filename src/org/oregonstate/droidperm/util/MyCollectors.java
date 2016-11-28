@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.util;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
 
@@ -30,21 +32,23 @@ public class MyCollectors {
      */
     public static <T>
     Collector<Collection<T>, ?, Set<T>> toFlatSet() {
-        return new CollectorImpl<>((Supplier<Set<T>>) HashSet::new, Set::addAll,
+        return new CollectorImpl<>(HashSet::new, Set::addAll,
                 (left, right) -> {
                     left.addAll(right);
                     return left;
                 },
+                Function.identity(),
                 CH_UNORDERED_ID);
     }
 
     public static <T, U>
     Collector<Map<T, U>, ?, Map<T, U>> toFlatMap() {
-        return new CollectorImpl<>((Supplier<Map<T, U>>) HashMap::new, Map::putAll,
+        return new CollectorImpl<>(HashMap::new, Map::putAll,
                 (left, right) -> {
                     left.putAll(right);
                     return left;
                 },
+                Function.identity(),
                 CH_UNORDERED_ID);
     }
 
@@ -71,12 +75,93 @@ public class MyCollectors {
                     left.putAll(right);
                     return left;
                 },
+                Function.identity(),
                 CH_UNORDERED_ID);
     }
 
-    @SuppressWarnings("unchecked")
-    private static <I, R> Function<I, R> castingIdentity() {
-        return i -> (R) i;
+    /**
+     * Collector that takes a stream of elements as input and produces a Guava Multimap, by mapping each element through
+     *
+     * @param keyMapper   a mapping function to produce keys
+     * @param valueMapper a mapping function to produce values.
+     * @param <T>         The type of input elements.
+     * @param <K>         The type of multimap keys.
+     * @param <V>         The type of multimap values (elements of the set corresponding to each key)
+     * @return a {@code Collector} which collects elements into a {@code MultiMap}, by performing a grouping by
+     * operation on the given keys.
+     */
+    public static <T, K, V>
+    Collector<T, ?, Multimap<K, V>> toMultimapGroupingBy(Function<? super T, ? extends K> keyMapper,
+                                                         Function<? super T, ? extends V> valueMapper) {
+        return new MultimapCollector<>(HashMultimap::create, keyMapper, valueMapper, Function.identity());
+    }
+
+    /**
+     * Collector that takes a stream of elements as input and produces a Guava Multimap, by mapping each element through
+     *
+     * @param keyMapper   a mapping function to produce keys
+     * @param valueMapper a mapping function from input stream elements to streams of value elements.
+     * @param <T>         The type of input elements.
+     * @param <K>         The type of multimap keys.
+     * @param <V>         The type of multimap values (elements of the set corresponding to each key)
+     * @return a {@code Collector} which collects elements into a {@code MultiMap} whose keys are the result of applying
+     * a key mapping function to the input elements, and whose values (which are sets) are the result of applying a
+     * value mapping function which produces a stream, and then collecting the stream elements into a set.
+     */
+    public static <T, K, V>
+    Collector<T, ?, Multimap<K, V>> toMultimap(Function<? super T, ? extends K> keyMapper,
+                                               Function<? super T, ? extends Stream<? extends V>> valueMapper) {
+        return toMultimapForCollection(keyMapper,
+                (T input) -> IteratorUtil.asIterable(valueMapper.apply(input).iterator()));
+    }
+
+    /**
+     * Collector that takes a stream of elements as input and produces a Guava Multimap, by mapping each element through
+     *
+     * @param supplier    multimap supplier
+     * @param keyMapper   a mapping function to produce keys
+     * @param valueMapper a mapping function from input stream elements to a collection of value elements.
+     * @param <T>         The type of input elements.
+     * @param <K>         The type of multimap keys.
+     * @param <V>         The type of multimap values (elements of the set corresponding to each key)
+     * @return a {@code Collector} which collects elements into a {@code MultiMap} whose keys are the result of applying
+     * a key mapping function to the input elements, and whose values (which are sets) are the result of applying a
+     * value mapping function which produces a stream, and then collecting the stream elements into a set.
+     */
+    public static <T, K, V>
+    Collector<T, ?, Multimap<K, V>> toMultimapForCollection(Supplier<Multimap<K, V>> supplier,
+                                                            Function<? super T, ? extends K> keyMapper,
+                                                            Function<? super T,
+                                                                    ? extends Iterable<? extends V>> valueMapper) {
+        return new CollectorImpl<>(
+                supplier,
+                (Multimap<K, V> multimap, T elem)
+                        -> multimap.putAll(keyMapper.apply(elem), valueMapper.apply(elem)),
+                (left, right) -> {
+                    left.putAll(right);
+                    return left;
+                },
+                Function.identity(),
+                CH_UNORDERED_ID);
+    }
+
+    /**
+     * Collector that takes a stream of elements as input and produces a Guava Multimap, by mapping each element through
+     *
+     * @param keyMapper   a mapping function to produce keys
+     * @param valueMapper a mapping function from input stream elements to a collection of value elements.
+     * @param <T>         The type of input elements.
+     * @param <K>         The type of multimap keys.
+     * @param <V>         The type of multimap values (elements of the set corresponding to each key)
+     * @return a {@code Collector} which collects elements into a {@code MultiMap} whose keys are the result of applying
+     * a key mapping function to the input elements, and whose values (which are sets) are the result of applying a
+     * value mapping function which produces a stream, and then collecting the stream elements into a set.
+     */
+    public static <T, K, V>
+    Collector<T, ?, Multimap<K, V>> toMultimapForCollection(Function<? super T, ? extends K> keyMapper,
+                                                            Function<? super T,
+                                                                    ? extends Iterable<? extends V>> valueMapper) {
+        return toMultimapForCollection(HashMultimap::create, keyMapper, valueMapper);
     }
 
     /**
@@ -104,13 +189,6 @@ public class MyCollectors {
             this.combiner = combiner;
             this.finisher = finisher;
             this.characteristics = characteristics;
-        }
-
-        CollectorImpl(Supplier<A> supplier,
-                      BiConsumer<A, T> accumulator,
-                      BinaryOperator<A> combiner,
-                      Set<Characteristics> characteristics) {
-            this(supplier, accumulator, combiner, castingIdentity(), characteristics);
         }
 
         @Override
