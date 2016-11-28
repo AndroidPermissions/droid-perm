@@ -16,6 +16,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,7 +44,7 @@ public class JaxbUtil {
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
                 Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
                         .map(edge -> detector.getSensitivePathsHolder().getReacheableSensitives(edge))
-                        .filter(set -> set != null)
+                        .filter(Objects::nonNull)
                         .collect(MyCollectors.toFlatSet());
                 if (!sensitives.isEmpty()) {
                     Set<String> permSet = detector.getPermissionsFor(sensitives);
@@ -94,5 +95,12 @@ public class JaxbUtil {
     public static Object load(Class<?> dataClass, File file) throws JAXBException {
         Unmarshaller unmarshaller = JAXBContext.newInstance(dataClass).createUnmarshaller();
         return unmarshaller.unmarshal(file);
+    }
+
+    public static <T> void print(T data, Class<T> dataClass) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(dataClass);
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        jaxbMarshaller.marshal(data, System.out);
     }
 }

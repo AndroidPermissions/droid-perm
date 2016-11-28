@@ -95,14 +95,8 @@ public class XmlPermDefMiner {
                 signatureBuilder.append(tokens[i]).append(" ");
             }
 
-            //This check ensure that any Java generics information is removed from the string
             String rawSignature = signatureBuilder.toString().trim();
-            if (rawSignature.contains("<")) {
-                rawSignature = scrubJavaGenerics(rawSignature);
-            }
-            String signature = rawSignature;
-            signature = signature.replace("...", "[]");//process Java 5 "..." construct
-            signature = processInnerClasses(signature);
+            String signature = cleanupSignature(rawSignature);
             permissionDef.setTarget(signature);
 
             //Here we determine if the target of the permission is a method or a field
@@ -122,9 +116,20 @@ public class XmlPermDefMiner {
     }
 
     /**
+     * Convert signature to the format expected by DroidPerm. Scrub generics, ... construct and convert inner class
+     * names.
+     */
+    public static String cleanupSignature(String rawSignature) {
+        String signature = scrubGenerics(rawSignature);
+        signature = signature.replace("...", "[]");//process Java 5 "..." construct
+        signature = processInnerClasses(signature);
+        return signature;
+    }
+
+    /**
      * Replace "." with "$" when connecting inner class names.
      */
-    private static String processInnerClasses(String str) {
+    public static String processInnerClasses(String str) {
         //Match a dot, followed by an uppercase java id including $, followed by a dot.
         //Last dot should be replaced by $
         String regex = "(\\.\\p{Upper}[\\w$]*)\\.";
@@ -178,25 +183,24 @@ public class XmlPermDefMiner {
     }
 
     /**
-     * This function removes any java generics information from the methods that require permissions. It is a helper the
-     * ItemsToPermissionDef function
+     * Removes generics constructs from the signature, e.g. anything between "<>"
      */
-    private static String scrubJavaGenerics(String rawSignature) {
-        //Java generics are in greater than/less than brackets so we breakup the string on them
-        String delims = "[<>]+";
-        String[] token = rawSignature.split(delims);
+    private static String scrubGenerics(String rawSignature) {
+        if (rawSignature.contains("<")) {
+            //Java generics are in greater than/less than brackets so we breakup the string on them
+            String delims = "[<>]+";
+            String[] token = rawSignature.split(delims);
 
-        //When the string is broken every other token is java generics info so we skip these when rebuilding the string
-        StringBuilder resultBuilder = new StringBuilder();
-        for (int i = 0; i < token.length; i += 2) {
-            //This check adds a space between the return type and the method signature
-            if (i == 0) {
-                resultBuilder.append(token[i]).append(" ");
-            } else {
-                resultBuilder.append(token[i]);
+            //When the string is broken every other token is java generics info so we skip these when rebuilding the string
+            StringBuilder resultBuilder = new StringBuilder();
+            for (int i = 0; i < token.length; i += 2) {
+                //This check adds a space between the return type and the method signature. Questionable.
+                String processedToken = i == 0 && !token[i].contains(" ") ? token[i] + " " : token[i];
+                resultBuilder.append(processedToken);
             }
+            return resultBuilder.toString();
         }
-        return resultBuilder.toString();
+        return rawSignature;
     }
 
     /**

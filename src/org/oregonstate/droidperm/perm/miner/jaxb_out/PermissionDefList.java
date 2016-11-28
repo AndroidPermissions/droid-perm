@@ -12,6 +12,13 @@ import java.util.List;
 public class PermissionDefList {
     private List<PermissionDef> permissionDefs = new ArrayList<>();
 
+    public PermissionDefList() {
+    }
+
+    public PermissionDefList(List<PermissionDef> permissionDefs) {
+        this.permissionDefs = permissionDefs;
+    }
+
     @XmlElement(name = "permissionDef")
     public List<PermissionDef> getPermissionDefs() {
         return permissionDefs;
