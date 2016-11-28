@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <PermissionDefinitions>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  renameAccount(android.accounts.Account, java.lang.String, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture renameAccount(android.accounts.Account, java.lang.String, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  getAccountsByTypeAndFeatures(java.lang.String, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAccountsByTypeAndFeatures(java.lang.String, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  addAccount(java.lang.String, java.lang.String, java.lang.String[], android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture addAccount(java.lang.String, java.lang.String, java.lang.String[], android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  confirmCredentials(android.accounts.Account, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture confirmCredentials(android.accounts.Account, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  editProperties(java.lang.String, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture editProperties(java.lang.String, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.USE_CREDENTIALS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.USE_CREDENTIALS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  getAuthToken(android.accounts.Account, java.lang.String, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.USE_CREDENTIALS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  getAuthTokenByFeatures(java.lang.String, java.lang.String, java.lang.String[], android.app.Activity, android.os.Bundle, android.os.Bundle, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthTokenByFeatures(java.lang.String, java.lang.String, java.lang.String[], android.app.Activity, android.os.Bundle, android.os.Bundle, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  removeAccount(android.accounts.Account, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture removeAccount(android.accounts.Account, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  updateCredentials(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture updateCredentials(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  hasFeatures(android.accounts.Account, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture hasFeatures(android.accounts.Account, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture  removeAccount(android.accounts.Account, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture removeAccount(android.accounts.Account, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.MANAGE_ACCOUNTS"/>
     </permissionDef>
     <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.Account[] getAccounts()" targetKind="Method">
@@ -146,7 +146,7 @@
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="java.lang.String getAddress()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="java.util.Set  getBondedDevices()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="java.util.Set getBondedDevices()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="void stopLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
@@ -185,25 +185,25 @@
     <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="int getConnectionState(android.bluetooth.BluetoothDevice, int)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List  getConnectedDevices(int)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List getConnectedDevices(int)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List  getDevicesMatchingConnectionStates(int, int[])" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List getDevicesMatchingConnectionStates(int, int[])" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="int getConnectionState(android.bluetooth.BluetoothDevice)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List  getConnectedDevices()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List getConnectedDevices()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List  getDevicesMatchingConnectionStates(int[])" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List getDevicesMatchingConnectionStates(int[])" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void startScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void startScan(java.util.List , android.bluetooth.le.ScanSettings, android.bluetooth.le.ScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void startScan(java.util.List, android.bluetooth.le.ScanSettings, android.bluetooth.le.ScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
     <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void stopScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
@@ -227,10 +227,10 @@
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="int getIsSyncable(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List  getPeriodicSyncs(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List getPeriodicSyncs(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List  getCurrentSyncs()" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List getCurrentSyncs()" targetKind="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
     <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void addPeriodicSync(android.accounts.Account, java.lang.String, android.os.Bundle, long)" targetKind="Method">
@@ -424,10 +424,10 @@
     <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="int updateNetwork(android.net.wifi.WifiConfiguration)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List  getScanResults()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List getScanResults()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List  getConfiguredNetworks()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List getConfiguredNetworks()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
     <permissionDef className="android.net.wifi.WifiManager$MulticastLock" permissionRel="AllOf" target="void acquire()" targetKind="Method">
@@ -636,7 +636,7 @@
     <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.lang.String getVoiceMailNumber(android.telecom.PhoneAccountHandle)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.util.List  getCallCapablePhoneAccounts()" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.util.List getCallCapablePhoneAccounts()" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
     <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="void cancelMissedCallsNotification()" targetKind="Method">

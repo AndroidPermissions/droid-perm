@@ -80,28 +80,21 @@ public class XmlPermDefMiner {
     }
 
     private static PermissionDefList buildPermissionDefList(List<JaxbItem> jaxbItems) {
-        String delimiters = "[ ]+";
         PermissionDefList permissionDefList = new PermissionDefList();
 
         for (JaxbItem jaxbItem : jaxbItems) {
             PermissionDef permissionDef = new PermissionDef();
+            String itemNameNoGenerics = scrubGenerics(jaxbItem.getName());
 
-            //Break up the string on spaces
-            //The string before the first space is the class name, what comes after is the method or field value
-            String[] tokens = jaxbItem.getName().split(delimiters);
-
-            String javaClassName = tokens[0];
-            permissionDef.setClassName(processInnerClasses(javaClassName));
-
-            //Here the method or field is rebuilt because it was likely broken by the previous split
-            StringBuilder signatureBuilder = new StringBuilder();
-            for (int i = 1; i < tokens.length; i++) {
-                signatureBuilder.append(tokens[i]).append(" ");
-            }
-
-            String rawSignature = signatureBuilder.toString().trim();
-            String signature = cleanupSignature(rawSignature);
-            permissionDef.setTarget(signature);
+            //Methods: token 0 = class, 1 = return type, 2 = method name + ( + first arg,
+            //  rest - other args. Last one with )
+            //  Generics, if present at this stage, could mess up this rule because they might have spaces inside
+            //Fields: token 0 = class, 1 = field name
+            int firstSpace = itemNameNoGenerics.indexOf(' ');
+            String className = itemNameNoGenerics.substring(0, firstSpace).trim();
+            String rawSignature = itemNameNoGenerics.substring(firstSpace, itemNameNoGenerics.length()).trim();
+            permissionDef.setClassName(processInnerClasses(className));
+            permissionDef.setTarget(cleanupSignature(rawSignature));
 
             //Here we determine if the target of the permission is a method or a field
             permissionDef.setTargetKind(
@@ -109,7 +102,7 @@ public class XmlPermDefMiner {
                     ? PermTargetKind.Method : PermTargetKind.Field);
 
             //Finally iterate through the annotations, extract the relevant information and put it in a PermDef object
-            extractPermissions(permissionDef, jaxbItem);
+            populatePermissions(permissionDef, jaxbItem);
 
             //some permission defs wrongly have an empty set of permissions. They have to be elliminated here.
             if (!permissionDef.getPermissions().isEmpty()) {
@@ -151,7 +144,7 @@ public class XmlPermDefMiner {
      * Does the bulk of the work for buildPermissionDefList. It gets the relevant information from a JaxbAnnotation
      * object and gives it to a PermissionDef object.
      */
-    private static void extractPermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
+    private static void populatePermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
         for (JaxbAnnotation jaxbAnnotation : jaxbItem.getAnnotations()) {
             //This block handles the extra Read or Write tag that may be attached to a permission
             OperationKind opKind = jaxbAnnotation.getName().contains("Read") ? OperationKind.Read :
@@ -180,24 +173,19 @@ public class XmlPermDefMiner {
     }
 
     /**
-     * Removes generics constructs from the signature, e.g. anything between "<>"
+     * Removes generics constructs from the signature, e.g. anything between "<>" or multi-level "<>".
+     * Works for any strigns: signatures, types or other.
      */
-    private static String scrubGenerics(String rawSignature) {
-        if (rawSignature.contains("<")) {
-            //Java generics are in greater than/less than brackets so we breakup the string on them
-            String delims = "[<>]+";
-            String[] token = rawSignature.split(delims);
-
-            //When the string is broken every other token is java generics info so we skip these when rebuilding the string
-            StringBuilder resultBuilder = new StringBuilder();
-            for (int i = 0; i < token.length; i += 2) {
-                //This check adds a space between the return type and the method signature. Questionable.
-                String processedToken = i == 0 && !token[i].contains(" ") ? token[i] + " " : token[i];
-                resultBuilder.append(processedToken);
+    private static String scrubGenerics(final String stringWithGenerics) {
+        String result = stringWithGenerics;
+        while (result.contains("<")) {
+            String newResult = result.replaceAll("<[^<]*>", ""); // scrubbing generics one level at a time
+            if (newResult.equals(result)) {
+                throw new IllegalStateException("Illegal state reached while scrubbing generics: " + result);
             }
-            return resultBuilder.toString();
+            result = newResult;
         }
-        return rawSignature;
+        return result;
     }
 
     /**
