@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.util;
 
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import soot.MethodOrMethodContext;
 import soot.SootClass;
 import soot.SootMethod;
@@ -23,4 +24,8 @@ public class SortUtil {
 
     public static final Comparator<Edge> edgeComparator = Comparator.comparing(Edge::getTgt, methodOrMCComparator)
             .thenComparing(Edge::getSrc, methodOrMCComparator);
+
+    public static final Comparator<PermissionDef> permissionDefComparator =
+            Comparator.comparing(PermissionDef::getClassName)
+                    .thenComparing(PermissionDef::getTarget, Comparator.nullsFirst(Comparator.naturalOrder()));
 }
