@@ -18,6 +18,7 @@ public class PermissionDef {
     private PermTargetKind targetKind;
     private PermissionRel permissionRel;
     private List<Permission> permissions = new ArrayList<>();
+    private String comment;
 
     public PermissionDef() {
     }
@@ -73,6 +74,15 @@ public class PermissionDef {
 
     public Set<String> getPermissionNames() {
         return getPermissions().stream().map(Permission::getName).collect(Collectors.toSet());
+    }
+
+    @XmlElement
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     @Override
