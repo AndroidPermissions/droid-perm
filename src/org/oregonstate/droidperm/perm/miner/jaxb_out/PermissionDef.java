@@ -19,6 +19,7 @@ public class PermissionDef {
     private PermissionRel permissionRel;
     private List<Permission> permissions = new ArrayList<>();
     private String comment;
+    private boolean conditional;
 
     public PermissionDef() {
     }
@@ -83,6 +84,15 @@ public class PermissionDef {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    @XmlAttribute
+    public boolean isConditional() {
+        return conditional;
+    }
+
+    public void setConditional(boolean conditional) {
+        this.conditional = conditional;
     }
 
     @Override
