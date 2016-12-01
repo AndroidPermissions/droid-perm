@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.sens;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
@@ -10,34 +11,37 @@ import java.util.List;
 @XmlRootElement(name = "appPermissions")
 public class SensitiveCollectorJaxbData {
 
-    @XmlElement
-    private List<String> declaredPerm;
+    @XmlElementWrapper
+    @XmlElement(name = "declaredPerm")
+    private List<String> declaredPerms;
 
-    @XmlElement
-    private List<String> referredPerm;
+    @XmlElementWrapper
+    @XmlElement(name = "referredPerm")
+    private List<String> referredPerms;
 
-    @XmlElement
-    private List<String> permWithSensitives;
+    @XmlElementWrapper
+    @XmlElement(name = "permWithSensitives")
+    private List<String> permsWithSensitives;
 
     public SensitiveCollectorJaxbData() {
     }
 
-    public SensitiveCollectorJaxbData(List<String> declaredPerm, List<String> referredPerm,
-                                      List<String> permWithSensitives) {
-        this.declaredPerm = declaredPerm;
-        this.referredPerm = referredPerm;
-        this.permWithSensitives = permWithSensitives;
+    public SensitiveCollectorJaxbData(List<String> declaredPerms, List<String> referredPerms,
+                                      List<String> permsWithSensitives) {
+        this.declaredPerms = declaredPerms;
+        this.referredPerms = referredPerms;
+        this.permsWithSensitives = permsWithSensitives;
     }
 
-    public List<String> getDeclaredPerm() {
-        return declaredPerm;
+    public List<String> getDeclaredPerms() {
+        return declaredPerms;
     }
 
-    public List<String> getReferredPerm() {
-        return referredPerm;
+    public List<String> getReferredPerms() {
+        return referredPerms;
     }
 
-    public List<String> getPermWithSensitives() {
-        return permWithSensitives;
+    public List<String> getPermsWithSensitives() {
+        return permsWithSensitives;
     }
 }
