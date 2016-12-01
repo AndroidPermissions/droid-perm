@@ -6,10 +6,12 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.sens.SensitiveCollectorJaxbData;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
+import org.oregonstate.droidperm.util.PrintUtil;
 import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +57,11 @@ public class DPBatchRunner {
         DROID_PERM, TAINT_ANALYSIS, COLLECT_ANNO, COLLECT_SENSITIVES
     }
 
+    @Parameter(names = "--collect-method-sens-only-apps",
+            description = "Collect apps that only use method-based dangerous permissions. "
+                    + "Used in conjunction with COLLECT_SENSITIVES mode.")
+    private boolean collectMethodSensOnlyApps;
+
     @Parameter(names = "--help", help = true)
     private boolean help = false;
 
@@ -65,6 +72,7 @@ public class DPBatchRunner {
 
     private Set<String> dangerousPermisisons;
     private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
+    private List<String> appsWithMethodSensOnly = new ArrayList<>();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -111,6 +119,7 @@ public class DPBatchRunner {
 
     private void batchRun() throws IOException, JAXBException {
         logger.info("DroidPerm Mode: " + mode);
+        logger.info("collectMethodSensOnlyApps: " + collectMethodSensOnlyApps);
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
@@ -261,10 +270,16 @@ public class DPBatchRunner {
         Set<String> unusedPerms = Sets.difference(referredPerms, permsWithSensitives);
         List<String> dangerousUnusedPerms = unusedPerms.stream().filter(dangerousPermisisons::contains)
                 .collect(Collectors.toList());
+        boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
+                && data.getReferredPermDefs().stream()
+                .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         if (!dangerousUnusedPerms.isEmpty()) {
             logger.info(appName + " : referred permissions with no corresponding sensitives: "
                     + dangerousUnusedPerms.size());
             appToUnusedPermMap.put(appName, dangerousUnusedPerms);
+        }
+        if (methodSensOnly) {
+            appsWithMethodSensOnly.add(appName);
         }
     }
 
@@ -297,6 +312,10 @@ public class DPBatchRunner {
                 + "========================================================================");
         for (String perm : unusedPermFrequency.keySet()) {
             System.out.println(perm + " : " + unusedPermFrequency.get(perm));
+        }
+
+        if (collectMethodSensOnlyApps) {
+            PrintUtil.printCollection(appsWithMethodSensOnly, "Apps with method sensitives only");
         }
     }
 }
