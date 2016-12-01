@@ -272,7 +272,8 @@ public class DPBatchRunner {
                 .collect(Collectors.toList());
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
                 && data.getReferredPermDefs().stream()
-                .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
+                .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method)
+                && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm);
         if (!dangerousUnusedPerms.isEmpty()) {
             logger.info(appName + " : referred permissions with no corresponding sensitives: "
                     + dangerousUnusedPerms.size());

@@ -32,6 +32,8 @@ public class SensitiveCollectorService {
 
     private static final Path DANGEROUS_PERM_FILE = Paths.get("config/DangerousPermissions.txt");
     private static Set<String> allDangerousPerm;
+    public static final List<String> storagePerm =
+            Arrays.asList("android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE");
 
     public static void hierarchySensitivesAnalysis(ScenePermissionDefService scenePermDef,
                                                    ClasspathFilter classpathFilter, File apkFile, File xmlOut)
@@ -76,9 +78,9 @@ public class SensitiveCollectorService {
         PrintUtil.printCollection(declaredDangerousPerm, "Dangerous permissions declared in manifest");
         PrintUtil.printCollection(unusedDangerousPerm, "Dangerous permissions declared but not used by sensitives");
 
-
         if (xmlOut != null) {
             SensitiveCollectorJaxbData data = new SensitiveCollectorJaxbData(
+                    new ArrayList<>(declaredPermissions),
                     new ArrayList<>(declaredDangerousPerm),
                     new ArrayList<>(referredPerm),
                     new ArrayList<>(dangerousPermWithSensitives),
