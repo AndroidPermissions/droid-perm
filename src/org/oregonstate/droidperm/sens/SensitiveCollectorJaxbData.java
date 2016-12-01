@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.sens;
 
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,14 +25,19 @@ public class SensitiveCollectorJaxbData {
     @XmlElement(name = "permWithSensitives")
     private List<String> permsWithSensitives;
 
+    @XmlElementWrapper
+    @XmlElement(name = "referredPermDef")
+    private List<PermissionDef> referredPermDefs;
+
     public SensitiveCollectorJaxbData() {
     }
 
     public SensitiveCollectorJaxbData(List<String> declaredPerms, List<String> referredPerms,
-                                      List<String> permsWithSensitives) {
+                                      List<String> permsWithSensitives, List<PermissionDef> referredPermDefs) {
         this.declaredPerms = declaredPerms;
         this.referredPerms = referredPerms;
         this.permsWithSensitives = permsWithSensitives;
+        this.referredPermDefs = referredPermDefs;
     }
 
     public List<String> getDeclaredPerms() {
@@ -43,5 +50,9 @@ public class SensitiveCollectorJaxbData {
 
     public List<String> getPermsWithSensitives() {
         return permsWithSensitives;
+    }
+
+    public List<PermissionDef> getReferredPermDefs() {
+        return referredPermDefs;
     }
 }

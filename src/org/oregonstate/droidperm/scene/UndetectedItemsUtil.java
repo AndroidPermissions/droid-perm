@@ -113,7 +113,7 @@ public class UndetectedItemsUtil {
         long startTime = System.currentTimeMillis();
 
         Map<Set<String>, MultiMap<SootMethod, Stmt>> permToUndetectedSensMap =
-                buildPermToUndetectedSensMap(scenePermDef, detected, classpathFilter);
+                buildPermToUndetectedMethodSensMap(scenePermDef, detected, classpathFilter);
         printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
 
         System.out.println("\nUndetected sensitives execution time: "
@@ -123,9 +123,9 @@ public class UndetectedItemsUtil {
     /**
      * Map lvl 1: from permission sets to undetected sensitives having this set.
      * <p>
-     * Map lvl2: from sensitive to its callign context: method and stmt.
+     * Map lvl2: from sensitive to its calling context: method and stmt.
      */
-    public static Map<Set<String>, MultiMap<SootMethod, Stmt>> buildPermToUndetectedSensMap(
+    public static Map<Set<String>, MultiMap<SootMethod, Stmt>> buildPermToUndetectedMethodSensMap(
             ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         MultiMap<SootMethod, Stmt> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter);

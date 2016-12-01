@@ -16,12 +16,19 @@ public class PermissionDef {
     private String className;
     private String target;
     private PermTargetKind targetKind;
-    private PermissionRel permissionRel;
+    private PermissionRel permissionRel = PermissionRel.AnyOf;
     private List<Permission> permissions = new ArrayList<>();
     private String comment;
     private boolean conditional;
 
     public PermissionDef() {
+    }
+
+    public PermissionDef(String className, String target, PermTargetKind targetKind, List<Permission> permissions) {
+        this.className = className;
+        this.target = target;
+        this.targetKind = targetKind;
+        this.permissions = permissions;
     }
 
     @XmlAttribute
