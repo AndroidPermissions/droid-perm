@@ -19,7 +19,7 @@ public class PermissionDef {
     private PermissionRel permissionRel = PermissionRel.AnyOf;
     private List<Permission> permissions = new ArrayList<>();
     private String comment;
-    private boolean conditional;
+    private Boolean conditional;
 
     public PermissionDef() {
     }
@@ -94,11 +94,11 @@ public class PermissionDef {
     }
 
     @XmlAttribute
-    public boolean isConditional() {
+    public Boolean isConditional() {
         return conditional;
     }
 
-    public void setConditional(boolean conditional) {
+    public void setConditional(Boolean conditional) {
         this.conditional = conditional;
     }
 
