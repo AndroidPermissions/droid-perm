@@ -207,7 +207,8 @@ public class DPBatchRunner {
             case COLLECT_SENSITIVES:
                 processBuilderArgs.addAll(Arrays.asList(
                         "--perm-def-files",
-                        "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml",
+                        "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml;"
+                                + "config/javadoc-perm-def-API-23.xml",
                         "--collect-sens-mode", "--xml-out", xmlOut.toString()));
                 break;
         }
