@@ -101,6 +101,13 @@ public class HierarchyUtil {
             return Collections.emptyList();
         } else {
             SootMethod method = scene.grabMethod(methodDef.getSignature());
+
+            //Workaround for soot bug: sometimes scene contains methods with name wrapped into ''.
+            //Example: SubscriptionManager.from()
+            if (method == null && !clazz.isPhantom()) {
+                method = scene.grabMethod(getSignatureWithQuotes(methodDef));
+            }
+
             if (method == null) {
                 if (clazz.isPhantom()) {
                     System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
@@ -116,6 +123,23 @@ public class HierarchyUtil {
 
             return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);
         }
+    }
+
+    /**
+     * Same as SootMethodAndClass.getSignature(), but method name is wrapped into ''
+     */
+    private static String getSignatureWithQuotes(SootMethodAndClass methodDef) {
+        String s = "<" + methodDef.getClassName() + ": " + (methodDef.getReturnType().length() == 0 ? "" :
+                                                            methodDef.getReturnType() + " ")
+                + "'" + methodDef.getMethodName() + "'" + "(";
+        for (int i = 0; i < methodDef.getParameters().size(); i++) {
+            if (i > 0) {
+                s += ",";
+            }
+            s += methodDef.getParameters().get(i).trim();
+        }
+        s += ")>";
+        return s;
     }
 
     public static List<SootMethod> resolveHybridDispatch(SootMethod staticTargetMethod,
