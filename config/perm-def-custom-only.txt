@@ -14,13 +14,3 @@
 % Used by some methods in Android compat framework.
 <android.support.v4.content.PermissionChecker: int checkSelfPermission(android.content.Context,java.lang.String )> -> _PERM_CHECKER_
 
-
-% CAMERA
-% ==================================
-
-% CAMERA - android.hardware.Camera
-% --------------------------------
-<android.hardware.Camera: android.hardware.Camera open()> -> CAMERA
-<android.hardware.Camera: android.hardware.Camera open(int)> -> CAMERA
-
-
