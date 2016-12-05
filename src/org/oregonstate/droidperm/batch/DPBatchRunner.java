@@ -311,7 +311,9 @@ public class DPBatchRunner {
         Map<String, Long> unusedPermFrequency = appToUnusedPermMap.keySet().stream()
                 .flatMap(app -> appToUnusedPermMap.get(app).stream().map(perm -> new Pair<>(app, perm)))
                 .collect(Collectors.groupingBy(Pair::getO2, TreeMap::new, Collectors.counting()));
-        System.out.println("\n\nUnused permissions, nr apps for each : " + unusedPermFrequency.size() + "\n"
+        long totalInstances = unusedPermFrequency.values().stream().mapToLong(l -> l).sum();
+        System.out.println("\n\nUnused permissions, nr apps for each : " + unusedPermFrequency.size());
+        System.out.println("Total unused permissions instances : " + totalInstances + "\n"
                 + "========================================================================");
         for (String perm : unusedPermFrequency.keySet()) {
             System.out.println(perm + " : " + unusedPermFrequency.get(perm));
