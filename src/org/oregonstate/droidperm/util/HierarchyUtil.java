@@ -79,7 +79,12 @@ public class HierarchyUtil {
     private static boolean dispatchExceptionLogged = false;
 
     public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs) {
-        return methodDefs.stream().map(HierarchyUtil::resolveAbstractDispatch)
+        return resolveAbstractDispatches(methodDefs, false);
+    }
+
+    public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs,
+                                                             boolean ignoreUnresolved) {
+        return methodDefs.stream().map(methodDef -> resolveAbstractDispatch(methodDef, ignoreUnresolved))
                 .flatMap(Collection::stream).collect(Collectors.toList());
     }
 
@@ -90,11 +95,11 @@ public class HierarchyUtil {
             Collection<T> methodDefs) {
         return methodDefs.stream().collect(Collectors.toMap(
                 methodDef -> methodDef,
-                HierarchyUtil::resolveAbstractDispatch
+                methodDef -> resolveAbstractDispatch(methodDef, false)
         ));
     }
 
-    public static List<SootMethod> resolveAbstractDispatch(SootMethodAndClass methodDef) {
+    public static List<SootMethod> resolveAbstractDispatch(SootMethodAndClass methodDef, boolean ignoreUnresolved) {
         Scene scene = Scene.v();
         SootClass clazz = scene.getSootClassUnsafe(methodDef.getClassName());
         if (clazz == null) {
@@ -109,16 +114,21 @@ public class HierarchyUtil {
             }
 
             if (method == null) {
-                if (clazz.isPhantom()) {
-                    System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
+                if (ignoreUnresolved) {
+                    logger.warn("Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
+                    return Collections.emptyList();
                 } else {
-                    System.err.println("Existing methods in " + clazz + " :");
-                    clazz.getMethods().forEach(System.err::println);
+                    if (clazz.isPhantom()) {
+                        System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
+                    } else {
+                        System.err.println("Existing methods in " + clazz + " :");
+                        clazz.getMethods().forEach(System.err::println);
+                    }
+                    throw new RuntimeException(
+                            "Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
+                    //                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
+                    //                return Collections.emptyList();
                 }
-                throw new RuntimeException(
-                        "Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
-//                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
-//                return Collections.emptyList();
             }
 
             return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);

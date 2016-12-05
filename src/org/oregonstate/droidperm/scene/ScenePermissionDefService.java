@@ -3,12 +3,14 @@ package org.oregonstate.droidperm.scene;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
+import org.oregonstate.droidperm.util.StreamUtil;
 import soot.Scene;
-import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
+import soot.SourceLocator;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
+import soot.options.Options;
 import soot.toolkits.scalar.Pair;
 
 import java.util.*;
@@ -71,7 +73,7 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getSceneMethodSensitives() {
-        return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs);
+        return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
     }
 
     /**
@@ -87,13 +89,23 @@ public class ScenePermissionDefService {
 
     private Map<FieldSensitiveDef, SootField> buildSceneFieldSensMap() {
         Scene scene = Scene.v();
-        return fieldSensitiveDefs.stream().filter(def -> scene.containsClass(def.getClassName()))
+
+        //Workaround: Classes with intents might not be resolved at this point, due to bytecode constant inlining.
+        Options.v().set_ignore_resolving_levels(true);
+        fieldSensitiveDefs.stream()
+                //filter out classes not in the classpath
+                .filter(def -> SourceLocator.v().getClassSource(def.getClassName()) != null)
+                .forEach(def -> scene.loadClassAndSupport(def.getClassName()));
+        Options.v().set_allow_phantom_refs(false);//may be messed up by the line above
+
+        return fieldSensitiveDefs.stream()
+                .filter(def -> scene.containsClass(def.getClassName())
+                        && scene.getSootClass(def.getClassName()).getFieldByNameUnsafe(def.getName()) != null)
                 .collect(Collectors.toMap(
                         fieldDef -> fieldDef,
-                        fieldDef -> {
-                            SootClass clazz = scene.getSootClassUnsafe(fieldDef.getClassName());
-                            return clazz.getFieldByName(fieldDef.getName());
-                        }
+                        fieldDef -> scene.getSootClass(fieldDef.getClassName()).getFieldByName(fieldDef.getName()),
+                        StreamUtil.throwingMerger(),
+                        LinkedHashMap::new
                 ));
     }
 
