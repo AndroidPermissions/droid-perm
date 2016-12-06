@@ -82,6 +82,7 @@ public class DPBatchRunner {
     private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
     private List<String> appsWithMethodSensOnly = new ArrayList<>();
     private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
+    private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -296,6 +297,8 @@ public class DPBatchRunner {
         boolean methodOrFieldSensOnly = !data.getReferredPermDefs().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
                 && dangerousUnusedPerms.isEmpty();
+        boolean declaresNonStoragePermOnly = !data.getDeclaredDangerousPerms().isEmpty()
+                && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm);
         if (!dangerousUnusedPerms.isEmpty()) {
             logger.info(appName + " : referred permissions with no corresponding sensitives: "
                     + dangerousUnusedPerms.size());
@@ -306,6 +309,9 @@ public class DPBatchRunner {
         }
         if (methodOrFieldSensOnly) {
             appsWithMethodOrFieldSensOnly.add(appName);
+        }
+        if (declaresNonStoragePermOnly) {
+            appsDeclaringNonStoragePermOnly.add(appName);
         }
     }
 
@@ -347,6 +353,7 @@ public class DPBatchRunner {
         }
         if (collectMethodOrFieldSensOnlyApps) {
             PrintUtil.printCollection(appsWithMethodOrFieldSensOnly, "Apps with method or field sensitives only");
+            PrintUtil.printCollection(appsDeclaringNonStoragePermOnly, "Apps declaring non-storage permissions only");
         }
     }
 }
