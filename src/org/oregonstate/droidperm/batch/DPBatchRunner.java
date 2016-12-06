@@ -46,6 +46,9 @@ public class DPBatchRunner {
     @Parameter(names = "--cg-algo", description = "The call graph algorithm")
     private InfoflowConfiguration.CallgraphAlgorithm cgAlgo = InfoflowConfiguration.CallgraphAlgorithm.GEOM;
 
+    @Parameter(names = "--use-javadoc-perm", description = "Use Javadoc permission definitions")
+    private boolean useJavadocPerm;
+
     @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space. "
             + "If more than one, they should be included into quotes (\"\").")
     private String vmArgs;
@@ -62,6 +65,11 @@ public class DPBatchRunner {
                     + "Used in conjunction with COLLECT_SENSITIVES mode.")
     private boolean collectMethodSensOnlyApps;
 
+    @Parameter(names = "--collect-method-or-field-sens-only-apps",
+            description = "Collect apps that only use method-based or field-based dangerous permissions. "
+                    + "No storage permissions. Used in conjunction with COLLECT_SENSITIVES mode.")
+    private boolean collectMethodOrFieldSensOnlyApps;
+
     @Parameter(names = "--help", help = true)
     private boolean help = false;
 
@@ -73,6 +81,7 @@ public class DPBatchRunner {
     private Set<String> dangerousPermisisons;
     private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
     private List<String> appsWithMethodSensOnly = new ArrayList<>();
+    private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -120,6 +129,7 @@ public class DPBatchRunner {
     private void batchRun() throws IOException, JAXBException {
         logger.info("DroidPerm Mode: " + mode);
         logger.info("collectMethodSensOnlyApps: " + collectMethodSensOnlyApps);
+        logger.info("collectMethodOrFieldSensOnlyApps: " + collectMethodOrFieldSensOnlyApps);
         logger.info("appsDir: " + appsDir);
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
@@ -193,6 +203,16 @@ public class DPBatchRunner {
                 "-jar", droidPermClassPath, apk.toAbsolutePath().toString(),
                 androidClassPath));
         processBuilderArgs.addAll(Arrays.asList("--cgalgo", cgAlgo.name()));
+
+        String permDefFiles =
+                "config/perm-def-custom-only.txt;"
+                        + "config/perm-def-API-23.xml;"
+                        + "config/perm-def-play-services.xml";
+        if (useJavadocPerm) {
+            permDefFiles += ";config/javadoc-perm-def-API-23.xml";
+        }
+        processBuilderArgs.addAll(Arrays.asList("--perm-def-files", permDefFiles));
+
         switch (mode) {
             case DROID_PERM:
                 break;
@@ -205,11 +225,7 @@ public class DPBatchRunner {
                         .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-MODE"));
                 break;
             case COLLECT_SENSITIVES:
-                processBuilderArgs.addAll(Arrays.asList(
-                        "--perm-def-files",
-                        "config/perm-def-custom-only.txt;config/perm-def-API-23.xml;config/perm-def-play-services.xml;"
-                                + "config/javadoc-perm-def-API-23.xml",
-                        "--collect-sens-mode", "--xml-out", xmlOut.toString()));
+                processBuilderArgs.addAll(Arrays.asList("--collect-sens-mode", "--xml-out", xmlOut.toString()));
                 break;
         }
 
@@ -271,9 +287,13 @@ public class DPBatchRunner {
         Set<String> unusedPerms = Sets.difference(referredPerms, permsWithSensitives);
         List<String> dangerousUnusedPerms = unusedPerms.stream().filter(dangerousPermisisons::contains)
                 .collect(Collectors.toList());
+        boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
+                .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
-                && data.getReferredPermDefs().stream()
-                .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method)
+                && referredPermDefsOnlyMethod
+                && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
+                && dangerousUnusedPerms.isEmpty();
+        boolean methodOrFieldSensOnly = !data.getReferredPermDefs().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
                 && dangerousUnusedPerms.isEmpty();
         if (!dangerousUnusedPerms.isEmpty()) {
@@ -283,6 +303,9 @@ public class DPBatchRunner {
         }
         if (methodSensOnly) {
             appsWithMethodSensOnly.add(appName);
+        }
+        if (methodOrFieldSensOnly) {
+            appsWithMethodOrFieldSensOnly.add(appName);
         }
     }
 
@@ -321,6 +344,9 @@ public class DPBatchRunner {
 
         if (collectMethodSensOnlyApps) {
             PrintUtil.printCollection(appsWithMethodSensOnly, "Apps with method sensitives only");
+        }
+        if (collectMethodOrFieldSensOnlyApps) {
+            PrintUtil.printCollection(appsWithMethodOrFieldSensOnly, "Apps with method or field sensitives only");
         }
     }
 }
