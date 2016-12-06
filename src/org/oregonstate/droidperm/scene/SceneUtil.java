@@ -69,7 +69,6 @@ public class SceneUtil {
             classpathFilter = meth -> true;
         }
         classes.stream()
-                .filter(SootClass::isConcrete)
                 .flatMap(sc -> sc.getMethods().stream()).filter(SootMethod::isConcrete).filter(classpathFilter)
                 .map(SceneUtil::retrieveBody).filter(Objects::nonNull)
                 .forEach(body -> body.getUnits().forEach(unit -> {
