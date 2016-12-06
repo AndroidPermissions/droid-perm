@@ -286,7 +286,7 @@ public class DPBatchRunner {
                                           ? new LinkedHashSet<>(data.getPermsWithSensitives()) : Collections.emptySet();
         Set<String> unusedPerms = Sets.difference(referredPerms, permsWithSensitives);
         List<String> dangerousUnusedPerms = unusedPerms.stream().filter(dangerousPermisisons::contains)
-                .collect(Collectors.toList());
+                .sorted().collect(Collectors.toList());
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
