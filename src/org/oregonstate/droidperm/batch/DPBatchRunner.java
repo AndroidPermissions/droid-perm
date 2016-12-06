@@ -135,6 +135,7 @@ public class DPBatchRunner {
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
         logger.info("cgalgo: " + cgAlgo);
+        logger.info("useJavadocPerm: " + useJavadocPerm);
         logger.info("vmArgs: " + vmArgs + "\n");
 
         if (mode == Mode.COLLECT_SENSITIVES) {
