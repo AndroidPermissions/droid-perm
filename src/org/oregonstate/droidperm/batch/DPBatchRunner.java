@@ -211,7 +211,7 @@ public class DPBatchRunner {
                         + "config/perm-def-API-23.xml;"
                         + "config/perm-def-play-services.xml";
         if (useJavadocPerm) {
-            permDefFiles += ";config/javadoc-perm-def-API-23.xml";
+            permDefFiles += ";config/javadoc-perm-def-API-23.xml;config/perm-def-manual.xml";
         }
         processBuilderArgs.addAll(Arrays.asList("--perm-def-files", permDefFiles));
 
