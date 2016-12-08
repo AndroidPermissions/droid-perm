@@ -23,41 +23,36 @@ import java.util.stream.Collector;
  *         <p>
  *         Created on 11/28/2016.
  */
-public final class MultimapCollector<T, K, V, R extends Multimap<K, V>>
-        implements Collector<T, Multimap<K, V>, R> {
-    private final Supplier<Multimap<K, V>> mapSupplier;
+public final class MultimapCollector<T, K, V, R extends Multimap<K, V>> implements Collector<T, R, R> {
+    private final Supplier<R> mapSupplier;
     private final Function<? super T, ? extends K> keyMapper;
     private final Function<? super T, ? extends V> valueMapper;
-    private final Function<Multimap<K, V>, R> resultMapper;
 
     /**
      * Creates a new MultimapCollector.
      * <p>
      *
-     * @param mapSupplier  a function which returns a new, empty {@code Multimap} into which intermediate results will
-     *                     be inserted
-     * @param keyMapper    a function that transforms the map keys
-     * @param valueMapper  a function that transforms the map values
-     * @param resultMapper a function that transforms the intermediate {@code Multimap} into the final result
+     * @param mapSupplier a function which returns a new, empty {@code Multimap} into which intermediate results will be
+     *                    inserted
+     * @param keyMapper   a function that transforms the map keys
+     * @param valueMapper a function that transforms the map values
      * @throws NullPointerException if any of the arguments are null
      */
-    public MultimapCollector(Supplier<Multimap<K, V>> mapSupplier,
+    public MultimapCollector(Supplier<R> mapSupplier,
                              Function<? super T, ? extends K> keyMapper,
-                             Function<? super T, ? extends V> valueMapper,
-                             Function<Multimap<K, V>, R> resultMapper) {
+                             Function<? super T, ? extends V> valueMapper) {
         this.mapSupplier = mapSupplier;
         this.keyMapper = keyMapper;
         this.valueMapper = valueMapper;
-        this.resultMapper = resultMapper;
     }
 
     @Override
-    public Supplier<Multimap<K, V>> supplier() {
+    public Supplier<R> supplier() {
         return mapSupplier;
     }
 
     @Override
-    public BiConsumer<Multimap<K, V>, T> accumulator() {
+    public BiConsumer<R, T> accumulator() {
         return (map, entry) ->
         {
             K key = keyMapper.apply(entry);
@@ -73,7 +68,7 @@ public final class MultimapCollector<T, K, V, R extends Multimap<K, V>>
     }
 
     @Override
-    public BinaryOperator<Multimap<K, V>> combiner() {
+    public BinaryOperator<R> combiner() {
         return (left, right) ->
         {
             left.putAll(right);
@@ -82,8 +77,8 @@ public final class MultimapCollector<T, K, V, R extends Multimap<K, V>>
     }
 
     @Override
-    public Function<Multimap<K, V>, R> finisher() {
-        return resultMapper;
+    public Function<R, R> finisher() {
+        return Function.identity();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -91,9 +93,10 @@ public class HierarchyUtil {
     /**
      * Includes all initial defs as keys, including those with 0 results.
      */
-    public static <T extends SootMethodAndClass> Map<T, List<SootMethod>> resolveAbstractDispatchesToMap(
+    public static <T extends SootMethodAndClass> ListMultimap<T, SootMethod> resolveAbstractDispatchesToMap(
             Collection<T> methodDefs) {
-        return methodDefs.stream().collect(Collectors.toMap(
+        return methodDefs.stream().collect(MyCollectors.toMultimapForCollection(
+                ArrayListMultimap::create,
                 methodDef -> methodDef,
                 methodDef -> resolveAbstractDispatch(methodDef, false)
         ));

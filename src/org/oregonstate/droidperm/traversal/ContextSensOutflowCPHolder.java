@@ -1,21 +1,20 @@
 package org.oregonstate.droidperm.traversal;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
-import org.oregonstate.droidperm.util.HierarchyUtil;
-import org.oregonstate.droidperm.util.PointsToUtil;
-import org.oregonstate.droidperm.util.SortUtil;
-import org.oregonstate.droidperm.util.StreamUtil;
+import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
-import soot.jimple.spark.ondemand.genericutil.HashSetMultiMap;
-import soot.jimple.spark.ondemand.genericutil.MultiMap;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
+import soot.toolkits.scalar.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,12 +62,12 @@ public class ContextSensOutflowCPHolder {
      * <p>
      * toperf this collection is likely a huge memory hog.
      */
-    private MultiMap<MethodInContext, MethodOrMethodContext> reachableSensitives;
+    private SetMultimap<MethodInContext, MethodOrMethodContext> reachableSensitives;
 
     /**
      * Map from sensitives to sets of callbacks.
      */
-    private Map<MethodInContext, Set<MethodOrMethodContext>> sensitiveInCToCallbacksMap;
+    private SetMultimap<MethodInContext, MethodOrMethodContext> sensitiveInCToCallbacksMap;
 
     /**
      * Elements are unique
@@ -89,7 +88,7 @@ public class ContextSensOutflowCPHolder {
         callbackToOutflowMap = buildCallbackToOutflowMap();
         sensitiveInCToCallbacksMap = buildSensitiveInCToCallbacksMap();
         buildReachableSensitives();
-        reachableCallbacks = getSensitiveToCallbacksMap().values().stream().flatMap(Collection::stream)
+        reachableCallbacks = getSensitiveToCallbacksMap().values().stream()
                 .distinct().sorted(SortUtil.methodOrMCComparator).collect(Collectors.toList());
     }
 
@@ -231,17 +230,17 @@ public class ContextSensOutflowCPHolder {
                 */
     }
 
-    private Map<MethodInContext, Set<MethodOrMethodContext>> buildSensitiveInCToCallbacksMap() {
-        return sensitivesInContext.stream().collect(Collectors.toMap(
+    private SetMultimap<MethodInContext, MethodOrMethodContext> buildSensitiveInCToCallbacksMap() {
+        return sensitivesInContext.stream().collect(MyCollectors.toMultimap(
                 sensitiveInContext -> sensitiveInContext,
                 sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
                         .filter(cbToOutflowEntry -> cbToOutflowEntry.getValue().containsKey(sensitiveInContext))
-                        .map(Map.Entry::getKey).collect(Collectors.toSet())
+                        .map(Map.Entry::getKey)
         ));
     }
 
     private void buildReachableSensitives() {
-        reachableSensitives = new HashSetMultiMap<>();
+        reachableSensitives = HashMultimap.create();
         for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
                 if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
@@ -382,8 +381,8 @@ public class ContextSensOutflowCPHolder {
     /**
      * For 1-CFA analysis. Map from call to its parent calls, for each call to sensitive in this calblack.
      */
-    public Map<Edge, Set<Edge>> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
-        return sensitivesInContext.stream().collect(Collectors.toMap(
+    public SetMultimap<Edge, Edge> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
+        return sensitivesInContext.stream().collect(MyCollectors.toMultimapForCollection(
                 sensInC -> sensInC.edge,
                 sensInC -> getParentEdges(sensInC.edge, callback)
         ));
@@ -421,21 +420,11 @@ public class ContextSensOutflowCPHolder {
     /**
      * Map from reachable sensitives to sets of callbacks.
      */
-    public Map<MethodOrMethodContext, Set<MethodOrMethodContext>> getSensitiveToCallbacksMap() {
-        return sensitiveInCToCallbacksMap.keySet().stream().collect(Collectors.toMap(
+    public Multimap<MethodOrMethodContext, MethodOrMethodContext> getSensitiveToCallbacksMap() {
+        return sensitiveInCToCallbacksMap.keySet().stream().collect(MyCollectors.toMultimapForCollection(
                 sensInC -> sensInC.method,
-                sensInC -> sensitiveInCToCallbacksMap.get(sensInC),
-                StreamUtil::newObjectUnion
+                sensInC -> sensitiveInCToCallbacksMap.get(sensInC)
         ));
-    }
-
-    public Map<MethodInContext, Set<MethodOrMethodContext>> getSensitiveInCToCallbacksMap() {
-        return sensitiveInCToCallbacksMap;
-    }
-
-    public Set<MethodOrMethodContext> getReachingCallbacks(MethodInContext meth) {
-        return callbackToOutflowMap.keySet().stream()
-                .filter(callback -> callbackToOutflowMap.get(callback).containsKey(meth)).collect(Collectors.toSet());
     }
 
     public Set<MethodOrMethodContext> getUiCallbacks() {
@@ -447,5 +436,28 @@ public class ContextSensOutflowCPHolder {
      */
     public List<MethodOrMethodContext> getReachableCallbacks() {
         return reachableCallbacks;
+    }
+
+    Set<MethodOrMethodContext> getReachingCallbacks(MethodInContext methInC) {
+        return sensitiveInCToCallbacksMap.get(methInC);
+    }
+
+    /**
+     * If parent edge doesn't come directly from dummy main, we'll get callbacks for the parent. Otherwise - callbacks
+     * for the child.
+     * <p>
+     * Limitation: This implementation doesn't account for parent-child points-to consistency. Only for checkers.
+     */
+    Set<MethodOrMethodContext> getReachingCallbacks(Pair<Edge, Edge> methParentPair) {
+        Edge meth = methParentPair.getO1();
+        Edge parent = methParentPair.getO2();
+        Edge target = (parent != null && parent.getSrc() != dummyMainMethod) ? parent : meth;
+        return getReachingCallbacksImpl(new MethodInContext(target));
+    }
+
+    private Set<MethodOrMethodContext> getReachingCallbacksImpl(MethodInContext methInC) {
+        return callbackToOutflowMap.keySet().stream()
+                .filter(callback -> callbackToOutflowMap.get(callback).containsKey(methInC))
+                .collect(Collectors.toSet());
     }
 }

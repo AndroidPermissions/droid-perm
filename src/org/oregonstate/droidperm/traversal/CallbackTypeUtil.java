@@ -1,10 +1,16 @@
 package org.oregonstate.droidperm.traversal;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import org.oregonstate.droidperm.util.MyCollectors;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootClass;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -13,17 +19,17 @@ import java.util.stream.Collectors;
 public class CallbackTypeUtil {
 
     //Double-brace initialziation: http://stackoverflow.com/a/6802512/4182868
-    private static Map<String, List<String>> componentDefs = new HashMap<String, List<String>>() {{
-        put("Activity", Collections.singletonList("android.app.Activity"));
-        put("Fragment", Arrays.asList("android.app.Fragment", "android.support.v4.app.Fragment"));
-        put("Service", Collections.singletonList("android.app.Service"));
-    }};
+    private static Multimap<String, String> componentDefs = ImmutableMultimap.<String, String>builder()
+            .putAll("Activity", Collections.singletonList("android.app.Activity"))
+            .putAll("Fragment", Arrays.asList("android.app.Fragment", "android.support.v4.app.Fragment"))
+            .putAll("Service", Collections.singletonList("android.app.Service"))
+            .build();
 
-    private static Map<String, List<SootClass>> componentTypes = componentDefs.keySet().stream().collect(
-            Collectors.toMap(
+    private static Multimap<String, SootClass> componentTypes = componentDefs.keySet().stream().collect(
+            MyCollectors.toMultimap(
                     comp -> comp,
                     comp -> componentDefs.get(comp).stream().filter(Scene.v()::containsClass)
-                            .map(Scene.v()::getSootClass).collect(Collectors.toList())
+                            .map(Scene.v()::getSootClass)
             ));
 
     public static String getCallbackType(MethodOrMethodContext callback) {

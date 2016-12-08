@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.traversal;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +21,15 @@ import java.util.stream.Collectors;
 public class CheckerUtil {
     private static final Logger logger = LoggerFactory.getLogger(CheckerUtil.class);
 
-    static Map<MethodOrMethodContext, Set<String>> buildCallbackToCheckedPermsMap(
+    static SetMultimap<MethodOrMethodContext, String> buildCallbackToCheckedPermsMap(
             ContextSensOutflowCPHolder checkerPathsHolder) {
-        return checkerPathsHolder.getReachableCallbacks().stream().collect(Collectors.toMap(
+        return checkerPathsHolder.getReachableCallbacks().stream().collect(MyCollectors.toMultimap(
+                HashMultimap::create,
                 callback -> callback,
                 //here getCallsToSensitiveFor actually means calls to checkers
                 callback -> checkerPathsHolder.getCallsToSensitiveFor(callback).stream()
-                        .map((checkerCall) -> getPossiblePermissionsFromChecker(checkerCall,
-                                checkerPathsHolder.getParentEdges(checkerCall, callback)))
-                        .collect(MyCollectors.toFlatSet())
+                        .flatMap((checkerCall) -> getPossiblePermissionsFromChecker(checkerCall,
+                                checkerPathsHolder.getParentEdges(checkerCall, callback)).stream())
         ));
     }
 

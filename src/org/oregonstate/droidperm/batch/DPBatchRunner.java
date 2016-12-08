@@ -3,6 +3,8 @@ package org.oregonstate.droidperm.batch;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
@@ -11,8 +13,8 @@ import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import org.oregonstate.droidperm.sens.SensitiveCollectorJaxbData;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
+import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
-import org.oregonstate.droidperm.util.StreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.InfoflowConfiguration;
@@ -79,7 +81,7 @@ public class DPBatchRunner {
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
     private Set<String> dangerousPermisisons;
-    private Map<String, List<String>> appToUnusedPermMap = new LinkedHashMap<>();
+    private LinkedListMultimap<String, String> appToUnusedPermMap = LinkedListMultimap.create();
     private List<String> appsWithMethodSensOnly = new ArrayList<>();
     private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
@@ -143,22 +145,20 @@ public class DPBatchRunner {
         }
 
         Files.createDirectories(logDir);
-        Map<String, List<Path>> appNamesToApksMap = Files.list(appsDir).sorted()
+        ListMultimap<String, Path> appNamesToApksMap = Files.list(appsDir).sorted()
                 .filter(path -> Files.isDirectory(path))
-                .collect(Collectors.toMap(
+                .collect(MyCollectors.toMultimap(
+                        LinkedListMultimap::create,
                         path -> path.getFileName().toString(),
                         path -> {
                             try {
                                 return Files.walk(path)
-                                        .filter(possibleApk -> possibleApk.getFileName().toString().endsWith(".apk"))
-                                        .collect(Collectors.toList());
+                                        .filter(possibleApk -> possibleApk.getFileName().toString().endsWith(".apk"));
                             } catch (IOException e) {
                                 //Looks like Java 8 lambdas don't like to throw checked exceptions.
                                 throw new RuntimeException(e);
                             }
-                        },
-                        StreamUtil.throwingMerger(),
-                        LinkedHashMap::new
+                        }
                 ));
 
         for (String appName : appNamesToApksMap.keySet()) {
@@ -303,7 +303,7 @@ public class DPBatchRunner {
         if (!dangerousUnusedPerms.isEmpty()) {
             logger.info(appName + " : referred permissions with no corresponding sensitives: "
                     + dangerousUnusedPerms.size());
-            appToUnusedPermMap.put(appName, dangerousUnusedPerms);
+            appToUnusedPermMap.putAll(appName, dangerousUnusedPerms);
         }
         if (methodSensOnly) {
             appsWithMethodSensOnly.add(appName);

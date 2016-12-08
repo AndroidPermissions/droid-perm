@@ -1,8 +1,13 @@
 package org.oregonstate.droidperm.scene;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
+import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
 import soot.Scene;
 import soot.SootField;
@@ -11,7 +16,6 @@ import soot.SourceLocator;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.options.Options;
-import soot.toolkits.scalar.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,14 +30,14 @@ public class ScenePermissionDefService {
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> methodSensitiveDefs;
     private Set<FieldSensitiveDef> fieldSensitiveDefs;
-    private Map<Set<String>, Set<SootMethod>> permissionToSensitivesMap;
-    private Map<SootMethod, Set<String>> sensitivesToPermissionsMap;
+    private SetMultimap<Set<String>, SootMethod> permissionToSensitivesMap;
+    private SetMultimap<SootMethod, String> sensitivesToPermissionsMap;
     /**
      * Only sensitive defs that are really found in scene are contained here
      */
     private Map<FieldSensitiveDef, SootField> sceneFieldSensMap;
-    private Map<Set<String>, List<SootField>> permissionToFieldSensMap;
-    private Map<AndroidMethod, List<SootMethod>> sceneMethodSensMap;
+    private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
+    private ListMultimap<AndroidMethod, SootMethod> sceneMethodSensMap;
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
@@ -50,25 +54,24 @@ public class ScenePermissionDefService {
         return HierarchyUtil.resolveAbstractDispatches(permCheckerDefs);
     }
 
-    private Map<AndroidMethod, List<SootMethod>> buildSceneMethodSensMap() {
+    private ListMultimap<AndroidMethod, SootMethod> buildSceneMethodSensMap() {
         return HierarchyUtil.resolveAbstractDispatchesToMap(methodSensitiveDefs);
     }
 
-    private Map<SootMethod, Set<String>> buildSensitivesToPermissionsMap() {
-        return permissionToSensitivesMap.entrySet().stream()
-                .flatMap(entry -> entry.getValue().stream().map(sootMeth -> new Pair<>(sootMeth, entry.getKey())))
-                .collect(Collectors.toMap(Pair::getO1, Pair::getO2));
+    private SetMultimap<SootMethod, String> buildSensitivesToPermissionsMap() {
+        return permissionToSensitivesMap.entries().stream()
+                .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
     }
 
-    private Map<Set<String>, Set<SootMethod>> buildPermissionToSensitivesMap() {
+    private SetMultimap<Set<String>, SootMethod> buildPermissionToSensitivesMap() {
         Map<Set<String>, List<AndroidMethod>> permissionToSensitiveDefMap = methodSensitiveDefs
                 .stream().collect(Collectors.groupingBy(AndroidMethod::getPermissions));
         return permissionToSensitiveDefMap.keySet().stream()
-                .collect(Collectors.toMap(
+                .collect(MyCollectors.toMultimap(
+                        LinkedHashMultimap::create,
                         permSet -> permSet,
                         permSet -> permissionToSensitiveDefMap.get(permSet).stream()
                                 .flatMap(androMeth -> sceneMethodSensMap.get(androMeth).stream())
-                                .collect(Collectors.toCollection(LinkedHashSet::new))
                 ));
     }
 
@@ -109,16 +112,16 @@ public class ScenePermissionDefService {
                 ));
     }
 
-    private Map<Set<String>, List<SootField>> buildPermissionToFieldSensMap() {
+    private ListMultimap<Set<String>, SootField> buildPermissionToFieldSensMap() {
         Map<Set<String>, List<FieldSensitiveDef>> permissionToFieldSensDefMap = fieldSensitiveDefs.stream()
                 .collect(Collectors.groupingBy(FieldSensitiveDef::getPermissions));
         return permissionToFieldSensDefMap.keySet().stream()
-                .collect(Collectors.toMap(
+                .collect(MyCollectors.toMultimap(
+                        ArrayListMultimap::create,
                         permSet -> permSet,
                         permSet -> permissionToFieldSensDefMap.get(permSet).stream()
                                 .map(sceneFieldSensMap::get)
                                 .filter(Objects::nonNull)
-                                .collect(Collectors.toList())
                 ));
     }
 
