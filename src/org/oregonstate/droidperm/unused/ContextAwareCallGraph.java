@@ -1,11 +1,11 @@
 package org.oregonstate.droidperm.unused;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import soot.MethodOrMethodContext;
 import soot.SootMethod;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
-import soot.util.HashMultiMap;
-import soot.util.MultiMap;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -15,13 +15,11 @@ import java.util.Set;
  * Extends the basic call graph with the ability to query edges into /out of a plain SootMethod, even when
  * the graph is context-sensitive.
  *
- * @author Denis Bogdanas <bogdanad@oregonstate.edu>
- *         Created on 4/7/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/7/2016.
  */
 public class ContextAwareCallGraph extends CallGraph {
 
-    protected MultiMap<SootMethod, MethodOrMethodContext> methodToMethodContext =
-            new HashMultiMap<>();
+    protected SetMultimap<SootMethod, MethodOrMethodContext> methodToMethodContext = HashMultimap.create();
 
     //work with: srcMethodToEdge, tgtToEdge
     @Override

@@ -2,8 +2,6 @@ package org.oregonstate.droidperm.util;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import soot.util.HashMultiMap;
-import soot.util.MultiMap;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -11,7 +9,6 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -44,33 +41,6 @@ public class MyCollectors {
     public static <T, U>
     Collector<Map<T, U>, ?, Map<T, U>> toFlatMap() {
         return new CollectorImpl<>(HashMap::new, Map::putAll,
-                (left, right) -> {
-                    left.putAll(right);
-                    return left;
-                },
-                Function.identity(),
-                CH_UNORDERED_ID);
-    }
-
-    /**
-     * Collector that takes a stream of elements as input and produces a multimap, by mapping each element to
-     *
-     * @param keyMapper   a mapping function to produce keys
-     * @param valueMapper a mapping function from input stream elements to streams of value elements.
-     * @param <T>         The type of input elements.
-     * @param <K>         The type of multimap keys.
-     * @param <V>         The type of multimap values (elements of the set corresponding to each key)
-     * @return a {@code Collector} which collects elements into a {@code MultiMap} whose keys are the result of applying
-     * a key mapping function to the input elements, and whose values (which are sets) are the result of applying a
-     * value mapping function which produces a stream, and then collecting the stream elements into a set.
-     */
-    public static <T, K, V>
-    Collector<T, ?, MultiMap<K, V>> toMultiMap(Function<? super T, ? extends K> keyMapper,
-                                               Function<? super T, ? extends Stream<? extends V>> valueMapper) {
-        return new CollectorImpl<>(
-                HashMultiMap::new,
-                (MultiMap<K, V> multiMap, T elem)
-                        -> multiMap.putAll(keyMapper.apply(elem), valueMapper.apply(elem).collect(Collectors.toSet())),
                 (left, right) -> {
                     left.putAll(right);
                     return left;

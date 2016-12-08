@@ -1,13 +1,13 @@
 package org.oregonstate.droidperm.scene;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
 import soot.tagkit.StringConstantValueTag;
-import soot.util.HashMultiMap;
-import soot.util.MultiMap;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -89,7 +89,7 @@ public class SceneUtil {
         return null;
     }
 
-    public static MultiMap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods,
+    public static Multimap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods,
                                                                  Predicate<SootMethod> classpathFilter) {
         Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);
 
@@ -97,14 +97,14 @@ public class SceneUtil {
         Set<String> sensSubsignatures =
                 methodSet.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
 
-        MultiMap<SootMethod, Stmt> result = new HashMultiMap<>();
+        Multimap<SootMethod, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
                 (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
         return result;
     }
 
     private static void collectResolvedMethods(Set<SootMethod> sensitives, Set<String> sensSubsignatures,
-                                               MultiMap<SootMethod, Stmt> result, Stmt stmt) {
+                                               Multimap<SootMethod, Stmt> result, Stmt stmt) {
         if (stmt.containsInvokeExpr()) {
             InvokeExpr invoke = stmt.getInvokeExpr();
             SootMethod invokeMethod;
@@ -130,18 +130,18 @@ public class SceneUtil {
     /**
      * @return A map from fields to actual statements in context possibly referring that fields.
      */
-    public static MultiMap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
+    public static Multimap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
                                                                Predicate<SootMethod> classpathFilter) {
         Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
         Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFieldsSet);
-        MultiMap<SootField, Stmt> result = new HashMultiMap<>();
+        Multimap<SootField, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
                 (stmt, method) -> collectResolvedFields(sensFieldsSet, constantFieldsMap, result, stmt));
         return result;
     }
 
     private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> constantFieldsMap,
-                                              MultiMap<SootField, Stmt> result, Stmt stmt) {
+                                              Multimap<SootField, Stmt> result, Stmt stmt) {
         List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
         fields.stream().filter(sensFields::contains).forEach(field ->
                 result.put(field, stmt)
@@ -191,16 +191,16 @@ public class SceneUtil {
         return null;
     }
 
-    public static MultiMap<String, Stmt> resolveConstantUsages(Collection<String> constants,
+    public static Multimap<String, Stmt> resolveConstantUsages(Collection<String> constants,
                                                                Predicate<SootMethod> classpathFilter) {
         Set<String> constantsSet = constants instanceof Set ? (Set) constants : new HashSet<>(constants);
-        MultiMap<String, Stmt> result = new HashMultiMap<>();
+        Multimap<String, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
                 (stmt, method) -> collectResolvedConstants(constantsSet, result, stmt));
         return result;
     }
 
-    private static void collectResolvedConstants(Set<String> constantsSet, MultiMap<String, Stmt> result, Stmt stmt) {
+    private static void collectResolvedConstants(Set<String> constantsSet, Multimap<String, Stmt> result, Stmt stmt) {
         List<String> referredConst = getStringConstantsIfAny(stmt);
         referredConst.stream().filter(constantsSet::contains).forEach(constant ->
                 result.put(constant, stmt)

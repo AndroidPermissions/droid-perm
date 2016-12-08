@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.debug;
 
+import com.google.common.collect.Multimap;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import org.oregonstate.droidperm.util.PointsToUtil;
 import org.oregonstate.droidperm.util.SortUtil;
@@ -14,7 +15,6 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.util.Chain;
-import soot.util.MultiMap;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -59,8 +59,8 @@ public class DebugUtil {
             Field field = ContextAwareCallGraph.class.getDeclaredField("methodToMethodContext");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
-            MultiMap<SootMethod, MethodOrMethodContext> methodToMethodContext =
-                    (MultiMap<SootMethod, MethodOrMethodContext>) field.get(cg);
+            Multimap<SootMethod, MethodOrMethodContext> methodToMethodContext =
+                    (Multimap<SootMethod, MethodOrMethodContext>) field.get(cg);
             for (SootMethod meth : methodToMethodContext.keySet()) {
                 System.out.println("\n" + meth);
                 System.out.println("--------------------------");

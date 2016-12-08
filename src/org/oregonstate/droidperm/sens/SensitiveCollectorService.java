@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.sens;
 
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.PermissionDefConverter;
@@ -14,7 +15,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
-import soot.util.MultiMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,11 +40,11 @@ public class SensitiveCollectorService {
             throws Exception {
         long startTime = System.currentTimeMillis();
 
-        Map<Set<String>, MultiMap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
+        Map<Set<String>, Multimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedMethodSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToReferredMethodSensMap, "Collected method sensitives");
 
-        Map<Set<String>, MultiMap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
+        Map<Set<String>, Multimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives");
 
@@ -93,8 +93,8 @@ public class SensitiveCollectorService {
     }
 
     private static List<PermissionDef> buildXmlPermDefs(
-            Map<Set<String>, MultiMap<SootMethod, Stmt>> permToReferredMethodSensMap,
-            Map<Set<String>, MultiMap<SootField, Stmt>> permToReferredFieldSensMap,
+            Map<Set<String>, Multimap<SootMethod, Stmt>> permToReferredMethodSensMap,
+            Map<Set<String>, Multimap<SootField, Stmt>> permToReferredFieldSensMap,
             ScenePermissionDefService scenePermDef) {
         return Stream.concat(
                 permToReferredMethodSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
