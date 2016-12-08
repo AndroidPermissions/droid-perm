@@ -30,6 +30,7 @@ public class ScenePermissionDefService {
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> methodSensitiveDefs;
     private Set<FieldSensitiveDef> fieldSensitiveDefs;
+    private ListMultimap<AndroidMethod, SootMethod> sceneMethodSensMap;
     private SetMultimap<Set<String>, SootMethod> permissionToSensitivesMap;
     private SetMultimap<SootMethod, String> sensitivesToPermissionsMap;
     /**
@@ -37,7 +38,7 @@ public class ScenePermissionDefService {
      */
     private Map<FieldSensitiveDef, SootField> sceneFieldSensMap;
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
-    private ListMultimap<AndroidMethod, SootMethod> sceneMethodSensMap;
+
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();

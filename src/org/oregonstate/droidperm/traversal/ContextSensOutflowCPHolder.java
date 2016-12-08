@@ -62,7 +62,7 @@ public class ContextSensOutflowCPHolder {
      * <p>
      * toperf this collection is likely a huge memory hog.
      */
-    private SetMultimap<MethodInContext, MethodOrMethodContext> reachableSensitives;
+    private SetMultimap<MethodInContext, MethodOrMethodContext> nodesToReachableSensitivesMap;
 
     /**
      * Map from sensitives to sets of callbacks.
@@ -240,7 +240,7 @@ public class ContextSensOutflowCPHolder {
     }
 
     private void buildReachableSensitives() {
-        reachableSensitives = HashMultimap.create();
+        nodesToReachableSensitivesMap = HashMultimap.create();
         for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
                 if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
@@ -254,11 +254,11 @@ public class ContextSensOutflowCPHolder {
                                                   Map<MethodInContext, MethodInContext> outflow) {
         MethodInContext node = sensitiveInContext;
         while (node != null && node.method != src) {
-            reachableSensitives.put(node, sensitiveInContext.method);
+            nodesToReachableSensitivesMap.put(node, sensitiveInContext.method);
             node = outflow.get(node);
         }
         if (node != null) {
-            reachableSensitives.put(node, sensitiveInContext.method);
+            nodesToReachableSensitivesMap.put(node, sensitiveInContext.method);
         }
     }
 
@@ -367,7 +367,7 @@ public class ContextSensOutflowCPHolder {
     }
 
     public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
-        return reachableSensitives.get(new MethodInContext(edge));
+        return nodesToReachableSensitivesMap.get(new MethodInContext(edge));
     }
 
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
