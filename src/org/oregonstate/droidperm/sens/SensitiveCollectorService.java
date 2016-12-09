@@ -1,6 +1,6 @@
 package org.oregonstate.droidperm.sens;
 
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.PermissionDefConverter;
@@ -40,11 +40,11 @@ public class SensitiveCollectorService {
             throws Exception {
         long startTime = System.currentTimeMillis();
 
-        Map<Set<String>, Multimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
+        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedMethodSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToReferredMethodSensMap, "Collected method sensitives");
 
-        Map<Set<String>, Multimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
+        Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
         UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives");
 
@@ -93,8 +93,8 @@ public class SensitiveCollectorService {
     }
 
     private static List<PermissionDef> buildXmlPermDefs(
-            Map<Set<String>, Multimap<SootMethod, Stmt>> permToReferredMethodSensMap,
-            Map<Set<String>, Multimap<SootField, Stmt>> permToReferredFieldSensMap,
+            Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap,
+            Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap,
             ScenePermissionDefService scenePermDef) {
         return Stream.concat(
                 permToReferredMethodSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
