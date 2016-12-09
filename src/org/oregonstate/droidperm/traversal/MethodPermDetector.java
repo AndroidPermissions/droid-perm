@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.traversal;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Table;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
@@ -58,7 +59,7 @@ public class MethodPermDetector {
      * The key on 1st level map as well as parentEdge in 2nd level map may be null, if the checker was not fully
      * resolved.
      */
-    private Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> permsToCheckersMap;
+    private Table<String, Pair<Edge, Edge>, Boolean> permsToCheckersMap;
 
     /**
      * This set is sorted.
@@ -316,13 +317,13 @@ public class MethodPermDetector {
         System.out.println(
                 "\n\n" + header + " \n========================================================================");
 
-        for (String perm : permsToCheckersMap.keySet()) {
-            String displayPerm = perm != null ? perm : "PERMISSION VALUES UNKNOWN";
+        for (String perm : permsToCheckersMap.rowKeySet()) {
+            String displayPerm = perm.equals("") ? "PERMISSION VALUES UNKNOWN" : perm;
             System.out.println("\n" + displayPerm + "\n------------------------------------");
 
             Map<Set<CheckerUsageStatus>, Integer> checkersCountByStatus = new HashMap<>();
             MethodOrMethodContext oldSens = null;
-            for (Pair<Edge, Edge> checkerPair : permsToCheckersMap.get(perm).keySet()) {
+            for (Pair<Edge, Edge> checkerPair : permsToCheckersMap.row(perm).keySet()) {
                 Edge checkerEdge = checkerPair.getO1();
                 Edge parent = checkerPair.getO2();
                 MethodOrMethodContext checkerMeth = checkerEdge.getTgt();
@@ -336,7 +337,7 @@ public class MethodPermDetector {
                     System.out.println("\tfrom lvl1 " + PrintUtil.toMethodLogString(checkerEdge.srcStmt()));
                     System.out.println("\tfrom lvl2 "
                             + (parent != null ? PrintUtil.toMethodLogString(parent.srcStmt()) : null));
-                    if (!permsToCheckersMap.get(perm).get(checkerPair)) {
+                    if (!permsToCheckersMap.get(perm, checkerPair)) {
                         System.out.println("\t\tPoints-to certainty: UNCERTAIN");
                     }
 
@@ -419,9 +420,7 @@ public class MethodPermDetector {
      * Computed from permsToCheckersMap
      */
     private Set<Edge> getPrintedCheckEdges() {
-        return permsToCheckersMap.values().stream().flatMap(map -> map.keySet().stream())
-                .map(Pair::getO1)
-                .collect(Collectors.toSet());
+        return permsToCheckersMap.columnKeySet().stream().map(Pair::getO1).collect(Collectors.toSet());
     }
 
     public CheckerUsageStatus getCheckUsageStatus(MethodOrMethodContext callback, String perm) {

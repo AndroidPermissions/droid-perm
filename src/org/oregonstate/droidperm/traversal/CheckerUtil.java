@@ -2,6 +2,8 @@ package org.oregonstate.droidperm.traversal;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,44 +62,39 @@ public class CheckerUtil {
     }
 
     /**
-     * 1st level map: key = permission, values = checkers that check this permission.
+     * row = permission, values = checkers that check this permission. If permission cannot be inferred,
+     * value is empty string "".
      * <p>
-     * 2nd level map: key = Pair[Edge, ParentEdge], value = whether certain or not.
+     * column = Pair[Edge, ParentEdge]
+     * value = whether check for this value on this path is certain or not.
      */
-    public static Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> buildPermsToCheckersMap(
+    public static Table<String, Pair<Edge, Edge>, Boolean> buildPermsToCheckersMap(
             Set<MethodOrMethodContext> permCheckers) {
         CallGraph cg = Scene.v().getCallGraph();
-        Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> result = new HashMap<>();
+        Table<String, Pair<Edge, Edge>, Boolean> table =
+                Tables.newCustomTable(new TreeMap<>(), LinkedHashMap::new);
         for (MethodOrMethodContext checker : permCheckers) {
             Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(checker));
             for (Edge edgeInto
                     : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
                 Iterator<Edge> parentEdgesIt = cg.edgesInto(edgeInto.getSrc());
                 if (!parentEdgesIt.hasNext()) {
-                    checkAndPut(result, null, new Pair<>(edgeInto, null), false);
+                    table.put("", new Pair<>(edgeInto, null), false);
                     continue;
                 }
                 for (Edge parent : (Iterable<Edge>) () -> parentEdgesIt) {
                     Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, parent);
                     if (possiblePerm.isEmpty()) {
-                        checkAndPut(result, null, new Pair<>(edgeInto, parent), false);
+                        table.put("", new Pair<>(edgeInto, parent), false);
                         continue;
                     }
                     for (String perm : possiblePerm) {
                         // if size == 1 then it's a certain check
-                        checkAndPut(result, perm, new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
+                        table.put(perm, new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
                     }
                 }
             }
         }
-        return result;
-    }
-
-    private static void checkAndPut(Map<String, LinkedHashMap<Pair<Edge, Edge>, Boolean>> result,
-                                    String perm, Pair<Edge, Edge> pair, boolean isCertain) {
-        if (!result.containsKey(perm)) {
-            result.put(perm, new LinkedHashMap<>());
-        }
-        result.get(perm).put(pair, isCertain);
+        return table;
     }
 }

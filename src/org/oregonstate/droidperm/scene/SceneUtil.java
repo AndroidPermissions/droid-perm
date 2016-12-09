@@ -89,6 +89,9 @@ public class SceneUtil {
         return null;
     }
 
+    /**
+     * @return A multimap from methods to statements possibly invoking that methods.
+     */
     public static Multimap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods,
                                                                  Predicate<SootMethod> classpathFilter) {
         Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);

@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.traversal;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.util.*;
 import org.slf4j.Logger;
@@ -53,7 +50,7 @@ public class ContextSensOutflowCPHolder {
      * <p>
      * 2-nd level map: key = node in the outflow, value = parent node. Both are context-sensitive.
      */
-    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> callbackToOutflowMap;
+    private Table<MethodOrMethodContext, MethodInContext, MethodInContext> callbackToOutflowMap;
 
     /**
      * From each MethodInContext in the call graph, the set of sensitives it reaches.
@@ -92,8 +89,8 @@ public class ContextSensOutflowCPHolder {
                 .distinct().sorted(SortUtil.methodOrMCComparator).collect(Collectors.toList());
     }
 
-    private Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> buildCallbackToOutflowMap() {
-        Map<MethodOrMethodContext, Map<MethodInContext, MethodInContext>> map = new HashMap<>();
+    private Table<MethodOrMethodContext, MethodInContext, MethodInContext> buildCallbackToOutflowMap() {
+        Table<MethodOrMethodContext, MethodInContext, MethodInContext> table = HashBasedTable.create();
         uiCallbacks = computeUICallbacks();
         logger.info("\n\nTotal callbacks: " + uiCallbacks.size() + "\n");
         for (MethodOrMethodContext callback : uiCallbacks) {
@@ -102,7 +99,7 @@ public class ContextSensOutflowCPHolder {
             Collection<MethodOrMethodContext> outflowNodes =
                     outflow.keySet().stream().map(methIC -> methIC.method).collect(Collectors.toList());
             if (!Collections.disjoint(outflowNodes, sensitives)) {
-                map.put(callback, outflow);
+                table.row(callback).putAll(outflow);
             }
 
             long newTime = System.currentTimeMillis();
@@ -110,7 +107,7 @@ public class ContextSensOutflowCPHolder {
             time = newTime;
         }
 
-        return map;
+        return table;
     }
 
     private Set<MethodOrMethodContext> computeUICallbacks() {
@@ -233,7 +230,7 @@ public class ContextSensOutflowCPHolder {
     private SetMultimap<MethodInContext, MethodOrMethodContext> buildSensitiveInCToCallbacksMap() {
         return sensitivesInContext.stream().collect(MyCollectors.toMultimap(
                 sensitiveInContext -> sensitiveInContext,
-                sensitiveInContext -> callbackToOutflowMap.entrySet().stream()
+                sensitiveInContext -> callbackToOutflowMap.rowMap().entrySet().stream()
                         .filter(cbToOutflowEntry -> cbToOutflowEntry.getValue().containsKey(sensitiveInContext))
                         .map(Map.Entry::getKey)
         ));
@@ -241,10 +238,10 @@ public class ContextSensOutflowCPHolder {
 
     private void buildReachableSensitives() {
         nodesToReachableSensitivesMap = HashMultimap.create();
-        for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
+        for (MethodOrMethodContext callback : callbackToOutflowMap.rowKeySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
-                if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
-                    collectReachableSensitivesOnPath(callback, sensitiveInContext, callbackToOutflowMap.get(callback));
+                if (callbackToOutflowMap.row(callback).containsKey(sensitiveInContext)) {
+                    collectReachableSensitivesOnPath(callback, sensitiveInContext, callbackToOutflowMap.row(callback));
                 }
             }
         }
@@ -266,10 +263,10 @@ public class ContextSensOutflowCPHolder {
         System.out.println("\nPaths from each callback to each sensitive");
         System.out.println("========================================================================\n");
 
-        for (MethodOrMethodContext callback : callbackToOutflowMap.keySet()) {
+        for (MethodOrMethodContext callback : callbackToOutflowMap.rowKeySet()) {
             for (MethodInContext sensitiveInContext : sensitivesInContext) {
-                if (callbackToOutflowMap.get(callback).containsKey(sensitiveInContext)) {
-                    printPath(callback, sensitiveInContext, callbackToOutflowMap.get(callback));
+                if (callbackToOutflowMap.row(callback).containsKey(sensitiveInContext)) {
+                    printPath(callback, sensitiveInContext, callbackToOutflowMap.row(callback));
                 }
             }
         }
@@ -373,7 +370,7 @@ public class ContextSensOutflowCPHolder {
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
         //toperf cg.findEdge() is potentially expensive. Better keep edges in the outflow.
         CallGraph cg = Scene.v().getCallGraph();
-        return callbackToOutflowMap.get(callback).keySet().stream().filter(sensitivesInContext::contains)
+        return callbackToOutflowMap.row(callback).keySet().stream().filter(sensitivesInContext::contains)
                 .map(methInCt -> cg.findEdge(methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toSet());
     }
@@ -393,7 +390,7 @@ public class ContextSensOutflowCPHolder {
      */
     public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
         CallGraph cg = Scene.v().getCallGraph();
-        return callbackToOutflowMap.get(callback).keySet().stream().filter(methInC -> methInC.method == meth)
+        return callbackToOutflowMap.row(callback).keySet().stream().filter(methInC -> methInC.method == meth)
                 .map(methInCt -> cg.findEdge(methInCt.getContext(), methInCt.method.method()))
                 .collect(Collectors.toList());
     }
@@ -406,13 +403,13 @@ public class ContextSensOutflowCPHolder {
      */
     public Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback) {
         MethodInContext methInC = new MethodInContext(edge);
-        if (!callbackToOutflowMap.get(callback).containsKey(methInC)) {
+        if (!callbackToOutflowMap.row(callback).containsKey(methInC)) {
             return Collections.emptySet();
         }
 
         Iterator<Edge> allParentEdges = Scene.v().getCallGraph().edgesInto(edge.getSrc());
         return StreamUtil.asStream(allParentEdges)
-                .filter(parent -> (callbackToOutflowMap.get(callback).containsKey(new MethodInContext(parent))
+                .filter(parent -> (callbackToOutflowMap.row(callback).containsKey(new MethodInContext(parent))
                         || edge.getSrc() == callback))
                 .collect(Collectors.toSet());
     }
@@ -452,12 +449,6 @@ public class ContextSensOutflowCPHolder {
         Edge meth = methParentPair.getO1();
         Edge parent = methParentPair.getO2();
         Edge target = (parent != null && parent.getSrc() != dummyMainMethod) ? parent : meth;
-        return getReachingCallbacksImpl(new MethodInContext(target));
-    }
-
-    private Set<MethodOrMethodContext> getReachingCallbacksImpl(MethodInContext methInC) {
-        return callbackToOutflowMap.keySet().stream()
-                .filter(callback -> callbackToOutflowMap.get(callback).containsKey(methInC))
-                .collect(Collectors.toSet());
+        return callbackToOutflowMap.column(new MethodInContext(target)).keySet();
     }
 }

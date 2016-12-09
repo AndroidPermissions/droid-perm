@@ -52,7 +52,7 @@ public class UndetectedItemsUtil {
                 permSet -> permSet,
                 permSet -> scenePermDef.getFieldSensitivesFor(permSet).stream().collect(
                         HashMultimap::create,
-                        (Multimap, field) -> Multimap.putAll(field, undetectedSens.get(field)),
+                        (multimap, field) -> multimap.putAll(field, undetectedSens.get(field)),
                         Multimap::putAll
                 )
         ));
@@ -133,7 +133,7 @@ public class UndetectedItemsUtil {
                 permSet -> permSet,
                 permSet -> scenePermDef.getMethodSensitivesFor(permSet).stream().collect(
                         HashMultimap::create,
-                        (Multimap, meth) -> Multimap.putAll(meth, undetectedSens.get(meth)),
+                        (multimap, meth) -> multimap.putAll(meth, undetectedSens.get(meth)),
                         Multimap::putAll
                 )
         ));

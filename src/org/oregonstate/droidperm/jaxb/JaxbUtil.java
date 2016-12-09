@@ -1,5 +1,7 @@
 package org.oregonstate.droidperm.jaxb;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
@@ -34,13 +36,13 @@ public class JaxbUtil {
         CallGraph cg = Scene.v().getCallGraph();
         //Map from callback to lvl 2 map describing checked permissions in this callback.
         //Lvl2 map: from checked permissions to usage status of this check: used, unused or possibly used through ICC.
-        Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> callbackCheckerStatusMap =
+        Table<MethodOrMethodContext, String, CheckerUsageStatus> callbackCheckerStatusMap =
                 buildCheckerStatusMap(detector);
 
         JaxbCallbackList jaxbCallbackList = new JaxbCallbackList();
         for (MethodOrMethodContext callback : detector.getSensitivePathsHolder().getReachableCallbacks()) {
             JaxbCallback jaxbCallback = new JaxbCallback(callback.method());
-            jaxbCallback.setCheckerStatusMap(callbackCheckerStatusMap.get(callback));
+            jaxbCallback.setCheckerStatusMap(callbackCheckerStatusMap.row(callback));
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
                 Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
                         .map(edge -> detector.getSensitivePathsHolder().getReacheableSensitives(edge))
@@ -63,19 +65,16 @@ public class JaxbUtil {
         return jaxbCallbackList;
     }
 
-    private static Map<MethodOrMethodContext, Map<String, CheckerUsageStatus>> buildCheckerStatusMap(
+    private static Table<MethodOrMethodContext, String, CheckerUsageStatus> buildCheckerStatusMap(
             MethodPermDetector detector) {
-        return detector.getCallbackToCheckedPermsMap().keySet().stream().collect(Collectors.toMap(
-                callback -> callback,
-                callback -> {
-                    Set<String> perms = detector.getCallbackToCheckedPermsMap().get(callback);
-
-                    return perms.stream().collect(Collectors.toMap(
-                            perm -> perm,
-                            perm -> detector.getCheckUsageStatus(callback, perm)
-                    ));
-                }
-        ));
+        Table<MethodOrMethodContext, String, CheckerUsageStatus> table = HashBasedTable.create();
+        detector.getCallbackToCheckedPermsMap().keySet().forEach(callback -> {
+            Set<String> perms = detector.getCallbackToCheckedPermsMap().get(callback);
+            perms.forEach(
+                    perm -> table.put(callback, perm, detector.getCheckUsageStatus(callback, perm))
+            );
+        });
+        return table;
     }
 
     public static void save(JaxbCallbackList data, File file) throws JAXBException {
