@@ -122,7 +122,7 @@ public class MethodPermDetector {
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
         UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(scenePermDef, getSensitiveEdgesInto(), classpathFilter);
+        UndetectedItemsUtil.printUndetectedMethSensitives(scenePermDef, getSensitiveEdgesInto(), classpathFilter);
 
         printCheckersInContext(true);
         printSensitivesInContext(true);

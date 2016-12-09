@@ -38,6 +38,7 @@ public class ScenePermissionDefService {
      */
     private Map<FieldSensitiveDef, SootField> sceneFieldSensMap;
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
+    private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
 
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
@@ -46,9 +47,12 @@ public class ScenePermissionDefService {
         fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
         sceneMethodSensMap = buildSceneMethodSensMap();
         permissionToSensitivesMap = buildPermissionToSensitivesMap();
-        sensitivesToPermissionsMap = buildSensitivesToPermissionsMap();
+        sensitivesToPermissionsMap = permissionToSensitivesMap.entries().stream()
+                .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
         sceneFieldSensMap = buildSceneFieldSensMap();
         permissionToFieldSensMap = buildPermissionToFieldSensMap();
+        fieldSensToPermissionsMap = permissionToFieldSensMap.entries().stream()
+                .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
     }
 
     public List<SootMethod> getPermCheckers() {
@@ -57,11 +61,6 @@ public class ScenePermissionDefService {
 
     private ListMultimap<AndroidMethod, SootMethod> buildSceneMethodSensMap() {
         return HierarchyUtil.resolveAbstractDispatchesToMap(methodSensitiveDefs);
-    }
-
-    private SetMultimap<SootMethod, String> buildSensitivesToPermissionsMap() {
-        return permissionToSensitivesMap.entries().stream()
-                .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
     }
 
     private SetMultimap<Set<String>, SootMethod> buildPermissionToSensitivesMap() {
@@ -74,21 +73,6 @@ public class ScenePermissionDefService {
                         permSet -> permissionToSensitiveDefMap.get(permSet).stream()
                                 .flatMap(androMeth -> sceneMethodSensMap.get(androMeth).stream())
                 ));
-    }
-
-    public List<SootMethod> getSceneMethodSensitives() {
-        return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
-    }
-
-    /**
-     * @return all sets of permissions for which there is a sensitive method definition.
-     */
-    public Set<Set<String>> getMethodPermissionSets() {
-        return methodSensitiveDefs.stream().map(AndroidMethod::getPermissions).collect(Collectors.toSet());
-    }
-
-    public Set<SootMethod> getMethodSensitivesFor(Set<String> permSet) {
-        return permissionToSensitivesMap.get(permSet);
     }
 
     private Map<FieldSensitiveDef, SootField> buildSceneFieldSensMap() {
@@ -126,12 +110,27 @@ public class ScenePermissionDefService {
                 ));
     }
 
+    public List<SootMethod> getSceneMethodSensitives() {
+        return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
+    }
+
     public Collection<SootField> getSceneFieldSensitives() {
         return sceneFieldSensMap.values();
     }
 
+    public Set<SootMethod> getMethodSensitivesFor(Set<String> permSet) {
+        return permissionToSensitivesMap.get(permSet);
+    }
+
     public List<SootField> getFieldSensitivesFor(Set<String> permSet) {
         return permissionToFieldSensMap.get(permSet);
+    }
+
+    /**
+     * @return all sets of permissions for which there is a sensitive method definition.
+     */
+    public Set<Set<String>> getMethodPermissionSets() {
+        return methodSensitiveDefs.stream().map(AndroidMethod::getPermissions).collect(Collectors.toSet());
     }
 
     /**
@@ -144,12 +143,16 @@ public class ScenePermissionDefService {
     public Set<Set<String>> getAllPermissionSets() {
         Set<Set<String>> result = new HashSet<>();
         result.addAll(getMethodPermissionSets());
-        result.addAll(permissionToFieldSensMap.keySet());
+        result.addAll(getFieldPermissionSets());
         return result;
     }
 
     public Set<String> getPermissionsFor(SootMethod meth) {
         return sensitivesToPermissionsMap.get(meth);
+    }
+
+    public Set<String> getPermissionsFor(SootField field) {
+        return fieldSensToPermissionsMap.get(field);
     }
 
     public AndroidMethod getPermDefFor(SootMethod meth) {
