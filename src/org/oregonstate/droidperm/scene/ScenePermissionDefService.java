@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
@@ -40,6 +37,10 @@ public class ScenePermissionDefService {
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
     private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
 
+    private final Set<SootMethodAndClass> parametricSensDef = ImmutableSet.<SootMethodAndClass>builder()
+            .add(new SootMethodAndClass("<init>", "android.content.Intent", "void",
+                    Collections.singletonList("java.lang.String")))
+            .build();
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
@@ -112,6 +113,22 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getSceneMethodSensitives() {
         return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
+    }
+
+    /**
+     * Return the permission set for this action string. Or return null if this action does not require permissions.
+     */
+    public Set<String> getPermissionsFor(String actionString) {
+        //fixme temp demo implementation
+        if (actionString.equals("android.intent.action.CALL")) {
+            return Collections.singleton("android.permission.CALL_PHONE");
+        } else {
+            return null;
+        }
+    }
+
+    public List<SootMethod> getSceneParametricSensitives() {
+        return HierarchyUtil.resolveAbstractDispatches(parametricSensDef, true);
     }
 
     public Collection<SootField> getSceneFieldSensitives() {

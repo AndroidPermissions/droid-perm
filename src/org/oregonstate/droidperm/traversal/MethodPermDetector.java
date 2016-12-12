@@ -1,9 +1,7 @@
 package org.oregonstate.droidperm.traversal;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Table;
+import com.google.common.collect.*;
+import com.sun.istack.internal.Nullable;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
@@ -14,6 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.Value;
+import soot.jimple.Stmt;
+import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
@@ -30,6 +31,8 @@ import java.util.stream.Collectors;
 public class MethodPermDetector {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodPermDetector.class);
+
+    private CallGraph callGraph = Scene.v().getCallGraph();
 
     private File txtOut;
     private File xmlOut;
@@ -65,6 +68,7 @@ public class MethodPermDetector {
      * This set is sorted.
      */
     private LinkedHashSet<MethodOrMethodContext> sensitives;
+    private LinkedHashSet<MethodOrMethodContext> parametricSensitives;
 
     private ContextSensOutflowCPHolder sensitivePathsHolder;
 
@@ -99,6 +103,10 @@ public class MethodPermDetector {
         sensitives = CallGraphUtil.getNodesFor(scenePermDef.getSceneMethodSensitives()).stream()
                 .sorted(SortUtil.methodOrMCComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        parametricSensitives = CallGraphUtil.getNodesFor(scenePermDef.getSceneParametricSensitives()).stream()
+                .sorted(SortUtil.methodOrMCComparator)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<MethodOrMethodContext> unifiedMethSensitives = Sets.union(sensitives, parametricSensitives);
 
         logger.info("Processing checkers");
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, classpathFilter);
@@ -106,7 +114,7 @@ public class MethodPermDetector {
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         logger.info("Processing sensitives");
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensitives, classpathFilter);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, unifiedMethSensitives, classpathFilter);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
         //Data structures that combine checkers and sensitives
@@ -152,6 +160,23 @@ public class MethodPermDetector {
 
     public Set<String> getPermissionsFor(Collection<MethodOrMethodContext> sensitives) {
         return sensitives.stream().map(this::getPermissionsFor).collect(MyCollectors.toFlatSet());
+    }
+
+    /**
+     * fixme support for both method and parametric sensitives.
+     * <p>
+     * Right now adding only parametric methods
+     */
+    @Nullable
+    public Set<String> getPermissionsFor(MethodInContext methInC) {
+        Stmt srcStmt = methInC.getContext();
+        Value arg0 = srcStmt.getInvokeExpr().getArg(0);
+        if (arg0 instanceof StringConstant) {
+            String argValue = ((StringConstant) arg0).value;
+            return scenePermDef.getPermissionsFor(argValue);
+        } else {
+            throw new RuntimeException("Unsupported arg0 for parametric sensitive: " + arg0);
+        }
     }
 
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
@@ -224,15 +249,14 @@ public class MethodPermDetector {
         String header = printCallbacks ? callbacksHeader : noCallbacksHeader;
         System.out.println(
                 "\n\n" + header + " \n========================================================================");
-        CallGraph cg = Scene.v().getCallGraph();
-        Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> permsToSensitivesMap = buildPermsToSensitivesMap();
+        Multimap<Set<String>, MethodOrMethodContext> permsToSensitivesMap = buildPermsToSensitivesMap();
         for (Set<String> permSet : permsToSensitivesMap.keySet()) {
             System.out.println("\n" + permSet + "\n------------------------------------");
 
             Map<Set<PermCheckStatus>, Integer> sensitivesCountByStatus = new HashMap<>();
             for (MethodOrMethodContext sens : permsToSensitivesMap.get(permSet)) {
                 boolean printed = false;
-                Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(sens));
+                Iterable<Edge> edgesInto = IteratorUtil.asIterable(callGraph.edgesInto(sens));
 
                 for (Edge edgeInto : edgesInto) {
                     //We don't print sensitives whose context is another sensitive.
@@ -289,6 +313,9 @@ public class MethodPermDetector {
                                 + " : " + sensitivesCountByStatus.get(statuses))
                 );
             }
+
+            Multimap<Set<String>, MethodInContext> permsToParametricSensMap = buildPermsToParametricSensMap();
+            System.out.println("Parametric sensitives: " + permsToParametricSensMap);
         }
     }
 
@@ -381,9 +408,18 @@ public class MethodPermDetector {
         }
     }
 
-    private Map<Set<String>, LinkedHashSet<MethodOrMethodContext>> buildPermsToSensitivesMap() {
+    private Multimap<Set<String>, MethodOrMethodContext> buildPermsToSensitivesMap() {
+        //noinspection Convert2MethodRef
         return sensitives.stream().collect(
-                Collectors.groupingBy(this::getPermissionsFor, Collectors.toCollection(LinkedHashSet::new)));
+                MyCollectors.toMultimapGroupingBy(() -> LinkedHashMultimap.create(), this::getPermissionsFor));
+    }
+
+    //todo sensitive should no longer be MethodInMethodContext but MethodInContext for all
+    private SetMultimap<Set<String>, MethodInContext> buildPermsToParametricSensMap() {
+        return parametricSensitives.stream().flatMap(sens -> StreamUtil.asStream(callGraph.edgesInto(sens)))
+                .map(MethodInContext::new).map(methInC -> new Pair<>(methInC, getPermissionsFor(methInC)))
+                .filter(pair -> pair.getO2() != null)
+                .collect(MyCollectors.toMultimapGroupingBy(Pair::getO2, Pair::getO1));
     }
 
     /**
@@ -410,9 +446,8 @@ public class MethodPermDetector {
      * All sensitives are printed one way or another.
      */
     private Set<Edge> getSensitiveEdgesInto() {
-        CallGraph cg = Scene.v().getCallGraph();
         return sensitives.stream()
-                .flatMap(meth -> StreamUtil.asStream(cg.edgesInto(meth)))
+                .flatMap(meth -> StreamUtil.asStream(callGraph.edgesInto(meth)))
                 .collect(Collectors.toSet());
     }
 
