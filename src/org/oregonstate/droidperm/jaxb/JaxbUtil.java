@@ -10,6 +10,7 @@ import soot.Scene;
 import soot.Unit;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
+import soot.jimple.toolkits.callgraph.Edge;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -18,7 +19,6 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,16 +40,15 @@ public class JaxbUtil {
                 buildCheckerStatusMap(detector);
 
         JaxbCallbackList jaxbCallbackList = new JaxbCallbackList();
-        for (MethodOrMethodContext callback : detector.getSensitivePathsHolder().getReachableCallbacks()) {
+        for (MethodOrMethodContext callback : detector.getSensitivePathsHolder().getSortedReachableCallbacks()) {
             JaxbCallback jaxbCallback = new JaxbCallback(callback.method());
             jaxbCallback.setCheckerStatusMap(callbackCheckerStatusMap.row(callback));
             for (Unit unit : callback.method().getActiveBody().getUnits()) {
-                Set<MethodOrMethodContext> sensitives = StreamUtil.asStream(cg.edgesOutOf(unit))
-                        .map(edge -> detector.getSensitivePathsHolder().getReacheableSensitives(edge))
-                        .filter(Objects::nonNull)
+                Set<Edge> sensEdges = StreamUtil.asStream(cg.edgesOutOf(unit))
+                        .map(edge -> detector.getSensitivePathsHolder().getReacheablePresensitives(edge))
                         .collect(MyCollectors.toFlatSet());
-                if (!sensitives.isEmpty()) {
-                    Set<String> permSet = detector.getPermissionsFor(sensitives);
+                if (!sensEdges.isEmpty()) {
+                    Set<String> permSet = detector.getPermissionsFor(sensEdges);
                     Map<String, Boolean> permGaurdedMap = permSet.stream()
                             .collect(Collectors.toMap(perm -> perm,
                                     perm -> detector

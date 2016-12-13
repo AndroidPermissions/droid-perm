@@ -25,7 +25,7 @@ public class CheckerUtil {
 
     static SetMultimap<MethodOrMethodContext, String> buildCallbackToCheckedPermsMap(
             ContextSensOutflowCPHolder checkerPathsHolder) {
-        return checkerPathsHolder.getReachableCallbacks().stream().collect(MyCollectors.toMultimap(
+        return checkerPathsHolder.getSortedReachableCallbacks().stream().collect(MyCollectors.toMultimap(
                 HashMultimap::create,
                 callback -> callback,
                 //here getCallsToSensitiveFor actually means calls to checkers

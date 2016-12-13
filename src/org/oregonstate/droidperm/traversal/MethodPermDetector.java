@@ -155,12 +155,8 @@ public class MethodPermDetector {
         }
     }
 
-    /**
-     * fixme replace with a version that uses edges
-     */
-    public Set<String> getPermissionsFor(Collection<MethodOrMethodContext> sensitives) {
-        return sensitives.stream().map((sensitive) -> scenePermDef.getPermissionsFor(sensitive.method()))
-                .collect(MyCollectors.toFlatSet());
+    public Set<String> getPermissionsFor(Collection<Edge> sensEdges) {
+        return sensEdges.stream().map(this::getPermissionsFor).collect(MyCollectors.toFlatSet());
     }
 
     /**
@@ -188,7 +184,7 @@ public class MethodPermDetector {
     }
 
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
-        return sensitivePathsHolder.getReachableCallbacks().stream().collect(MyCollectors.toMultimap(
+        return sensitivePathsHolder.getSortedReachableCallbacks().stream().collect(MyCollectors.toMultimap(
                 callback -> callback,
                 callback -> sensitivePathsHolder.getCallsToSensitiveFor(callback).stream()
                         .flatMap(sensitiveCall ->

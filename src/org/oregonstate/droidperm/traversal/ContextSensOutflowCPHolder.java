@@ -39,10 +39,15 @@ public class ContextSensOutflowCPHolder {
     /**
      * BiMap from callback methods to edges that call those methods. For each callback method there's only one
      * corresponding edge - the first.
+     * <p>
+     * Contains all callbacks, not only those having sensitives.
      */
     private BiMap<MethodOrMethodContext, Edge> uiCallbacksBiMap;
 
-    private Set<Edge> sensitivesInContext = new HashSet<>();
+    /**
+     * Presensitives. For parametric sensitives, they are sensitives or not depending on what arguments they get.
+     */
+    private Set<Edge> presensEdges = new HashSet<>();
 
     //todo investigate using a true call graph for outflows, instead of these maps.
     //Potentially will improve performance, since callbackToOutflowTable contains a lot of repetition.
@@ -67,17 +72,12 @@ public class ContextSensOutflowCPHolder {
      * <p>
      * toperf this collection is likely a huge memory hog.
      */
-    private SetMultimap<Edge, MethodOrMethodContext> nodesToReachableSensitivesMap;
+    private SetMultimap<Edge, Edge> nodesToReachablePresensMap;
 
     /**
      * Map from sensitives to sets of callbacks.
      */
-    private SetMultimap<Edge, MethodOrMethodContext> sensitiveInCToCallbacksMap;
-
-    /**
-     * Elements are unique
-     */
-    private List<MethodOrMethodContext> reachableCallbacks;
+    private SetMultimap<Edge, MethodOrMethodContext> presensToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<MethodOrMethodContext> sensitives,
                                       ClasspathFilter classpathFilter) {
@@ -91,10 +91,8 @@ public class ContextSensOutflowCPHolder {
         }
 
         callbackToOutflowTable = buildCallbackToOutflowMap();
-        sensitiveInCToCallbacksMap = buildSensitiveInCToCallbacksMap();
-        buildReachableSensitives();
-        reachableCallbacks = getSensitiveToCallbacksMap().values().stream()
-                .distinct().sorted(SortUtil.methodOrMCComparator).collect(Collectors.toList());
+        presensToCallbacksMap = buildSensitiveInCToCallbacksMap();
+        nodesToReachablePresensMap = buildNodesToReachablePresensMap();
     }
 
     private Table<MethodOrMethodContext, Edge, Edge> buildCallbackToOutflowMap() {
@@ -154,7 +152,7 @@ public class ContextSensOutflowCPHolder {
                                         queue.add(tgtEdge);
                                         outflow.put(tgtEdge, srcEdge);
                                         if (sensitives.contains(tgtEdge.getTgt())) {
-                                            sensitivesInContext.add(tgtEdge);
+                                            presensEdges.add(tgtEdge);
                                         }
                                     }
                                 }));
@@ -236,7 +234,7 @@ public class ContextSensOutflowCPHolder {
     }
 
     private SetMultimap<Edge, MethodOrMethodContext> buildSensitiveInCToCallbacksMap() {
-        return sensitivesInContext.stream().collect(MyCollectors.toMultimap(
+        return presensEdges.stream().collect(MyCollectors.toMultimap(
                 sensitiveInContext -> sensitiveInContext,
                 sensitiveInContext -> callbackToOutflowTable.rowMap().entrySet().stream()
                         .filter(cbToOutflowEntry -> cbToOutflowEntry.getValue().containsKey(sensitiveInContext))
@@ -244,28 +242,24 @@ public class ContextSensOutflowCPHolder {
         ));
     }
 
-    private void buildReachableSensitives() {
-        nodesToReachableSensitivesMap = HashMultimap.create();
+    private SetMultimap<Edge, Edge> buildNodesToReachablePresensMap() {
+        SetMultimap<Edge, Edge> result = HashMultimap.create();
         for (MethodOrMethodContext callback : callbackToOutflowTable.rowKeySet()) {
-            for (Edge sensitiveInContext : sensitivesInContext) {
-                if (callbackToOutflowTable.row(callback).containsKey(sensitiveInContext)) {
-                    collectReachableSensitivesOnPath(callback, sensitiveInContext,
-                            callbackToOutflowTable.row(callback));
+            for (Edge presensEdge : presensEdges) {
+                if (callbackToOutflowTable.contains(callback, presensEdge)) {
+                    Edge edge = presensEdge;
+                    //populate the result map across the path from callback to presensEdge
+                    while (edge != null && edge.getTgt() != callback) {
+                        result.put(edge, presensEdge);
+                        edge = callbackToOutflowTable.row(callback).get(edge);
+                    }
+                    if (edge != null) {
+                        result.put(edge, presensEdge);
+                    }
                 }
             }
         }
-    }
-
-    private void collectReachableSensitivesOnPath(MethodOrMethodContext src, Edge sensitive,
-                                                  Map<Edge, Edge> outflow) {
-        Edge node = sensitive;
-        while (node != null && node.getTgt() != src) {
-            nodesToReachableSensitivesMap.put(node, sensitive.getTgt());
-            node = outflow.get(node);
-        }
-        if (node != null) {
-            nodesToReachableSensitivesMap.put(node, sensitive.getTgt());
-        }
+        return result;
     }
 
     public void printPathsFromCallbackToSensitive() {
@@ -273,7 +267,7 @@ public class ContextSensOutflowCPHolder {
         System.out.println("========================================================================\n");
 
         for (MethodOrMethodContext callback : callbackToOutflowTable.rowKeySet()) {
-            for (Edge sensitiveInContext : sensitivesInContext) {
+            for (Edge sensitiveInContext : presensEdges) {
                 if (callbackToOutflowTable.row(callback).containsKey(sensitiveInContext)) {
                     printPath(callback, sensitiveInContext, callbackToOutflowTable.row(callback));
                 }
@@ -381,58 +375,32 @@ public class ContextSensOutflowCPHolder {
         return PointsToUtil.getPointsToIfVirtualCall(stmt, context, pointsToAnalysis);
     }
 
-    public Set<MethodOrMethodContext> getReacheableSensitives(Edge edge) {
-        return nodesToReachableSensitivesMap.get(edge);
+    public Set<Edge> getReacheablePresensitives(Edge edge) {
+        return nodesToReachablePresensMap.get(edge);
     }
 
     public Set<Edge> getCallsToSensitiveFor(MethodOrMethodContext callback) {
-        return Sets.intersection(callbackToOutflowTable.row(callback).keySet(), sensitivesInContext);
+        return Sets.intersection(callbackToOutflowTable.row(callback).keySet(), presensEdges);
     }
 
     /**
-     * For 1-CFA analysis. Map from call to its parent calls, for each call to sensitive in this calblack.
-     */
-    public SetMultimap<Edge, Edge> getContextSensCallsToSensitiveFor(MethodOrMethodContext callback) {
-        return sensitivesInContext.stream().collect(MyCollectors.toMultimapForCollection(
-                sensInC -> sensInC,
-                sensInC -> getParentEdges(sensInC, callback)
-        ));
-    }
-
-    /**
-     * There might be multiple calls to meth in one callback, that's why list is needed.
-     */
-    public List<Edge> getCallsToMeth(MethodOrMethodContext meth, MethodOrMethodContext callback) {
-        return callbackToOutflowTable.row(callback).keySet().stream().filter(edge -> edge.getTgt() == meth)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * To be used for checkers only. this method does not check points-to consistency between parent edges and child
+     * To be used for checkers only.
+     * <p>
+     * LIMITATION: This method does not check points-to consistency between parent edges and child
      * edges.
      * <p>
      * For methods executed directly inside callback, parent will be the edge from dummy main to callback.
      */
     public Set<Edge> getParentEdges(Edge edge, MethodOrMethodContext callback) {
-        if (!callbackToOutflowTable.row(callback).containsKey(edge)) {
+        if (!callbackToOutflowTable.contains(callback, edge)) {
             return Collections.emptySet();
         }
 
         Iterator<Edge> allParentEdges = callGraph.edgesInto(edge.getSrc());
         return StreamUtil.asStream(allParentEdges)
-                .filter(parentEdge -> (callbackToOutflowTable.row(callback).containsKey(parentEdge)
+                .filter(parentEdge -> (callbackToOutflowTable.contains(callback, parentEdge)
                         || edge.getSrc() == callback))
                 .collect(Collectors.toSet());
-    }
-
-    /**
-     * Map from reachable sensitives to sets of callbacks.
-     */
-    public Multimap<MethodOrMethodContext, MethodOrMethodContext> getSensitiveToCallbacksMap() {
-        return sensitiveInCToCallbacksMap.keySet().stream().collect(MyCollectors.toMultimapForCollection(
-                Edge::getTgt,
-                sensEdge -> sensitiveInCToCallbacksMap.get(sensEdge)
-        ));
     }
 
     public Set<MethodOrMethodContext> getUiCallbacks() {
@@ -440,14 +408,17 @@ public class ContextSensOutflowCPHolder {
     }
 
     /**
+     * Returns only the reachable callbacks, e.g. those that reach sensitives.
+     * <p>
      * We also sort the callbacks by their class name followed by method declaration line number.
      */
-    public List<MethodOrMethodContext> getReachableCallbacks() {
-        return reachableCallbacks;
+    public Set<MethodOrMethodContext> getSortedReachableCallbacks() {
+        return callbackToOutflowTable.rowKeySet().stream().sorted(SortUtil.methodOrMCComparator)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     Set<MethodOrMethodContext> getReachingCallbacks(Edge edge) {
-        return sensitiveInCToCallbacksMap.get(edge);
+        return presensToCallbacksMap.get(edge);
     }
 
     /**
