@@ -123,7 +123,7 @@ public class ScenePermissionDefService {
         if (actionString.equals("android.intent.action.CALL")) {
             return Collections.singleton("android.permission.CALL_PHONE");
         } else {
-            return null;
+            return Collections.emptySet();
         }
     }
 

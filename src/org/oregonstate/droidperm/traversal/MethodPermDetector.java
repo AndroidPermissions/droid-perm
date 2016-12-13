@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.SootMethod;
 import soot.Value;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
@@ -26,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/19/2016.
@@ -68,7 +68,6 @@ public class MethodPermDetector {
      * This set is sorted.
      */
     private LinkedHashSet<Edge> sensEdges;
-    private LinkedHashSet<Edge> parametricSensEdges;
 
     private ContextSensOutflowCPHolder sensitivePathsHolder;
 
@@ -104,15 +103,16 @@ public class MethodPermDetector {
 
     private void analyze() throws Exception {
         permCheckers = CallGraphUtil.getNodesFor(scenePermDef.getPermCheckers());
-        sensEdges = CallGraphUtil.getEdgesInto(scenePermDef.getSceneMethodSensitives()).stream()
+        List<SootMethod> sceneMethodSensitives = scenePermDef.getSceneMethodSensitives();
+        List<SootMethod> sceneParametricSensitives = scenePermDef.getSceneParametricSensitives();
+        List<SootMethod> scenePresensitiveMethods = Lists.newArrayList(
+                Iterables.concat(sceneMethodSensitives, sceneParametricSensitives));
+
+        sensEdges = CallGraphUtil.getEdgesInto(scenePresensitiveMethods).stream()
                 .sorted(SortUtil.edgeComparator)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        parametricSensEdges = CallGraphUtil.getEdgesInto(scenePermDef.getSceneParametricSensitives()).stream()
-                .sorted(SortUtil.edgeComparator)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        Set<MethodOrMethodContext> unifiedSensitives =
-                Stream.concat(sensEdges.stream(), parametricSensEdges.stream()).distinct().map(Edge::getTgt)
-                        .collect(Collectors.toSet());
+        Set<MethodOrMethodContext> cgPresensitiveMethods =
+                sensEdges.stream().map(Edge::getTgt).collect(Collectors.toSet());
 
         logger.info("Processing checkers");
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, classpathFilter);
@@ -120,7 +120,7 @@ public class MethodPermDetector {
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
 
         logger.info("Processing sensitives");
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, unifiedSensitives, classpathFilter);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, cgPresensitiveMethods, classpathFilter);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
         //Data structures that combine checkers and sensitives
@@ -318,10 +318,6 @@ public class MethodPermDetector {
                                 + " : " + sensitivesCountByStatus.get(statuses))
                 );
             }
-
-            //fixme proof of concept only for now
-            Multimap<Set<String>, Edge> permsToParametricSensMap = buildPermsToParametricSensEdgesMap();
-            System.out.println("Parametric sensitives: " + permsToParametricSensMap);
         }
     }
 
@@ -417,13 +413,6 @@ public class MethodPermDetector {
         //noinspection Convert2MethodRef
         return sensEdges.stream().collect(
                 MyCollectors.toMultimapGroupingBy(() -> LinkedHashMultimap.create(), this::getPermissionsFor));
-    }
-
-    private SetMultimap<Set<String>, Edge> buildPermsToParametricSensEdgesMap() {
-        return parametricSensEdges.stream()
-                .map(sensEdge -> new Pair<>(sensEdge, getPermissionsFor(sensEdge)))
-                .filter(pair -> pair.getO2() != null)
-                .collect(MyCollectors.toMultimapGroupingBy(Pair::getO2, Pair::getO1));
     }
 
     /**
