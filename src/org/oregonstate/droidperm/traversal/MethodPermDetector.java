@@ -40,8 +40,7 @@ public class MethodPermDetector {
 
     private ClasspathFilter classpathFilter;
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private MethodOrMethodContext dummyMainMethod;
+    public static final MethodOrMethodContext dummyMainMethod = getDummyMain();
 
     @SuppressWarnings("FieldCanBeLocal")
     private Set<MethodOrMethodContext> permCheckers;
@@ -77,6 +76,11 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
+    private static MethodOrMethodContext getDummyMain() {
+        String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
+        return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
+    }
+
     public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef,
                               ClasspathFilter classpathFilter) {
         this.txtOut = txtOut;
@@ -98,7 +102,6 @@ public class MethodPermDetector {
     }
 
     private void analyze() throws Exception {
-        dummyMainMethod = getDummyMain();
         permCheckers = CallGraphUtil.getNodesFor(scenePermDef.getPermCheckers());
         sensitives = CallGraphUtil.getNodesFor(scenePermDef.getSceneMethodSensitives()).stream()
                 .sorted(SortUtil.methodOrMCComparator)
@@ -149,11 +152,6 @@ public class MethodPermDetector {
         }
     }
 
-    private static MethodOrMethodContext getDummyMain() {
-        String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
-        return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
-    }
-
     private Set<String> getPermissionsFor(MethodOrMethodContext sensitive) {
         return scenePermDef.getPermissionsFor(sensitive.method());
     }
@@ -168,8 +166,9 @@ public class MethodPermDetector {
      * Right now adding only parametric methods
      */
     @Nullable
-    public Set<String> getPermissionsFor(MethodInContext methInC) {
-        Stmt srcStmt = methInC.getContext();
+    public Set<String> getPermissionsFor(Edge sensEdge) {
+        Stmt srcStmt = sensEdge.srcStmt();
+        assert srcStmt != null; //sensitive edges always come from method calls
         Value arg0 = srcStmt.getInvokeExpr().getArg(0);
         if (arg0 instanceof StringConstant) {
             String argValue = ((StringConstant) arg0).value;
@@ -271,9 +270,8 @@ public class MethodPermDetector {
                             System.out.println("\t\tTRY-CATCH CHECKED");
                         }
 
-                        MethodInContext sensInC = new MethodInContext(edgeInto);
                         ListMultimap<PermCheckStatus, MethodOrMethodContext> permCheckStatusToCallbacks =
-                                getPermCheckStatusToCallbacksMap(sensInC, permSet);
+                                getPermCheckStatusToCallbacksMap(edgeInto, permSet);
                         if (!classpathFilter.test(edgeInto.src())) {
                             System.out.println("\t\tCallbacks: BLOCKED");
                         } else if (!permCheckStatusToCallbacks.isEmpty()) {
@@ -314,15 +312,15 @@ public class MethodPermDetector {
                 );
             }
 
-            Multimap<Set<String>, MethodInContext> permsToParametricSensMap = buildPermsToParametricSensMap();
+            Multimap<Set<String>, Edge> permsToParametricSensMap = buildPermsToParametricSensMap();
             System.out.println("Parametric sensitives: " + permsToParametricSensMap);
         }
     }
 
 
     private ListMultimap<PermCheckStatus, MethodOrMethodContext> getPermCheckStatusToCallbacksMap(
-            MethodInContext sensInC, Set<String> permSet) {
-        Set<MethodOrMethodContext> reachableCallbacks = sensitivePathsHolder.getReachingCallbacks(sensInC);
+            Edge sensEdge, Set<String> permSet) {
+        Set<MethodOrMethodContext> reachableCallbacks = sensitivePathsHolder.getReachingCallbacks(sensEdge);
         if (reachableCallbacks == null) {
             reachableCallbacks = Collections.emptySet();
         }
@@ -414,10 +412,9 @@ public class MethodPermDetector {
                 MyCollectors.toMultimapGroupingBy(() -> LinkedHashMultimap.create(), this::getPermissionsFor));
     }
 
-    //todo sensitive should no longer be MethodInMethodContext but MethodInContext for all
-    private SetMultimap<Set<String>, MethodInContext> buildPermsToParametricSensMap() {
+    private SetMultimap<Set<String>, Edge> buildPermsToParametricSensMap() {
         return parametricSensitives.stream().flatMap(sens -> StreamUtil.asStream(callGraph.edgesInto(sens)))
-                .map(MethodInContext::new).map(methInC -> new Pair<>(methInC, getPermissionsFor(methInC)))
+                .map(methInC -> new Pair<>(methInC, getPermissionsFor(methInC)))
                 .filter(pair -> pair.getO2() != null)
                 .collect(MyCollectors.toMultimapGroupingBy(Pair::getO2, Pair::getO1));
     }
