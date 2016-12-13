@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.util;
 
+import com.google.common.collect.ImmutableSet;
 import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.unused.ContextAwareCallGraph;
 import soot.MethodOrMethodContext;
@@ -20,6 +21,16 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/15/2016.
  */
 public class CallGraphUtil {
+
+    public static Set<Edge> getEdgesInto(Collection<SootMethod> methods) {
+        return methods.stream().map(CallGraphUtil::getEdgesInto)
+                .collect(MyCollectors.toFlatSet()); //Collect edge sets for every method into one set
+    }
+
+    public static Set<Edge> getEdgesInto(SootMethod method) {
+        CallGraph callGraph = Scene.v().getCallGraph();
+        return ImmutableSet.copyOf(callGraph.edgesInto(method));
+    }
 
     /**
      * Return the subset of methods (eventually in their context) contained in the call graph, out of the input
