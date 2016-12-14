@@ -177,7 +177,7 @@ public class MethodPermDetector {
         Value arg0 = srcStmt.getInvokeExpr().getArg(0);
         if (arg0 instanceof StringConstant) {
             String argValue = ((StringConstant) arg0).value;
-            return scenePermDef.getPermissionsFor(argValue);
+            return scenePermDef.getPermissionsFor(scenePermDef.getFieldFor(argValue));
         } else {
             throw new RuntimeException("Unsupported arg0 for parametric sensitive: " + arg0);
         }

@@ -36,7 +36,9 @@ public class ScenePermissionDefService {
     private Map<FieldSensitiveDef, SootField> sceneFieldSensMap;
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
     private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
+    private final Map<String, SootField> constantFieldsMap;
 
+    //todo generalize
     private final Set<SootMethodAndClass> parametricSensDef = ImmutableSet.<SootMethodAndClass>builder()
             .add(new SootMethodAndClass("<init>", "android.content.Intent", "void",
                     Collections.singletonList("java.lang.String")))
@@ -54,6 +56,7 @@ public class ScenePermissionDefService {
         permissionToFieldSensMap = buildPermissionToFieldSensMap();
         fieldSensToPermissionsMap = permissionToFieldSensMap.entries().stream()
                 .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
+        constantFieldsMap = SceneUtil.buildConstantFieldsMap(fieldSensToPermissionsMap.keySet());
     }
 
     public List<SootMethod> getPermCheckers() {
@@ -115,16 +118,8 @@ public class ScenePermissionDefService {
         return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
     }
 
-    /**
-     * Return the permission set for this action string. Or return null if this action does not require permissions.
-     */
-    public Set<String> getPermissionsFor(String actionString) {
-        //fixme temp demo implementation
-        if (actionString.equals("android.intent.action.CALL")) {
-            return Collections.singleton("android.permission.CALL_PHONE");
-        } else {
-            return Collections.emptySet();
-        }
+    public SootField getFieldFor(String actionString) {
+        return constantFieldsMap.get(actionString);
     }
 
     public List<SootMethod> getSceneParametricSensitives() {

@@ -151,7 +151,7 @@ public class SceneUtil {
         );
     }
 
-    private static Map<String, SootField> buildConstantFieldsMap(Set<SootField> sensFields) {
+    public static Map<String, SootField> buildConstantFieldsMap(Set<SootField> sensFields) {
         //If there are multiple sensitive fields initialized with same constant, exception will be thrown.
         return sensFields.stream().filter(field -> getConstantValue(field) != null).collect(Collectors.toMap(
                 SceneUtil::getConstantValue,
