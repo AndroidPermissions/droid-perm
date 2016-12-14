@@ -159,6 +159,9 @@ public class ScenePermissionDefService {
         return result;
     }
 
+    /**
+     * Returns the permissions for the given sensitive method. If the method is not a sensitive, returns an empty set.
+     */
     public Set<String> getPermissionsFor(SootMethod meth) {
         return sensitivesToPermissionsMap.get(meth);
     }

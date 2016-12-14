@@ -136,13 +136,11 @@ public class MethodPermDetector {
         }
     }
 
-    //todo this impl does not support field permissions
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
         return sensitivePathsHolder.getSortedReachableCallbacks().stream().collect(MyCollectors.toMultimap(
                 callback -> callback,
                 callback -> sensitivePathsHolder.getCallsToSensitiveFor(callback).stream()
-                        .flatMap(sensitiveCall ->
-                                scenePermDef.getPermissionsFor(sensitiveCall.getTgt().method()).stream())
+                        .flatMap(sensEdge -> cgService.getPermissionsFor(sensEdge).stream())
         ));
     }
 
