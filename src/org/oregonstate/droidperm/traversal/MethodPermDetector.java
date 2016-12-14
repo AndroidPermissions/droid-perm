@@ -213,6 +213,7 @@ public class MethodPermDetector {
                     .collect(MyCollectors.toMultimapGroupingBy(Edge::getTgt));
             Map<Set<PermCheckStatus>, Integer> sensitivesCountByStatus = new HashMap<>();
             for (MethodOrMethodContext sens : sensToSensEdgesMap.keySet()) {
+                boolean isParametric = scenePermDef.getSceneParametricSensitives().contains(sens.method());
                 boolean printed = false;
                 Iterable<Edge> edgesInto = sensToSensEdgesMap.get(sens);
 
@@ -221,10 +222,13 @@ public class MethodPermDetector {
                     //noinspection ConstantConditions
                     if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
                         if (!printed) {
-                            System.out.println("\nSensitive " + sens);
+                            System.out.println((isParametric ? "\nParametric sensitive " : "\nSensitive ") + sens);
                             printed = true;
                         }
                         System.out.println("\tfrom " + PrintUtil.toMethodLogString(edgeInto.srcStmt()));
+                        if (isParametric) {
+                            System.out.println("\tparameter: " + cgService.getSensitiveArgument(edgeInto));
+                        }
                         if (TryCatchCheckerUtil.isTryCatchChecked(edgeInto)) {
                             System.out.println("\t\tTRY-CATCH CHECKED");
                         }

@@ -6,6 +6,7 @@ import com.sun.istack.internal.Nullable;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Value;
 import soot.jimple.Stmt;
@@ -25,7 +26,6 @@ public class CallGraphPermDefService {
 
     private ScenePermissionDefService scenePermDef;
 
-
     public CallGraphPermDefService(ScenePermissionDefService scenePermDef) {
         this.scenePermDef = scenePermDef;
     }
@@ -34,11 +34,6 @@ public class CallGraphPermDefService {
         return sensEdges.stream().map(this::getPermissionsFor).collect(MyCollectors.toFlatSet());
     }
 
-    /**
-     * fixme full support for field sensitives
-     * <p>
-     * Right now adding only parametric methods
-     */
     @Nullable
     public Set<String> getPermissionsFor(Edge sensEdge) {
         Set<String> methodSensPerm = scenePermDef.getPermissionsFor(sensEdge.tgt());
@@ -47,12 +42,22 @@ public class CallGraphPermDefService {
         }
 
         //Maybe this edge is a parametric sensitive.
+        SootField sensArgument = getSensitiveArgument(sensEdge);
+        return scenePermDef.getPermissionsFor(sensArgument);
+    }
+
+    /**
+     * fixme full support for field sensitives
+     * <p>
+     * Only to be called for edges representing parametric sensitives. Returns null if this is a parametric sensitive
+     * but the argument is not a sensitive field.
+     */
+    public SootField getSensitiveArgument(Edge sensEdge) {
         Stmt srcStmt = sensEdge.srcStmt();
         assert srcStmt != null; //sensitive edges always come from method calls
         Value arg0 = srcStmt.getInvokeExpr().getArg(0);
         if (arg0 instanceof StringConstant) {
-            String argValue = ((StringConstant) arg0).value;
-            return scenePermDef.getPermissionsFor(scenePermDef.getFieldFor(argValue));
+            return scenePermDef.getFieldFor(((StringConstant) arg0).value);
         } else {
             throw new RuntimeException("Unsupported arg0 for parametric sensitive: " + arg0);
         }
