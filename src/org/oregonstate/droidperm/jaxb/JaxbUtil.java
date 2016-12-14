@@ -48,7 +48,7 @@ public class JaxbUtil {
                         .map(edge -> detector.getSensitivePathsHolder().getReacheablePresensitives(edge))
                         .collect(MyCollectors.toFlatSet());
                 if (!sensEdges.isEmpty()) {
-                    Set<String> permSet = detector.getPermissionsFor(sensEdges);
+                    Set<String> permSet = detector.getCgService().getPermissionsFor(sensEdges);
                     Map<String, Boolean> permGaurdedMap = permSet.stream()
                             .collect(Collectors.toMap(perm -> perm,
                                     perm -> detector

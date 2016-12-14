@@ -1,7 +1,6 @@
 package org.oregonstate.droidperm.traversal;
 
 import com.google.common.collect.*;
-import com.sun.istack.internal.Nullable;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
@@ -15,10 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
-import soot.SootMethod;
-import soot.Value;
-import soot.jimple.Stmt;
-import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 
@@ -38,6 +33,7 @@ public class MethodPermDetector {
     private File txtOut;
     private File xmlOut;
     private ScenePermissionDefService scenePermDef;
+    private CallGraphPermDefService cgService;
 
     private ClasspathFilter classpathFilter;
 
@@ -64,13 +60,8 @@ public class MethodPermDetector {
      */
     private Table<String, Pair<Edge, Edge>, Boolean> permsToCheckersMap;
 
-    /**
-     * This set is sorted.
-     */
     private LinkedHashSet<Edge> sensEdges;
-
     private ContextSensOutflowCPHolder sensitivePathsHolder;
-
     private SetMultimap<MethodOrMethodContext, String> callbackToRequiredPermsMap;
     private Set<String> sometimesNotCheckedPerms;
 
@@ -87,6 +78,7 @@ public class MethodPermDetector {
         this.xmlOut = xmlOut;
         this.scenePermDef = scenePermDef;
         this.classpathFilter = classpathFilter;
+        this.cgService = new CallGraphPermDefService(scenePermDef);
     }
 
     public void analyzeAndPrint() throws Exception {
@@ -109,7 +101,7 @@ public class MethodPermDetector {
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(checkerEdges);
 
         logger.info("Processing sensitives");
-        sensEdges = buildSensEdges();
+        sensEdges = cgService.buildSensEdges();
         sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensEdges, classpathFilter);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
@@ -144,46 +136,7 @@ public class MethodPermDetector {
         }
     }
 
-    //todo consider moving outside, to a CallGraphSensitivesService or something.
-    private LinkedHashSet<Edge> buildSensEdges() {
-        List<SootMethod> sceneMethodSensitives = scenePermDef.getSceneMethodSensitives();
-        List<SootMethod> sceneParametricSensitives = scenePermDef.getSceneParametricSensitives();
-        List<SootMethod> scenePresensitiveMethods = Lists.newArrayList(
-                Iterables.concat(sceneMethodSensitives, sceneParametricSensitives));
-
-        return CallGraphUtil.getEdgesInto(scenePresensitiveMethods).stream() //already sorted
-                .filter(edge -> !getPermissionsFor(edge).isEmpty())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
-    public Set<String> getPermissionsFor(Collection<Edge> sensEdges) {
-        return sensEdges.stream().map(this::getPermissionsFor).collect(MyCollectors.toFlatSet());
-    }
-
-    /**
-     * fixme full support for field sensitives
-     * <p>
-     * Right now adding only parametric methods
-     */
-    @Nullable
-    public Set<String> getPermissionsFor(Edge sensEdge) {
-        Set<String> methodSensPerm = scenePermDef.getPermissionsFor(sensEdge.tgt());
-        if (!methodSensPerm.isEmpty()) {
-            return methodSensPerm;
-        }
-
-        //Maybe this edge is a parametric sensitive.
-        Stmt srcStmt = sensEdge.srcStmt();
-        assert srcStmt != null; //sensitive edges always come from method calls
-        Value arg0 = srcStmt.getInvokeExpr().getArg(0);
-        if (arg0 instanceof StringConstant) {
-            String argValue = ((StringConstant) arg0).value;
-            return scenePermDef.getPermissionsFor(scenePermDef.getFieldFor(argValue));
-        } else {
-            throw new RuntimeException("Unsupported arg0 for parametric sensitive: " + arg0);
-        }
-    }
-
+    //todo this impl does not support field permissions
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
         return sensitivePathsHolder.getSortedReachableCallbacks().stream().collect(MyCollectors.toMultimap(
                 callback -> callback,
@@ -413,7 +366,7 @@ public class MethodPermDetector {
     private Multimap<Set<String>, Edge> buildPermsToSensEdgesMap() {
         //noinspection Convert2MethodRef
         return sensEdges.stream().collect(
-                MyCollectors.toMultimapGroupingBy(() -> LinkedHashMultimap.create(), this::getPermissionsFor));
+                MyCollectors.toMultimapGroupingBy(() -> LinkedHashMultimap.create(), cgService::getPermissionsFor));
     }
 
     /**
@@ -430,6 +383,10 @@ public class MethodPermDetector {
                 MyCollectors.toMultimapGroupingBy(
                         () -> ArrayListMultimap.create(),
                         callback -> perm != null ? getCheckUsageStatus(callback, perm) : CheckerUsageStatus.UNUSED));
+    }
+
+    public CallGraphPermDefService getCgService() {
+        return cgService;
     }
 
     public ContextSensOutflowCPHolder getSensitivePathsHolder() {
