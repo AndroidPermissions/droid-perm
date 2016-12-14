@@ -4,7 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
-import org.oregonstate.droidperm.util.*;
+import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.PointsToUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -68,30 +69,25 @@ public class CheckerUtil {
      * column = Pair[Edge, ParentEdge]
      * value = whether check for this value on this path is certain or not.
      */
-    public static Table<String, Pair<Edge, Edge>, Boolean> buildPermsToCheckersMap(
-            Set<MethodOrMethodContext> permCheckers) {
+    public static Table<String, Pair<Edge, Edge>, Boolean> buildPermsToCheckersMap(LinkedHashSet<Edge> checkerEdges) {
         CallGraph cg = Scene.v().getCallGraph();
         Table<String, Pair<Edge, Edge>, Boolean> table =
                 Tables.newCustomTable(new TreeMap<>(), LinkedHashMap::new);
-        for (MethodOrMethodContext checker : permCheckers) {
-            Iterable<Edge> edgesInto = IteratorUtil.asIterable(cg.edgesInto(checker));
-            for (Edge edgeInto
-                    : StreamUtil.asStream(edgesInto).sorted(SortUtil.edgeComparator).collect(Collectors.toList())) {
-                Iterator<Edge> parentEdgesIt = cg.edgesInto(edgeInto.getSrc());
-                if (!parentEdgesIt.hasNext()) {
-                    table.put("", new Pair<>(edgeInto, null), false);
+        for (Edge checkerEdge : checkerEdges) {
+            Iterator<Edge> parentEdgesIt = cg.edgesInto(checkerEdge.getSrc());
+            if (!parentEdgesIt.hasNext()) {
+                table.put("", new Pair<>(checkerEdge, null), false);
+                continue;
+            }
+            for (Edge parent : (Iterable<Edge>) () -> parentEdgesIt) {
+                Set<String> possiblePerm = getPossiblePermissionsFromChecker(checkerEdge, parent);
+                if (possiblePerm.isEmpty()) {
+                    table.put("", new Pair<>(checkerEdge, parent), false);
                     continue;
                 }
-                for (Edge parent : (Iterable<Edge>) () -> parentEdgesIt) {
-                    Set<String> possiblePerm = getPossiblePermissionsFromChecker(edgeInto, parent);
-                    if (possiblePerm.isEmpty()) {
-                        table.put("", new Pair<>(edgeInto, parent), false);
-                        continue;
-                    }
-                    for (String perm : possiblePerm) {
-                        // if size == 1 then it's a certain check
-                        table.put(perm, new Pair<>(edgeInto, parent), possiblePerm.size() == 1);
-                    }
+                for (String perm : possiblePerm) {
+                    // if size == 1 then it's a certain check
+                    table.put(perm, new Pair<>(checkerEdge, parent), possiblePerm.size() == 1);
                 }
             }
         }

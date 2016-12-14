@@ -44,7 +44,7 @@ public class MethodPermDetector {
     public static final MethodOrMethodContext dummyMainMethod = getDummyMain();
 
     @SuppressWarnings("FieldCanBeLocal")
-    private Set<MethodOrMethodContext> permCheckers;
+    private LinkedHashSet<Edge> checkerEdges;
 
     //toperf holders for checkers and sensitives could be combined into one. One traversal could produce both.
     //this is actually required for flow-sensitive analysis.
@@ -78,7 +78,7 @@ public class MethodPermDetector {
 
     private static MethodOrMethodContext getDummyMain() {
         String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
-        return CallGraphUtil.getEntryPointMethod(Scene.v().getMethod(sig));
+        return Scene.v().getMethod(sig);
     }
 
     public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef,
@@ -102,30 +102,19 @@ public class MethodPermDetector {
     }
 
     private void analyze() throws Exception {
-        permCheckers = CallGraphUtil.getNodesFor(scenePermDef.getPermCheckers());
-        List<SootMethod> sceneMethodSensitives = scenePermDef.getSceneMethodSensitives();
-        List<SootMethod> sceneParametricSensitives = scenePermDef.getSceneParametricSensitives();
-        List<SootMethod> scenePresensitiveMethods = Lists.newArrayList(
-                Iterables.concat(sceneMethodSensitives, sceneParametricSensitives));
-
-        sensEdges = CallGraphUtil.getEdgesInto(scenePresensitiveMethods).stream()
-                .sorted(SortUtil.edgeComparator)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        Set<MethodOrMethodContext> cgPresensitiveMethods =
-                sensEdges.stream().map(Edge::getTgt).collect(Collectors.toSet());
-
         logger.info("Processing checkers");
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, permCheckers, classpathFilter);
+        checkerEdges = CallGraphUtil.getEdgesInto(scenePermDef.getPermCheckers());
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, checkerEdges, classpathFilter);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
-        permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(permCheckers);
+        permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(checkerEdges);
 
         logger.info("Processing sensitives");
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, cgPresensitiveMethods, classpathFilter);
+        sensEdges = buildSensEdges();
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensEdges, classpathFilter);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
-        //Data structures that combine checkers and sensitives
+        //Section 3: Data structures that combine checkers and sensitives
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
-
         jaxbData = JaxbUtil.buildJaxbData(this);
     }
 
@@ -153,6 +142,18 @@ public class MethodPermDetector {
         if (xmlOut != null) {
             JaxbUtil.save(jaxbData, xmlOut);
         }
+    }
+
+    //todo consider moving outside, to a CallGraphSensitivesService or something.
+    private LinkedHashSet<Edge> buildSensEdges() {
+        List<SootMethod> sceneMethodSensitives = scenePermDef.getSceneMethodSensitives();
+        List<SootMethod> sceneParametricSensitives = scenePermDef.getSceneParametricSensitives();
+        List<SootMethod> scenePresensitiveMethods = Lists.newArrayList(
+                Iterables.concat(sceneMethodSensitives, sceneParametricSensitives));
+
+        return CallGraphUtil.getEdgesInto(scenePresensitiveMethods).stream() //already sorted
+                .filter(edge -> !getPermissionsFor(edge).isEmpty())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public Set<String> getPermissionsFor(Collection<Edge> sensEdges) {

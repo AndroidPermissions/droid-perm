@@ -163,6 +163,9 @@ public class ScenePermissionDefService {
         return sensitivesToPermissionsMap.get(meth);
     }
 
+    /**
+     * Returns the permissions for the given sensitive field. If the field is not a sensitive, returns an empty set.
+     */
     public Set<String> getPermissionsFor(SootField field) {
         return fieldSensToPermissionsMap.get(field);
     }
