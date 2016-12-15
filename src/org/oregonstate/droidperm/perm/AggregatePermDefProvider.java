@@ -20,6 +20,7 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
     private final Set<SootMethodAndClass> permCheckerDefs;
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
+    private final Set<SootMethodAndClass> parametricSensDefs;
 
     public AggregatePermDefProvider(List<IPermissionDefProvider> sourceProviders) {
         this.permCheckerDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
@@ -34,6 +35,10 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
                 sourceProviders.stream().map(IPermissionDefProvider::getFieldSensitiveDefs),
                 FieldSensitiveDef::getPseudoSignature,
                 "field sensitive defs"));
+        this.parametricSensDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
+                sourceProviders.stream().map(IPermissionDefProvider::getParametricSensDefs),
+                SootMethodAndClass::getSignature,
+                "parametric sensitive defs"));
     }
 
     private static <T> Set<T> computeAndVerifyUniqueSet(Stream<Set<T>> inputSetList,
@@ -71,5 +76,10 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
     @Override
     public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
         return fieldSensitiveDefs;
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getParametricSensDefs() {
+        return parametricSensDefs;
     }
 }

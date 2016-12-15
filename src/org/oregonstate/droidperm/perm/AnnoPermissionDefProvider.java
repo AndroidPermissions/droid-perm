@@ -9,10 +9,7 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.tagkit.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -124,5 +121,10 @@ class AnnoPermissionDefProvider implements IPermissionDefProvider {
     @Override
     public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
         return xmlPermissionDefProvider.getFieldSensitiveDefs();
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getParametricSensDefs() {
+        return Collections.emptySet();
     }
 }

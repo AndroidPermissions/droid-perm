@@ -1,6 +1,9 @@
 package org.oregonstate.droidperm.scene;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
@@ -27,6 +30,7 @@ public class ScenePermissionDefService {
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> methodSensitiveDefs;
     private Set<FieldSensitiveDef> fieldSensitiveDefs;
+    private final Set<SootMethodAndClass> parametricSensDefs;
     private ListMultimap<AndroidMethod, SootMethod> sceneMethodSensMap;
     private SetMultimap<Set<String>, SootMethod> permissionToSensitivesMap;
     private SetMultimap<SootMethod, String> sensitivesToPermissionsMap;
@@ -38,16 +42,11 @@ public class ScenePermissionDefService {
     private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
     private final Map<String, SootField> constantFieldsMap;
 
-    //todo generalize
-    private final Set<SootMethodAndClass> parametricSensDef = ImmutableSet.<SootMethodAndClass>builder()
-            .add(new SootMethodAndClass("<init>", "android.content.Intent", "void",
-                    Collections.singletonList("java.lang.String")))
-            .build();
-
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
         methodSensitiveDefs = permissionDefProvider.getMethodSensitiveDefs();
         fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
+        parametricSensDefs = permissionDefProvider.getParametricSensDefs();
         sceneMethodSensMap = buildSceneMethodSensMap();
         permissionToSensitivesMap = buildPermissionToSensitivesMap();
         sensitivesToPermissionsMap = permissionToSensitivesMap.entries().stream()
@@ -123,7 +122,7 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getSceneParametricSensitives() {
-        return HierarchyUtil.resolveAbstractDispatches(parametricSensDef, true);
+        return HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, true);
     }
 
     public Collection<SootField> getSceneFieldSensitives() {

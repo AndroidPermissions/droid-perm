@@ -7,4 +7,7 @@
     <checkerDef className="android.support.v4.content.PermissionChecker"
                 target="int checkSelfPermission(android.content.Context,java.lang.String)"/>
   </checkerDefs>
+  <parametricSensDefs>
+    <parametricSensDef className="android.content.Intent" target="void &lt;init&gt;(java.lang.String)"/>
+  </parametricSensDefs>
 </PermissionDefinitions>

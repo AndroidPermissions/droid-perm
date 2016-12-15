@@ -174,4 +174,9 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
     public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
         return fieldSensitiveDefs;
     }
+
+    @Override
+    public Set<SootMethodAndClass> getParametricSensDefs() {
+        return Collections.emptySet();
+    }
 }

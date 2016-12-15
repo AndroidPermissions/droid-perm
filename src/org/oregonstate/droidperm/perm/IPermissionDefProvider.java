@@ -15,4 +15,6 @@ public interface IPermissionDefProvider {
     Set<AndroidMethod> getMethodSensitiveDefs();
 
     Set<FieldSensitiveDef> getFieldSensitiveDefs();
+
+    Set<SootMethodAndClass> getParametricSensDefs();
 }
