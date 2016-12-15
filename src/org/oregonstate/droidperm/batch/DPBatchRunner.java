@@ -207,7 +207,7 @@ public class DPBatchRunner {
         processBuilderArgs.addAll(Arrays.asList("--cgalgo", cgAlgo.name()));
 
         String permDefFiles =
-                "config/perm-def-custom-only.txt;"
+                "config/checker-param-sens-def.xml;"
                         + "config/perm-def-API-23.xml;"
                         + "config/perm-def-play-services.xml";
         if (useJavadocPerm) {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PermissionDefinitions>
+  <checkerDefs>
+    <checkerDef className="android.content.Context" target="int checkSelfPermission(java.lang.String)"/>
+    <checkerDef className="android.support.v4.content.ContextCompat"
+                target="int checkSelfPermission(android.content.Context,java.lang.String)"/>
+    <checkerDef className="android.support.v4.content.PermissionChecker"
+                target="int checkSelfPermission(android.content.Context,java.lang.String)"/>
+  </checkerDefs>
+</PermissionDefinitions>

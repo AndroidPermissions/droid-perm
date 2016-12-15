@@ -82,9 +82,10 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
             boolean parsed = false;
             Matcher mappingMatcher = mappingPattern.matcher(line);
             if (mappingMatcher.find()) {
+                String checkerOrPermList = mappingMatcher.group(2).trim();
                 Matcher methodSigMatcher = methodSigPattern.matcher(mappingMatcher.group(1));
                 if (methodSigMatcher.find()) {
-                    AndroidMethod parsedDef = parseMethodSensitiveDef(mappingMatcher, methodSigMatcher);
+                    AndroidMethod parsedDef = parseMethodSensitiveDef(methodSigMatcher, checkerOrPermList);
                     parsed = true;
 
                     if (parsedDef.isSource()) {
@@ -95,7 +96,7 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
                 } else {
                     Matcher fieldSigMatcher = fieldSigPattern.matcher(mappingMatcher.group(1));
                     if (fieldSigMatcher.find()) {
-                        FieldSensitiveDef parsedDef = parseFieldSensitiveDef(mappingMatcher, fieldSigMatcher);
+                        FieldSensitiveDef parsedDef = parseFieldSensitiveDef(fieldSigMatcher, checkerOrPermList);
                         parsed = true;
                         fieldSensitiveDefs.add(parsedDef);
                     }
@@ -107,7 +108,7 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
         }
     }
 
-    private AndroidMethod parseMethodSensitiveDef(Matcher mappingMatcher, Matcher methodSigMatcher) {
+    private AndroidMethod parseMethodSensitiveDef(Matcher methodSigMatcher, String checkerOrPermList) {
         String className = methodSigMatcher.group(1).trim();
         String returnType = methodSigMatcher.group(2).trim();
         String methodName = methodSigMatcher.group(3).trim();
@@ -116,7 +117,6 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
                 Arrays.stream(paramsSource.split(",")).map(String::trim).collect(Collectors.toList());
 
         //either CONST_PERM_CHECKER, or a list of permission defs separated by ","
-        String checkerOrPermList = mappingMatcher.group(2).trim();
         AndroidMethod androidMethodDef;
 
         if (checkerOrPermList.equals(CONST_PERM_CHECKER)) {
@@ -133,10 +133,9 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
         return androidMethodDef;
     }
 
-    private FieldSensitiveDef parseFieldSensitiveDef(Matcher mappingMatcher, Matcher fieldSigMatcher) {
+    private FieldSensitiveDef parseFieldSensitiveDef(Matcher fieldSigMatcher, String permList) {
         String className = fieldSigMatcher.group(1).trim();
         String name = fieldSigMatcher.group(2).trim();
-        String permList = mappingMatcher.group(2).trim();
         Set<String> permissions = parsePermissions(permList);
 
         return new FieldSensitiveDef(className, name, permissions);

@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.Permission;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionRel;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
@@ -37,7 +34,7 @@ class AnnoPermissionDefProvider implements IPermissionDefProvider {
 
     public AnnoPermissionDefProvider() {
         permissionDefs = extractAnnotations();
-        xmlPermissionDefProvider = new XMLPermissionDefProvider(permissionDefs);
+        xmlPermissionDefProvider = new XMLPermissionDefProvider(new PermissionDefList(permissionDefs));
     }
 
     private static List<PermissionDef> extractAnnotations() {

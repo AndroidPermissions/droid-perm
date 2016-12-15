@@ -1,36 +1,67 @@
 package org.oregonstate.droidperm.perm;
 
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.CheckerDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author George Harder <harderg@oregonstate.edu> Created on 7/28/2016.
  */
 class XMLPermissionDefProvider implements IPermissionDefProvider {
 
+    /**
+     * Groups: 1 = return type, 2 = method name, 3 = parameters
+     */
+    private static final String methodSigRegex = "\\s*([^\\s]+)\\s+([^\\s]+)\\s*\\((.*)\\)";
+    private static final Pattern methodSigPattern = Pattern.compile(methodSigRegex);
+
+    private final Set<SootMethodAndClass> permCheckerDefs;
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
 
     public XMLPermissionDefProvider(File xmlPermDefFile) throws JAXBException {
-        this(XmlPermDefMiner.load(xmlPermDefFile).getPermissionDefs());
+        this(XmlPermDefMiner.load(xmlPermDefFile));
     }
 
-    public XMLPermissionDefProvider(List<PermissionDef> permissionDefs) {
-        methodSensitiveDefs = permissionDefs.stream()
+    public XMLPermissionDefProvider(PermissionDefList permDefList) {
+        permCheckerDefs = permDefList.getCheckerDefs().stream()
+                .map(XMLPermissionDefProvider::toSootMethodAndClass)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        methodSensitiveDefs = permDefList.getPermissionDefs().stream()
                 .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Method)
                 .map(XMLPermissionDefProvider::toAndroidMethod).collect(Collectors.toCollection(LinkedHashSet::new));
-        fieldSensitiveDefs = permissionDefs.stream()
+        fieldSensitiveDefs = permDefList.getPermissionDefs().stream()
                 .filter(permissionDef -> permissionDef.getTargetKind() == PermTargetKind.Field)
                 .map(XMLPermissionDefProvider::toFieldSensitiveDef)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private static SootMethodAndClass toSootMethodAndClass(CheckerDef checkerDef) {
+        Matcher matcher = methodSigPattern.matcher(checkerDef.getTarget());
+        if (!matcher.find()) {
+            throw new RuntimeException("Invalid signature for permission checker: " + checkerDef.getTarget());
+        }
+        String returnType = matcher.group(1);
+        String methodName = matcher.group(2);
+        String unsplitParameters = matcher.group(3);
+        List<String> parameters =
+                Stream.of(unsplitParameters.split(",")).map(String::trim).collect(Collectors.toList());
+        return new SootMethodAndClass(methodName, checkerDef.getClassName(), returnType, parameters);
     }
 
     private static FieldSensitiveDef toFieldSensitiveDef(PermissionDef permissionDef) {
@@ -55,7 +86,7 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
 
     @Override
     public Set<SootMethodAndClass> getPermCheckerDefs() {
-        return Collections.emptySet();
+        return permCheckerDefs;
     }
 
     @Override
