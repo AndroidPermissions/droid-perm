@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.util;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
@@ -75,7 +76,7 @@ public class MyCollectors {
     public static <T, K, V>
     Collector<T, ?, SetMultimap<K, V>> toMultimapGroupingBy(Function<? super T, ? extends K> keyMapper,
                                                             Function<? super T, ? extends V> valueMapper) {
-        return new MultimapCollector<>(HashMultimap::create, keyMapper, valueMapper);
+        return new MultimapCollector<>(LinkedHashMultimap::create, keyMapper, valueMapper);
     }
 
     public static <T, K, V, M extends Multimap<K, V>>

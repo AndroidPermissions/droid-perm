@@ -9,5 +9,12 @@
   </checkerDefs>
   <parametricSensDefs>
     <parametricSensDef className="android.content.Intent" target="void &lt;init&gt;(java.lang.String)"/>
+    <parametricSensDef className="android.content.Intent"
+                       target="void &lt;init&gt;(java.lang.String, android.net.Uri)"/>
+    <parametricSensDef className="android.content.Intent"
+                       target="void &lt;init&gt;(java.lang.String, android.net.Uri, android.content.Context, java.lang.Class)"/>
+    <parametricSensDef className="android.content.IntentFilter" target="void &lt;init&gt;(java.lang.String)"/>
+    <parametricSensDef className="android.content.IntentFilter"
+                       target="void &lt;init&gt;(java.lang.String, java.lang.String)"/>
   </parametricSensDefs>
 </PermissionDefinitions>
