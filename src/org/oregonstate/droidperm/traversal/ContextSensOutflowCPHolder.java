@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.InstanceInvokeExpr;
-import soot.jimple.InvokeStmt;
 import soot.jimple.Stmt;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.toolkits.callgraph.CallGraph;
@@ -30,6 +29,7 @@ public class ContextSensOutflowCPHolder {
      * Methods ignored by the outflow algorithm
      */
     private ClasspathFilter classpathFilter;
+    private final CallGraphPermDefService cgService;
 
     protected final PointsToAnalysis pointsToAnalysis;
     protected final CallGraph callGraph = Scene.v().getCallGraph();
@@ -81,10 +81,11 @@ public class ContextSensOutflowCPHolder {
     private SetMultimap<Edge, MethodOrMethodContext> presensToCallbacksMap;
 
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<Edge> sensEdges,
-                                      ClasspathFilter classpathFilter) {
+                                      ClasspathFilter classpathFilter, CallGraphPermDefService cgService) {
         this.dummyMainMethod = dummyMainMethod;
         this.initSensEdges = sensEdges;
         this.classpathFilter = classpathFilter;
+        this.cgService = cgService;
 
         pointsToAnalysis = Scene.v().getPointsToAnalysis();
         if (pointsToAnalysis.getClass() != GeomPointsTo.class) {
@@ -273,10 +274,12 @@ public class ContextSensOutflowCPHolder {
         }
     }
 
-    private void printPath(MethodOrMethodContext src, Edge destEdge, Map<Edge, Edge> outflow) {
-        List<Edge> path = computePathFromOutflow(src, destEdge, outflow);
+    private void printPath(MethodOrMethodContext callback, Edge destEdge, Map<Edge, Edge> outflow) {
+        List<Edge> path = computePathFromOutflow(callback, destEdge, outflow);
 
-        System.out.println("From " + src + "\n  to " + toDisplayString(destEdge));
+        System.out.println("From " + callback);
+        cgService.printSensitiveHeader(destEdge.getTgt(), "  ");
+        cgService.printSensitiveContext(destEdge, "\t\t");
         System.out.println("----------------------------------------------------------------------------------------");
         if (path != null) {
             for (int i = 0; i < path.size(); i++) {
@@ -289,15 +292,6 @@ public class ContextSensOutflowCPHolder {
             System.out.println("Not found!");
         }
         System.out.println();
-    }
-
-    private static String toDisplayString(Edge edge) {
-        Value targetObj = edge.srcStmt() instanceof InvokeStmt &&
-                                  edge.srcStmt().getInvokeExpr() instanceof InstanceInvokeExpr
-                          ? ((InstanceInvokeExpr) edge.srcStmt().getInvokeExpr()).getBase() : null;
-        return edge.getTgt() + "\n        calling context " + edge.getSrc()
-                + " : " + edge.srcStmt().getJavaSourceStartLineNumber()
-                + "\n        targetObj: " + targetObj;
     }
 
     /**

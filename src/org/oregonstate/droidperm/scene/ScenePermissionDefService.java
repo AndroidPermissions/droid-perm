@@ -9,10 +9,7 @@ import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
-import soot.Scene;
-import soot.SootField;
-import soot.SootMethod;
-import soot.SourceLocator;
+import soot.*;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.options.Options;
@@ -41,6 +38,8 @@ public class ScenePermissionDefService {
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
     private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
     private final Map<String, SootField> constantFieldsMap;
+    private List<SootMethod> sceneMethodSensitives;
+    private List<SootMethod> sceneParametricSensitives;
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
@@ -114,7 +113,10 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getSceneMethodSensitives() {
-        return HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
+        if (sceneMethodSensitives == null) {
+            sceneMethodSensitives = HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
+        }
+        return sceneMethodSensitives;
     }
 
     public SootField getFieldFor(String actionString) {
@@ -122,7 +124,10 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getSceneParametricSensitives() {
-        return HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, true);
+        if (sceneParametricSensitives == null) {
+            sceneParametricSensitives = HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, true);
+        }
+        return sceneParametricSensitives;
     }
 
     public Collection<SootField> getSceneFieldSensitives() {
@@ -170,6 +175,10 @@ public class ScenePermissionDefService {
      */
     public Set<String> getPermissionsFor(SootField field) {
         return fieldSensToPermissionsMap.get(field);
+    }
+
+    public boolean isParametric(MethodOrMethodContext sens) {
+        return getSceneParametricSensitives().contains(sens.method());
     }
 
     public AndroidMethod getPermDefFor(SootMethod meth) {

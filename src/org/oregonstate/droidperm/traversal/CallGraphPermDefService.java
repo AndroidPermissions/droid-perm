@@ -6,6 +6,8 @@ import com.sun.istack.internal.Nullable;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
+import org.oregonstate.droidperm.util.PrintUtil;
+import soot.MethodOrMethodContext;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Value;
@@ -72,5 +74,16 @@ public class CallGraphPermDefService {
         return CallGraphUtil.getEdgesInto(scenePresensitiveMethods).stream() //already sorted
                 .filter(edge -> !getPermissionsFor(edge).isEmpty())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public void printSensitiveHeader(MethodOrMethodContext sens, String prefix) {
+        System.out.println(prefix + (scenePermDef.isParametric(sens) ? "Parametric sensitive " : "Sensitive ") + sens);
+    }
+
+    public void printSensitiveContext(Edge sensEdge, String prefix) {
+        System.out.println(prefix + "context " + PrintUtil.toMethodLogString(sensEdge.srcStmt()));
+        if (scenePermDef.isParametric(sensEdge.tgt())) {
+            System.out.println(prefix + "param " + getSensitiveArgument(sensEdge));
+        }
     }
 }

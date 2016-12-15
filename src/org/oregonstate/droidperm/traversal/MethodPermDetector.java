@@ -5,6 +5,7 @@ import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
+import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
@@ -67,6 +68,10 @@ public class MethodPermDetector {
 
     private JaxbCallbackList jaxbData;
 
+    @SuppressWarnings("FieldCanBeLocal")
+    private long startTime;
+    private long lastStepTime;
+
     private static MethodOrMethodContext getDummyMain() {
         String sig = "<dummyMainClass: void dummyMainMethod(java.lang.String[])>";
         return Scene.v().getMethod(sig);
@@ -82,7 +87,8 @@ public class MethodPermDetector {
     }
 
     public void analyzeAndPrint() throws Exception {
-        long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
+        lastStepTime = startTime;
         logger.info("\n\n"
                 + "Start of DroidPerm logs\n"
                 + "========================================================================\n");
@@ -94,15 +100,22 @@ public class MethodPermDetector {
     }
 
     private void analyze() throws Exception {
+        SceneUtil.getMethodOf(null);//triggering stmt to method map initialziation
+
+        long currentTime = System.currentTimeMillis();
+        System.out.println("\n\nDroidPerm stmt to method map build time: "
+                + (currentTime - lastStepTime) / 1E3 + " seconds");
+        lastStepTime = currentTime;
+
         logger.info("Processing checkers");
         checkerEdges = CallGraphUtil.getEdgesInto(scenePermDef.getPermCheckers());
-        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, checkerEdges, classpathFilter);
+        checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, checkerEdges, classpathFilter, cgService);
         callbackToCheckedPermsMap = CheckerUtil.buildCallbackToCheckedPermsMap(checkerPathsHolder);
         permsToCheckersMap = CheckerUtil.buildPermsToCheckersMap(checkerEdges);
 
         logger.info("Processing sensitives");
         sensEdges = cgService.buildSensEdges();
-        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensEdges, classpathFilter);
+        sensitivePathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, sensEdges, classpathFilter, cgService);
         callbackToRequiredPermsMap = buildCallbackToRequiredPermsMap();
 
         //Section 3: Data structures that combine checkers and sensitives
@@ -116,9 +129,15 @@ public class MethodPermDetector {
         sensitivePathsHolder.printPathsFromCallbackToSensitive();
         printReachableSensitivesInCallbackStmts(jaxbData, System.out);
 
+        long currentTime = System.currentTimeMillis();
+        System.out.println("\n\nDroidPerm reachability analysis execution time: "
+                + (currentTime - lastStepTime) / 1E3 + " seconds");
+        lastStepTime = currentTime;
+
         UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
         UndetectedItemsUtil.printUndetectedMethSensitives(scenePermDef, sensEdges, classpathFilter);
 
+        lastStepTime = System.currentTimeMillis();//already printed as part of undetected items analysis
         printCheckersInContext(true);
         printSensitivesInContext(true);
 
@@ -134,6 +153,8 @@ public class MethodPermDetector {
         if (xmlOut != null) {
             JaxbUtil.save(jaxbData, xmlOut);
         }
+        System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "
+                + (System.currentTimeMillis() - lastStepTime) / 1E3 + " seconds");
     }
 
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
@@ -213,56 +234,42 @@ public class MethodPermDetector {
                     .collect(MyCollectors.toMultimapGroupingBy(Edge::getTgt));
             Map<Set<PermCheckStatus>, Integer> sensitivesCountByStatus = new HashMap<>();
             for (MethodOrMethodContext sens : sensToSensEdgesMap.keySet()) {
-                boolean isParametric = scenePermDef.getSceneParametricSensitives().contains(sens.method());
-                boolean printed = false;
-                Iterable<Edge> edgesInto = sensToSensEdgesMap.get(sens);
+                cgService.printSensitiveHeader(sens, "\n");
+                for (Edge sensEdge : sensToSensEdgesMap.get(sens)) {
+                    cgService.printSensitiveContext(sensEdge, "\t");
+                    if (TryCatchCheckerUtil.isTryCatchChecked(sensEdge)) {
+                        System.out.println("\t\tTRY-CATCH CHECKED");
+                    }
 
-                for (Edge edgeInto : edgesInto) {
-                    //We don't print sensitives whose context is another sensitive.
-                    //noinspection ConstantConditions
-                    if (sens.method().getDeclaringClass() != edgeInto.src().getDeclaringClass()) {
-                        if (!printed) {
-                            System.out.println((isParametric ? "\nParametric sensitive " : "\nSensitive ") + sens);
-                            printed = true;
-                        }
-                        System.out.println("\tfrom " + PrintUtil.toMethodLogString(edgeInto.srcStmt()));
-                        if (isParametric) {
-                            System.out.println("\tparameter: " + cgService.getSensitiveArgument(edgeInto));
-                        }
-                        if (TryCatchCheckerUtil.isTryCatchChecked(edgeInto)) {
-                            System.out.println("\t\tTRY-CATCH CHECKED");
-                        }
-
-                        ListMultimap<PermCheckStatus, MethodOrMethodContext> permCheckStatusToCallbacks =
-                                getPermCheckStatusToCallbacksMap(edgeInto, permSet);
-                        if (!classpathFilter.test(edgeInto.src())) {
-                            System.out.println("\t\tCallbacks: BLOCKED");
-                        } else if (!permCheckStatusToCallbacks.isEmpty()) {
-                            List<MethodOrMethodContext> callbacks = permCheckStatusToCallbacks.values().stream()
-                                    .collect(Collectors.toList());
-                            System.out.println("\t\tCallback types: " + CallbackTypeUtil.getCallbackTypes(callbacks));
-                            for (PermCheckStatus status : PermCheckStatus.values()) {
-                                List<MethodOrMethodContext> methodsForStatus = permCheckStatusToCallbacks.get(status);
-                                if (!methodsForStatus.isEmpty()) {
-                                    System.out.println(
-                                            "\t\tCallbacks where " + status + ": " + methodsForStatus.size());
-                                    if (printCallbacks) {
-                                        methodsForStatus.forEach(
-                                                meth -> System.out.println("\t\t\t" + meth));
-                                    }
+                    ListMultimap<PermCheckStatus, MethodOrMethodContext> permCheckStatusToCallbacks =
+                            getPermCheckStatusToCallbacksMap(sensEdge, permSet);
+                    if (!classpathFilter.test(sensEdge.src())) {
+                        System.out.println("\t\tCallbacks: BLOCKED");
+                    } else if (!permCheckStatusToCallbacks.isEmpty()) {
+                        List<MethodOrMethodContext> callbacks = permCheckStatusToCallbacks.values().stream()
+                                .collect(Collectors.toList());
+                        System.out.println("\t\tCallback types: " + CallbackTypeUtil.getCallbackTypes(callbacks));
+                        for (PermCheckStatus status : PermCheckStatus.values()) {
+                            List<MethodOrMethodContext> methodsForStatus = permCheckStatusToCallbacks.get(status);
+                            if (!methodsForStatus.isEmpty()) {
+                                System.out.println(
+                                        "\t\tCallbacks where " + status + ": " + methodsForStatus.size());
+                                if (printCallbacks) {
+                                    methodsForStatus.forEach(
+                                            meth -> System.out.println("\t\t\t" + meth));
                                 }
                             }
-                        } else {
-                            System.out.println("\t\tCallbacks: NONE, POSSIBLY BLOCKED");
                         }
-
-                        //count by status
-                        Set<PermCheckStatus> statuses = permCheckStatusToCallbacks.keySet();
-                        int oldCount =
-                                sensitivesCountByStatus.containsKey(statuses) ? sensitivesCountByStatus.get(statuses)
-                                                                              : 0;
-                        sensitivesCountByStatus.put(statuses, oldCount + 1);
+                    } else {
+                        System.out.println("\t\tCallbacks: NONE, POSSIBLY BLOCKED");
                     }
+
+                    //count by status
+                    Set<PermCheckStatus> statuses = permCheckStatusToCallbacks.keySet();
+                    int oldCount =
+                            sensitivesCountByStatus.containsKey(statuses) ? sensitivesCountByStatus.get(statuses)
+                                                                          : 0;
+                    sensitivesCountByStatus.put(statuses, oldCount + 1);
                 }
             }
 
