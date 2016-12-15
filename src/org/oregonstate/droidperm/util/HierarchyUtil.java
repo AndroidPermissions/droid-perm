@@ -98,7 +98,7 @@ public class HierarchyUtil {
         return methodDefs.stream().collect(MyCollectors.toMultimapForCollection(
                 ArrayListMultimap::create,
                 methodDef -> methodDef,
-                methodDef -> resolveAbstractDispatch(methodDef, false)
+                methodDef -> resolveAbstractDispatch(methodDef, true)
         ));
     }
 

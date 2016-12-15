@@ -16,5 +16,7 @@
     <parametricSensDef className="android.content.IntentFilter" target="void &lt;init&gt;(java.lang.String)"/>
     <parametricSensDef className="android.content.IntentFilter"
                        target="void &lt;init&gt;(java.lang.String, java.lang.String)"/>
+    <parametricSensDef className="android.content.ContentResolver"
+                       target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
   </parametricSensDefs>
 </PermissionDefinitions>
