@@ -124,7 +124,7 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getSceneMethodSensitives() {
         if (sceneMethodSensitives == null) {
-            sceneMethodSensitives = HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, true);
+            sceneMethodSensitives = HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, false);
         }
         return sceneMethodSensitives;
     }
@@ -135,7 +135,7 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getSceneParametricSensitives() {
         if (sceneParametricSensitives == null) {
-            sceneParametricSensitives = HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, true);
+            sceneParametricSensitives = HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, false);
         }
         return sceneParametricSensitives;
     }

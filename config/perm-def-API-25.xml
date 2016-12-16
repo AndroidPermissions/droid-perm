@@ -1,314 +1,236 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <PermissionDefinitions>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture renameAccount(android.accounts.Account, java.lang.String, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAccountsByTypeAndFeatures(java.lang.String, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" target="android.accounts.AccountManagerFuture getAccountsByTypeAndFeatures(java.lang.String, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture addAccount(java.lang.String, java.lang.String, java.lang.String[], android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture confirmCredentials(android.accounts.Account, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture editProperties(java.lang.String, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.USE_CREDENTIALS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, android.os.Bundle, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.USE_CREDENTIALS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthToken(android.accounts.Account, java.lang.String, boolean, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.USE_CREDENTIALS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture getAuthTokenByFeatures(java.lang.String, java.lang.String, java.lang.String[], android.app.Activity, android.os.Bundle, android.os.Bundle, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture removeAccount(android.accounts.Account, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture updateCredentials(android.accounts.Account, java.lang.String, android.os.Bundle, android.app.Activity, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture hasFeatures(android.accounts.Account, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" target="android.accounts.AccountManagerFuture hasFeatures(android.accounts.Account, java.lang.String[], android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.AccountManagerFuture removeAccount(android.accounts.Account, android.accounts.AccountManagerCallback, android.os.Handler)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.Account[] getAccounts()" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" target="android.accounts.Account[] getAccounts()" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="android.accounts.Account[] getAccountsByType(java.lang.String)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" target="android.accounts.Account[] getAccountsByType(java.lang.String)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="boolean addAccountExplicitly(android.accounts.Account, java.lang.String, android.os.Bundle)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="boolean notifyAccountAuthenticated(android.accounts.Account)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="boolean removeAccountExplicitly(android.accounts.Account)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="java.lang.String blockingGetAuthToken(android.accounts.Account, java.lang.String, boolean)" targetKind="Method">
-        <permission name="android.permission.USE_CREDENTIALS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="java.lang.String getPassword(android.accounts.Account)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="java.lang.String getUserData(android.accounts.Account, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="java.lang.String peekAuthToken(android.accounts.Account, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="void addOnAccountsUpdatedListener(android.accounts.OnAccountsUpdateListener, android.os.Handler, boolean)" targetKind="Method">
+    <permissionDef className="android.accounts.AccountManager" target="void addOnAccountsUpdatedListener(android.accounts.OnAccountsUpdateListener, android.os.Handler, boolean)" targetKind="Method">
         <permission name="android.permission.GET_ACCOUNTS"/>
     </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="void clearPassword(android.accounts.Account)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AnyOf" target="void invalidateAuthToken(java.lang.String, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.MANAGE_ACCOUNTS"/>
-        <permission name="android.permission.USE_CREDENTIALS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="void setAuthToken(android.accounts.Account, java.lang.String, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="void setPassword(android.accounts.Account, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.accounts.AccountManager" permissionRel="AllOf" target="void setUserData(android.accounts.Account, java.lang.String, java.lang.String)" targetKind="Method">
-        <permission name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    </permissionDef>
-    <permissionDef className="android.app.KeyguardManager" permissionRel="AllOf" target="void exitKeyguardSecurely(android.app.KeyguardManager$OnKeyguardExitResult)" targetKind="Method">
+    <permissionDef className="android.app.KeyguardManager" target="void exitKeyguardSecurely(android.app.KeyguardManager$OnKeyguardExitResult)" targetKind="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
-    <permissionDef className="android.app.KeyguardManager$KeyguardLock" permissionRel="AllOf" target="void disableKeyguard()" targetKind="Method">
+    <permissionDef className="android.app.KeyguardManager$KeyguardLock" target="void disableKeyguard()" targetKind="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
-    <permissionDef className="android.app.KeyguardManager$KeyguardLock" permissionRel="AllOf" target="void reenableKeyguard()" targetKind="Method">
+    <permissionDef className="android.app.KeyguardManager$KeyguardLock" target="void reenableKeyguard()" targetKind="Method">
         <permission name="android.permission.DISABLE_KEYGUARD"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="android.bluetooth.BluetoothServerSocket listenUsingInsecureRfcommWithServiceRecord(java.lang.String, java.util.UUID)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="android.bluetooth.BluetoothServerSocket listenUsingInsecureRfcommWithServiceRecord(java.lang.String, java.util.UUID)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="android.bluetooth.BluetoothServerSocket listenUsingRfcommWithServiceRecord(java.lang.String, java.util.UUID)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="android.bluetooth.BluetoothServerSocket listenUsingRfcommWithServiceRecord(java.lang.String, java.util.UUID)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean cancelDiscovery()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean cancelDiscovery()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean disable()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean disable()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean enable()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean enable()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean isDiscovering()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean isDiscovering()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean isEnabled()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean isEnabled()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean setName(java.lang.String)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean setName(java.lang.String)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean startDiscovery()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean startDiscovery()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean startLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean startLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="boolean startLeScan(java.util.UUID[], android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="boolean startLeScan(java.util.UUID[], android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="int getProfileConnectionState(int)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="int getProfileConnectionState(int)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="int getScanMode()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="int getScanMode()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
         <permission name="android.bluetooth.BluetoothAdapter.SCAN_MODE_NONE"/>
         <permission name="android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE"/>
         <permission name="android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="int getState()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="int getState()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
         <permission name="android.bluetooth.BluetoothAdapter.STATE_OFF"/>
         <permission name="android.bluetooth.BluetoothAdapter.STATE_TURNING_ON"/>
         <permission name="android.bluetooth.BluetoothAdapter.STATE_ON"/>
         <permission name="android.bluetooth.BluetoothAdapter.STATE_TURNING_OFF"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="java.lang.String getAddress()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="java.lang.String getAddress()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="java.util.Set getBondedDevices()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="java.util.Set getBondedDevices()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothAdapter" permissionRel="AllOf" target="void stopLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothAdapter" target="void stopLeScan(android.bluetooth.BluetoothAdapter$LeScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="android.bluetooth.BluetoothClass getBluetoothClass()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="android.bluetooth.BluetoothClass getBluetoothClass()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="android.bluetooth.BluetoothSocket createInsecureRfcommSocketToServiceRecord(java.util.UUID)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="android.bluetooth.BluetoothSocket createInsecureRfcommSocketToServiceRecord(java.util.UUID)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="android.bluetooth.BluetoothSocket createRfcommSocketToServiceRecord(java.util.UUID)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="android.bluetooth.BluetoothSocket createRfcommSocketToServiceRecord(java.util.UUID)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="android.os.ParcelUuid[] getUuids()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="android.os.ParcelUuid[] getUuids()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="boolean createBond()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="boolean createBond()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="boolean fetchUuidsWithSdp()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="boolean fetchUuidsWithSdp()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="boolean setPairingConfirmation(boolean)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="boolean setPairingConfirmation(boolean)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="int getBondState()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="int getBondState()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="int getType()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="int getType()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothDevice" permissionRel="AllOf" target="java.lang.String getName()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothDevice" target="java.lang.String getName()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="int getConnectionState(android.bluetooth.BluetoothDevice, int)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothManager" target="int getConnectionState(android.bluetooth.BluetoothDevice, int)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List getConnectedDevices(int)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothManager" target="java.util.List getConnectedDevices(int)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothManager" permissionRel="AllOf" target="java.util.List getDevicesMatchingConnectionStates(int, int[])" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothManager" target="java.util.List getDevicesMatchingConnectionStates(int, int[])" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="int getConnectionState(android.bluetooth.BluetoothDevice)" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothProfile" target="int getConnectionState(android.bluetooth.BluetoothDevice)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List getConnectedDevices()" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothProfile" target="java.util.List getConnectedDevices()" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.BluetoothProfile" permissionRel="AllOf" target="java.util.List getDevicesMatchingConnectionStates(int[])" targetKind="Method">
+    <permissionDef className="android.bluetooth.BluetoothProfile" target="java.util.List getDevicesMatchingConnectionStates(int[])" targetKind="Method">
         <permission name="android.permission.BLUETOOTH"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void startScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" target="void startScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void startScan(java.util.List, android.bluetooth.le.ScanSettings, android.bluetooth.le.ScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" target="void startScan(java.util.List, android.bluetooth.le.ScanSettings, android.bluetooth.le.ScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" permissionRel="AllOf" target="void stopScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
+    <permissionDef className="android.bluetooth.le.BluetoothLeScanner" target="void stopScan(android.bluetooth.le.ScanCallback)" targetKind="Method">
         <permission name="android.permission.BLUETOOTH_ADMIN"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="android.content.SyncInfo getCurrentSync()" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="android.content.SyncInfo getCurrentSync()" targetKind="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="boolean getMasterSyncAutomatically()" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="boolean getMasterSyncAutomatically()" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="boolean getSyncAutomatically(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="boolean getSyncAutomatically(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="boolean isSyncActive(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="boolean isSyncActive(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="boolean isSyncPending(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="boolean isSyncPending(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="int getIsSyncable(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="int getIsSyncable(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List getPeriodicSyncs(android.accounts.Account, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="java.util.List getPeriodicSyncs(android.accounts.Account, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="java.util.List getCurrentSyncs()" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="java.util.List getCurrentSyncs()" targetKind="Method">
         <permission name="android.permission.READ_SYNC_STATS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void addPeriodicSync(android.accounts.Account, java.lang.String, android.os.Bundle, long)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void addPeriodicSync(android.accounts.Account, java.lang.String, android.os.Bundle, long)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void cancelSync(android.content.SyncRequest)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void cancelSync(android.content.SyncRequest)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void removePeriodicSync(android.accounts.Account, java.lang.String, android.os.Bundle)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void removePeriodicSync(android.accounts.Account, java.lang.String, android.os.Bundle)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void setIsSyncable(android.accounts.Account, java.lang.String, int)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void setIsSyncable(android.accounts.Account, java.lang.String, int)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void setMasterSyncAutomatically(boolean)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void setMasterSyncAutomatically(boolean)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.ContentResolver" permissionRel="AllOf" target="void setSyncAutomatically(android.accounts.Account, java.lang.String, boolean)" targetKind="Method">
+    <permissionDef className="android.content.ContentResolver" target="void setSyncAutomatically(android.accounts.Account, java.lang.String, boolean)" targetKind="Method">
         <permission name="android.permission.WRITE_SYNC_SETTINGS"/>
     </permissionDef>
-    <permissionDef className="android.content.Intent" permissionRel="AllOf" target="ACTION_CALL" targetKind="Field">
+    <permissionDef className="android.content.Intent" target="ACTION_CALL" targetKind="Field">
         <permission name="android.permission.CALL_PHONE"/>
     </permissionDef>
-    <permissionDef className="android.hardware.camera2.CameraManager" permissionRel="AllOf" target="void openCamera(java.lang.String, android.hardware.camera2.CameraDevice$StateCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.hardware.camera2.CameraManager" target="void openCamera(java.lang.String, android.hardware.camera2.CameraDevice$StateCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.CAMERA"/>
     </permissionDef>
-    <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" target="boolean hasEnrolledFingerprints()" targetKind="Method">
+    <permissionDef className="android.hardware.fingerprint.FingerprintManager" target="boolean hasEnrolledFingerprints()" targetKind="Method">
         <permission name="android.permission.USE_FINGERPRINT"/>
     </permissionDef>
-    <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" target="boolean isHardwareDetected()" targetKind="Method">
+    <permissionDef className="android.hardware.fingerprint.FingerprintManager" target="boolean isHardwareDetected()" targetKind="Method">
         <permission name="android.permission.USE_FINGERPRINT"/>
     </permissionDef>
-    <permissionDef className="android.hardware.fingerprint.FingerprintManager" permissionRel="AllOf" target="void authenticate(android.hardware.fingerprint.FingerprintManager$CryptoObject, android.os.CancellationSignal, int, android.hardware.fingerprint.FingerprintManager$AuthenticationCallback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.hardware.fingerprint.FingerprintManager" target="void authenticate(android.hardware.fingerprint.FingerprintManager$CryptoObject, android.os.CancellationSignal, int, android.hardware.fingerprint.FingerprintManager$AuthenticationCallback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.USE_FINGERPRINT"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="android.location.GpsStatus getGpsStatus(android.location.GpsStatus)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="android.location.GpsStatus getGpsStatus(android.location.GpsStatus)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
     <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="android.location.Location getLastKnownLocation(java.lang.String)" targetKind="Method">
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean addGpsStatusListener(android.location.GpsStatus$Listener)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean addGpsStatusListener(android.location.GpsStatus$Listener)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean addNmeaListener(android.location.GpsStatus$NmeaListener)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean addNmeaListener(android.location.GpsStatus$NmeaListener)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean addNmeaListener(android.location.OnNmeaMessageListener)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean addNmeaListener(android.location.OnNmeaMessageListener)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean addNmeaListener(android.location.OnNmeaMessageListener, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean addNmeaListener(android.location.OnNmeaMessageListener, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean registerGnssMeasurementsCallback(android.location.GnssMeasurementsEvent$Callback)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean registerGnssMeasurementsCallback(android.location.GnssMeasurementsEvent$Callback)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean registerGnssMeasurementsCallback(android.location.GnssMeasurementsEvent$Callback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean registerGnssMeasurementsCallback(android.location.GnssMeasurementsEvent$Callback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean registerGnssNavigationMessageCallback(android.location.GnssNavigationMessage$Callback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean registerGnssNavigationMessageCallback(android.location.GnssNavigationMessage$Callback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean registerGnssStatusCallback(android.location.GnssStatus$Callback)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean registerGnssStatusCallback(android.location.GnssStatus$Callback)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AllOf" target="boolean registerGnssStatusCallback(android.location.GnssStatus$Callback, android.os.Handler)" targetKind="Method">
+    <permissionDef className="android.location.LocationManager" target="boolean registerGnssStatusCallback(android.location.GnssStatus$Callback, android.os.Handler)" targetKind="Method">
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
     <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void addProximityAlert(double, double, float, long, android.app.PendingIntent)" targetKind="Method">
-        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
-        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
-    </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void removeProximityAlert(android.app.PendingIntent)" targetKind="Method">
-        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
-        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
-    </permissionDef>
-    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void removeUpdates(android.location.LocationListener)" targetKind="Method">
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
@@ -348,72 +270,72 @@
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
         <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
-    <permissionDef className="android.media.tv.TvContract" permissionRel="AllOf" target="android.net.Uri buildChannelUri(long)" targetKind="Method">
+    <permissionDef className="android.media.tv.TvContract" target="android.net.Uri buildChannelUri(long)" targetKind="Method">
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationKind="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.media.tv.TvContract$Channels" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.media.tv.TvContract$Channels" target="CONTENT_URI" targetKind="Field">
         <permission name="com.android.providers.tv.permission.READ_EPG_DATA" operationKind="Read"/>
         <permission name="com.android.providers.tv.permission.WRITE_EPG_DATA" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="android.net.DhcpInfo getDhcpInfo()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="android.net.DhcpInfo getDhcpInfo()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="android.net.wifi.WifiInfo getConnectionInfo()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="android.net.wifi.WifiInfo getConnectionInfo()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean disableNetwork(int)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean disableNetwork(int)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean disconnect()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean disconnect()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean enableNetwork(int, boolean)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean enableNetwork(int, boolean)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean is5GHzBandSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean is5GHzBandSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isDeviceToApRttSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isDeviceToApRttSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isEnhancedPowerReportingSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isEnhancedPowerReportingSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isP2pSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isP2pSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isPreferredNetworkOffloadSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isPreferredNetworkOffloadSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isScanAlwaysAvailable()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isScanAlwaysAvailable()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean isTdlsSupported()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean isTdlsSupported()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean reassociate()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean reassociate()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean reconnect()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean reconnect()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean removeNetwork(int)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean removeNetwork(int)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean saveConfiguration()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean saveConfiguration()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean setWifiEnabled(boolean)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean setWifiEnabled(boolean)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="boolean startScan()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="boolean startScan()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="int addNetwork(android.net.wifi.WifiConfiguration)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="int addNetwork(android.net.wifi.WifiConfiguration)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="int getWifiState()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="int getWifiState()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
         <permission name="android.net.wifi.WifiManager.WIFI_STATE_DISABLING"/>
         <permission name="android.net.wifi.WifiManager.WIFI_STATE_DISABLED"/>
@@ -421,237 +343,195 @@
         <permission name="android.net.wifi.WifiManager.WIFI_STATE_ENABLED"/>
         <permission name="android.net.wifi.WifiManager.WIFI_STATE_UNKNOWN"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="int updateNetwork(android.net.wifi.WifiConfiguration)" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="int updateNetwork(android.net.wifi.WifiConfiguration)" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List getScanResults()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="java.util.List getScanResults()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager" permissionRel="AllOf" target="java.util.List getConfiguredNetworks()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager" target="java.util.List getConfiguredNetworks()" targetKind="Method">
         <permission name="android.permission.ACCESS_WIFI_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" permissionRel="AllOf" target="void acquire()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" target="void acquire()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     </permissionDef>
-    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" permissionRel="AllOf" target="void release()" targetKind="Method">
+    <permissionDef className="android.net.wifi.WifiManager$MulticastLock" target="void release()" targetKind="Method">
         <permission name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="boolean invokeBeam(android.app.Activity)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="boolean invokeBeam(android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void disableForegroundDispatch(android.app.Activity)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void disableForegroundDispatch(android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void disableForegroundNdefPush(android.app.Activity)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void disableForegroundNdefPush(android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void enableForegroundDispatch(android.app.Activity, android.app.PendingIntent, android.content.IntentFilter[], java.lang.String[][])" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void enableForegroundDispatch(android.app.Activity, android.app.PendingIntent, android.content.IntentFilter[], java.lang.String[][])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void enableForegroundNdefPush(android.app.Activity, android.nfc.NdefMessage)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void enableForegroundNdefPush(android.app.Activity, android.nfc.NdefMessage)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setBeamPushUris(android.net.Uri[], android.app.Activity)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void setBeamPushUris(android.net.Uri[], android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setBeamPushUrisCallback(android.nfc.NfcAdapter$CreateBeamUrisCallback, android.app.Activity)" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void setBeamPushUrisCallback(android.nfc.NfcAdapter$CreateBeamUrisCallback, android.app.Activity)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity[])" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void setNdefPushMessage(android.nfc.NdefMessage, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setNdefPushMessageCallback(android.nfc.NfcAdapter$CreateNdefMessageCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void setNdefPushMessageCallback(android.nfc.NfcAdapter$CreateNdefMessageCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.NfcAdapter" permissionRel="AllOf" target="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter$OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
+    <permissionDef className="android.nfc.NfcAdapter" target="void setOnNdefPushCompleteCallback(android.nfc.NfcAdapter$OnNdefPushCompleteCallback, android.app.Activity, android.app.Activity[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.cardemulation.CardEmulation" permissionRel="AllOf" target="boolean isDefaultServiceForAid(android.content.ComponentName, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.nfc.cardemulation.CardEmulation" target="boolean isDefaultServiceForAid(android.content.ComponentName, java.lang.String)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.cardemulation.CardEmulation" permissionRel="AllOf" target="boolean isDefaultServiceForCategory(android.content.ComponentName, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.nfc.cardemulation.CardEmulation" target="boolean isDefaultServiceForCategory(android.content.ComponentName, java.lang.String)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.IsoDep" permissionRel="AllOf" target="byte[] transceive(byte[])" targetKind="Method">
+    <permissionDef className="android.nfc.tech.IsoDep" target="byte[] transceive(byte[])" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.IsoDep" permissionRel="AllOf" target="int getTimeout()" targetKind="Method">
+    <permissionDef className="android.nfc.tech.IsoDep" target="int getTimeout()" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.IsoDep" permissionRel="AllOf" target="void setTimeout(int)" targetKind="Method">
+    <permissionDef className="android.nfc.tech.IsoDep" target="void setTimeout(int)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.Ndef" permissionRel="AllOf" target="android.nfc.NdefMessage getNdefMessage()" targetKind="Method">
+    <permissionDef className="android.nfc.tech.Ndef" target="android.nfc.NdefMessage getNdefMessage()" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.Ndef" permissionRel="AllOf" target="boolean makeReadOnly()" targetKind="Method">
+    <permissionDef className="android.nfc.tech.Ndef" target="boolean makeReadOnly()" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.Ndef" permissionRel="AllOf" target="void writeNdefMessage(android.nfc.NdefMessage)" targetKind="Method">
+    <permissionDef className="android.nfc.tech.Ndef" target="void writeNdefMessage(android.nfc.NdefMessage)" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.TagTechnology" permissionRel="AllOf" target="void close()" targetKind="Method">
+    <permissionDef className="android.nfc.tech.TagTechnology" target="void close()" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.nfc.tech.TagTechnology" permissionRel="AllOf" target="void connect()" targetKind="Method">
+    <permissionDef className="android.nfc.tech.TagTechnology" target="void connect()" targetKind="Method">
         <permission name="android.permission.NFC"/>
     </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="BOOKMARKS_URI" targetKind="Field">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationKind="Read"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationKind="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="SEARCHES_URI" targetKind="Field">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS" operationKind="Read"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" operationKind="Write"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="android.database.Cursor getAllBookmarks(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="android.database.Cursor getAllVisitedUrls(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="boolean canClearHistory(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void addSearchUrl(android.content.ContentResolver, java.lang.String)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void clearHistory(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void clearSearches(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void deleteFromHistory(android.content.ContentResolver, java.lang.String)" targetKind="Method">
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void deleteHistoryTimeFrame(android.content.ContentResolver, long, long)" targetKind="Method">
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void requestAllIcons(android.content.ContentResolver, java.lang.String, android.webkit.WebIconDatabase$IconListener)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void truncateHistory(android.content.ContentResolver)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.Browser" permissionRel="AllOf" target="void updateVisitedHistory(android.content.ContentResolver, java.lang.String, boolean)" targetKind="Method">
-        <permission name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-        <permission name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
-    </permissionDef>
-    <permissionDef className="android.provider.CalendarContract" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Attendees" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Attendees" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$CalendarAlerts" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarAlerts" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$CalendarEntity" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$CalendarEntity" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Calendars" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Calendars" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Colors" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Colors" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$EventDays" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$EventDays" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Events" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Events" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$EventsEntity" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$EventsEntity" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$ExtendedProperties" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$ExtendedProperties" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Instances" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Instances" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$Reminders" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$Reminders" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CalendarContract$SyncState" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CalendarContract$SyncState" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALENDAR" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALENDAR" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CallLog" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALL_LOG" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" target="CONTENT_FILTER_URI" targetKind="Field">
+    <permissionDef className="android.provider.CallLog$Calls" target="CONTENT_FILTER_URI" targetKind="Field">
         <permission name="android.permission.READ_CALL_LOG" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.CallLog$Calls" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.CallLog$Calls" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_CALL_LOG" operationKind="Read"/>
         <permission name="android.permission.WRITE_CALL_LOG" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.UserDictionary" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.UserDictionary" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationKind="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.provider.UserDictionary$Words" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
+    <permissionDef className="android.provider.UserDictionary$Words" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_USER_DICTIONARY" operationKind="Read"/>
         <permission name="android.permission.WRITE_USER_DICTIONARY" operationKind="Write"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="android.net.Uri getAdnUriForPhoneAccount(android.telecom.PhoneAccountHandle)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="android.net.Uri getAdnUriForPhoneAccount(android.telecom.PhoneAccountHandle)" targetKind="Method">
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="android.telecom.PhoneAccountHandle getDefaultOutgoingPhoneAccount(java.lang.String)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="android.telecom.PhoneAccountHandle getDefaultOutgoingPhoneAccount(java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="boolean handleMmi(java.lang.String)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="boolean handleMmi(java.lang.String)" targetKind="Method">
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="boolean handleMmi(java.lang.String, android.telecom.PhoneAccountHandle)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="boolean handleMmi(java.lang.String, android.telecom.PhoneAccountHandle)" targetKind="Method">
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="boolean isInCall()" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="boolean isInCall()" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="boolean isVoiceMailNumber(android.telecom.PhoneAccountHandle, java.lang.String)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="boolean isVoiceMailNumber(android.telecom.PhoneAccountHandle, java.lang.String)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.lang.String getLine1Number(android.telecom.PhoneAccountHandle)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="java.lang.String getLine1Number(android.telecom.PhoneAccountHandle)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.lang.String getVoiceMailNumber(android.telecom.PhoneAccountHandle)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="java.lang.String getVoiceMailNumber(android.telecom.PhoneAccountHandle)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="java.util.List getCallCapablePhoneAccounts()" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="java.util.List getCallCapablePhoneAccounts()" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="void cancelMissedCallsNotification()" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="void cancelMissedCallsNotification()" targetKind="Method">
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="void placeCall(android.net.Uri, android.os.Bundle)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="void placeCall(android.net.Uri, android.os.Bundle)" targetKind="Method">
         <permission name="android.permission.CALL_PHONE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="void showInCallScreen(boolean)" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="void showInCallScreen(boolean)" targetKind="Method">
         <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.telecom.TelecomManager" permissionRel="AllOf" target="void silenceRinger()" targetKind="Method">
+    <permissionDef className="android.telecom.TelecomManager" target="void silenceRinger()" targetKind="Method">
         <permission name="android.permission.MODIFY_PHONE_STATE"/>
     </permissionDef>
-    <permissionDef className="android.view.inputmethod.InputMethodManager" permissionRel="AllOf" target="boolean setCurrentInputMethodSubtype(android.view.inputmethod.InputMethodSubtype)" targetKind="Method">
+    <permissionDef className="android.view.inputmethod.InputMethodManager" target="boolean setCurrentInputMethodSubtype(android.view.inputmethod.InputMethodSubtype)" targetKind="Method">
         <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
     </permissionDef>
+    <checkerDefs/>
+    <parametricSensDefs/>
 </PermissionDefinitions>

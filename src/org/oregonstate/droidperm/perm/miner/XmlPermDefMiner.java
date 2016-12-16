@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -152,29 +153,39 @@ public class XmlPermDefMiner {
      */
     private static void populatePermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
         for (JaxbAnnotation jaxbAnnotation : jaxbItem.getAnnotations()) {
+            List<Permission> permForThisAnno = new ArrayList<>();
             //This block handles the extra Read or Write tag that may be attached to a permission
             OperationKind opKind = jaxbAnnotation.getName().contains("Read") ? OperationKind.Read :
                                    jaxbAnnotation.getName().contains("Write") ? OperationKind.Write
                                                                               : null;
             for (JaxbVal jaxbVal : jaxbAnnotation.getVals()) {
                 //When a value has the name 'apis' its value is not a permission, so we don't store it
-                if (!(jaxbVal.getName().contains("apis"))) {
+                String valName = jaxbVal.getName();
+                if ((valName.equals("apis"))) {
+                    if (jaxbVal.getVal().contains("..22")) {
+                        //Permissions in this annotation are for older android versions. Clearing.
+                        permForThisAnno.clear();
+                        break;
+                    }
+                } else {
                     String delims = "[{},\"]+";
                     String[] tokens = jaxbVal.getVal().split(delims);
 
                     for (String token : tokens) {
                         if (token.length() > 1) {
-                            permissionDef.addPermission(new Permission(token.trim(), opKind));
+
+                            permForThisAnno.add(new Permission(token.trim(), opKind));
                         }
                     }
 
-                    //This block handles the OR/AND relationship that may exist when an item has multiple permissions
-                    //If there's no rel defined, it's AllOf.
-                    PermissionRel permRel =
-                            jaxbVal.getName().contains("anyOf") ? PermissionRel.AnyOf : PermissionRel.AllOf;
+                    //Name could be either value, anyOf or allOf.
+                    PermissionRel permRel = valName.equals("anyOf") ? PermissionRel.AnyOf
+                                                                    : valName.equals("allOf")
+                                                                      ? PermissionRel.AllOf : null;
                     permissionDef.setPermissionRel(permRel);
                 }
             }
+            permissionDef.getPermissions().addAll(permForThisAnno);
         }
     }
 
