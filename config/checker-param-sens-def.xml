@@ -18,5 +18,31 @@
                        target="void &lt;init&gt;(java.lang.String, java.lang.String)"/>
     <parametricSensDef className="android.content.ContentResolver"
                        target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
+    <parametricSensDef className="android.content.ContentResolver"
+                       target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String, android.os.CancellationSignal)"/>
+    <parametricSensDef className="android.content.ContentResolver"
+                       target="android.net.Uri insert(android.net.Uri, android.content.ContentValues)"/>
+    <parametricSensDef className="android.content.ContentResolver"
+                       target="int bulkInsert(android.net.Uri, android.content.ContentValues[])"/>
+    <parametricSensDef className="android.content.ContentResolver"
+                       target="int delete(android.net.Uri, java.lang.String, java.lang.String[])"/>
+    <parametricSensDef className="android.content.ContentProvider"
+                       target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
+    <parametricSensDef className="android.content.ContentProvider"
+                       target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String, android.os.CancellationSignal)"/>
+    <parametricSensDef className="android.content.ContentProvider"
+                       target="android.net.Uri insert(android.net.Uri, android.content.ContentValues)"/>
+    <parametricSensDef className="android.content.ContentProvider"
+                       target="int bulkInsert(android.net.Uri, android.content.ContentValues[])"/>
+    <parametricSensDef className="android.content.ContentProvider"
+                       target="int delete(android.net.Uri, java.lang.String, java.lang.String[])"/>
+    <parametricSensDef className="android.content.CursorLoader"
+                       target="void &lt;init&gt;(android.content.Context, android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
+    <parametricSensDef className="android.content.CursorLoader" target="void setUri(android.net.Uri)"/>
+    <parametricSensDef className="android.support.v4.content.CursorLoader"
+                       target="void &lt;init&gt;(android.content.Context, android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
+    <parametricSensDef className="android.support.v4.content.CursorLoader" target="void setUri(android.net.Uri)"/>
+    <parametricSensDef className="android.database.Cursor"
+                       target="void setNotificationUri(android.content.ContentResolver, android.net.Uri)"/>
   </parametricSensDefs>
 </PermissionDefinitions>

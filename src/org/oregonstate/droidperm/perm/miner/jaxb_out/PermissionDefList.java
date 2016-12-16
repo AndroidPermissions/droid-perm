@@ -27,6 +27,13 @@ public class PermissionDefList {
         this.permissionDefs = permissionDefs;
     }
 
+    public PermissionDefList(List<PermissionDef> permissionDefs, List<CheckerDef> checkerDefs,
+                             List<ParametricSensDef> parametricSensDefs) {
+        this.permissionDefs = permissionDefs;
+        this.checkerDefs = checkerDefs;
+        this.parametricSensDefs = parametricSensDefs;
+    }
+
     public List<PermissionDef> getPermissionDefs() {
         return permissionDefs;
     }
