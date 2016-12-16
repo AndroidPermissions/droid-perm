@@ -7,13 +7,13 @@ import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
-import soot.MethodOrMethodContext;
-import soot.SootField;
-import soot.SootMethod;
-import soot.Value;
+import soot.*;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.Edge;
+import soot.toolkits.graph.ExceptionalUnitGraph;
+import soot.toolkits.scalar.SimpleLiveLocals;
+import soot.toolkits.scalar.SmartLocalDefs;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -49,8 +49,6 @@ public class CallGraphPermDefService {
     }
 
     /**
-     * fixme full support for field sensitives
-     * <p>
      * Only to be called for edges representing parametric sensitives. Returns null if this is a parametric sensitive
      * but the argument is not a sensitive field.
      */
@@ -60,8 +58,25 @@ public class CallGraphPermDefService {
         Value arg0 = srcStmt.getInvokeExpr().getArg(0);
         if (arg0 instanceof StringConstant) {
             return scenePermDef.getFieldFor(((StringConstant) arg0).value);
+        } else if (arg0 instanceof Local) {
+            //noinspection ConstantConditions
+            ExceptionalUnitGraph graph = new ExceptionalUnitGraph(sensEdge.src().retrieveActiveBody());
+            SmartLocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
+            List<Unit> arg0AssignPoints = localDefs.getDefsOfAt((Local) arg0, srcStmt);
+            if (arg0AssignPoints.size() != 1) {
+                throw new RuntimeException(
+                        "parametric sensitive " + sensEdge + " has a value with assignments number != 1: "
+                                + arg0AssignPoints);
+            }
+            Stmt assign = (Stmt) arg0AssignPoints.get(0);
+            if (assign.containsFieldRef()) {
+                return assign.getFieldRef().getField();
+            } else {
+                throw new RuntimeException(
+                        "parametric sensitive " + sensEdge + " has a parameter with unsupported assignment: " + assign);
+            }
         } else {
-            throw new RuntimeException("Unsupported arg0 for parametric sensitive: " + arg0);
+            throw new RuntimeException("parametric sensitive " + sensEdge + " has unsipported arg0: " + arg0);
         }
     }
 
