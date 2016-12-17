@@ -55,20 +55,20 @@ public class CallGraphPermDefService {
     public SootField getSensitiveArgument(Edge sensEdge) {
         Stmt srcStmt = sensEdge.srcStmt();
         assert srcStmt != null; //sensitive edges always come from method calls
-        Value arg0 = srcStmt.getInvokeExpr().getArg(0);
-        if (arg0 instanceof StringConstant) {
-            return scenePermDef.getFieldFor(((StringConstant) arg0).value);
-        } else if (arg0 instanceof Local) {
+        Value arg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
+        if (arg instanceof StringConstant) {
+            return scenePermDef.getFieldFor(((StringConstant) arg).value);
+        } else if (arg instanceof Local) {
             //noinspection ConstantConditions
             ExceptionalUnitGraph graph = new ExceptionalUnitGraph(sensEdge.src().retrieveActiveBody());
             SmartLocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
-            List<Unit> arg0AssignPoints = localDefs.getDefsOfAt((Local) arg0, srcStmt);
-            if (arg0AssignPoints.size() != 1) {
+            List<Unit> argAssignPoints = localDefs.getDefsOfAt((Local) arg, srcStmt);
+            if (argAssignPoints.size() != 1) {
                 throw new RuntimeException(
                         "parametric sensitive " + sensEdge + " has a value with assignments number != 1: "
-                                + arg0AssignPoints);
+                                + argAssignPoints);
             }
-            Stmt assign = (Stmt) arg0AssignPoints.get(0);
+            Stmt assign = (Stmt) argAssignPoints.get(0);
             if (assign.containsFieldRef()) {
                 return assign.getFieldRef().getField();
             } else {
@@ -76,7 +76,7 @@ public class CallGraphPermDefService {
                         "parametric sensitive " + sensEdge + " has a parameter with unsupported assignment: " + assign);
             }
         } else {
-            throw new RuntimeException("parametric sensitive " + sensEdge + " has unsipported arg0: " + arg0);
+            throw new RuntimeException("parametric sensitive " + sensEdge + " has unsupported arg: " + arg);
         }
     }
 

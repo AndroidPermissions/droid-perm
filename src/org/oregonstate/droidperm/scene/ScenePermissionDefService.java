@@ -41,6 +41,10 @@ public class ScenePermissionDefService {
     private final Map<String, SootField> constantFieldsMap;
     private List<SootMethod> sceneMethodSensitives;
     private List<SootMethod> sceneParametricSensitives;
+    /**
+     * Specifies the index of the sensitive argument for parametric sensitives.
+     */
+    private Map<SootMethod, Integer> parametricSensToArgIndexMap;
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
         permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
@@ -138,6 +142,30 @@ public class ScenePermissionDefService {
             sceneParametricSensitives = HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, false);
         }
         return sceneParametricSensitives;
+    }
+
+    /**
+     * @return The index of the sensitive argument for the given parametric sensitive.
+     */
+    public int getSensitiveArgumentIndex(SootMethod parametricSens) {
+        if (parametricSensToArgIndexMap == null) {
+            parametricSensToArgIndexMap = getSceneParametricSensitives().stream()
+                    .collect(Collectors.toMap(
+                            paramSens -> paramSens,
+                            this::computeSensitiveArgIndex
+                    ));
+        }
+        return parametricSensToArgIndexMap.get(parametricSens);
+    }
+
+    private int computeSensitiveArgIndex(SootMethod parametricSens) {
+        for (int i = 0; i < parametricSens.getParameterTypes().size(); i++) {
+            Type type = parametricSens.getParameterType(i);
+            if (type.toString().equals("java.lang.String") || type.toString().equals("android.net.Uri")) {
+                return i;
+            }
+        }
+        throw new RuntimeException("Unsupported parametric sensitive: " + parametricSens);
     }
 
     public Collection<SootField> getSceneFieldSensitives() {
