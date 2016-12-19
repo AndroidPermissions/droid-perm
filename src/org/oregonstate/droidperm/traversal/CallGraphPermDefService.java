@@ -7,7 +7,10 @@ import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.*;
+import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.callgraph.Edge;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 12/14/2016.
  */
 public class CallGraphPermDefService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CallGraphPermDefService.class);
 
     private ScenePermissionDefService scenePermDef;
 
@@ -72,9 +77,13 @@ public class CallGraphPermDefService {
             if (assign.containsFieldRef()) {
                 return assign.getFieldRef().getField();
             } else {
-                throw new RuntimeException(
-                        "parametric sensitive " + sensEdge + " has a parameter with unsupported assignment: " + assign);
+                logger.warn(
+                        "Parametric sensitive " + sensEdge + " has a parameter with unsupported assignment: " + assign);
+                return null;
             }
+        } else if (arg instanceof NullConstant) {
+            //Valid case. Happens in dummy main when app uses com.google.firebase API.
+            return null;
         } else {
             throw new RuntimeException("parametric sensitive " + sensEdge + " has unsupported arg: " + arg);
         }
