@@ -1,11 +1,9 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import java.io.File;
 import java.io.IOException;
 
@@ -23,12 +21,7 @@ public class AnnoPermissionDefUtil {
         pdList.setPermissionDefs(AnnoPermissionDefProvider.getInstance().getPermissionDefs());
 
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(PermissionDefList.class);
-            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-
-            // output pretty printed
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            jaxbMarshaller.marshal(pdList, System.out);
+            JaxbUtil.print(pdList, PermissionDefList.class);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +32,7 @@ public class AnnoPermissionDefUtil {
         if (xmlOut != null) {
             PermissionDefList out = new PermissionDefList();
             out.setPermissionDefs(AnnoPermissionDefProvider.getInstance().getPermissionDefs());
-            XmlPermDefMiner.save(out, xmlOut);
+            JaxbUtil.save(out, PermissionDefList.class, xmlOut);
         }
     }
 }

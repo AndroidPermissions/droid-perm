@@ -164,7 +164,7 @@ public class MethodPermDetector {
             List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
                     .getPermDefsFor(permToUndetectedSensMap, Collections.emptyMap(), scenePermDef);
             jaxbData.setUndetectedPermDefs(undetectedPermDefs);
-            JaxbUtil.save(jaxbData, xmlOut);
+            JaxbUtil.save(jaxbData, JaxbCallbackList.class, xmlOut);
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "
                 + (System.currentTimeMillis() - lastStepTime) / 1E3 + " seconds");

@@ -17,7 +17,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -77,17 +80,14 @@ public class JaxbUtil {
         return table;
     }
 
-    public static void save(JaxbCallbackList data, File file) throws JAXBException {
-        save(data, JaxbCallbackList.class, file);
-    }
-
-    public static <T> void save(T data, Class<T> dataClass, File file) throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(dataClass);
-        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-
+    public static <T> void save(T data, Class<T> dataClass, File file) throws JAXBException, IOException {
+        Marshaller jaxbMarshaller = JAXBContext.newInstance(dataClass).createMarshaller();
         // output pretty printed
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
+        Path parentPath = file.toPath().getParent();
+        if (parentPath != null) {
+            Files.createDirectories(parentPath);
+        }
         jaxbMarshaller.marshal(data, file);
     }
 
@@ -104,8 +104,7 @@ public class JaxbUtil {
     }
 
     public static <T> void print(T data, Class<T> dataClass) throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(dataClass);
-        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+        Marshaller jaxbMarshaller = JAXBContext.newInstance(dataClass).createMarshaller();
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         jaxbMarshaller.marshal(data, System.out);
     }

@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.perm.miner;
 
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbAnnotation;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItem;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItemList;
@@ -10,13 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,27 +30,12 @@ public class XmlPermDefMiner {
 
     private static final Logger logger = LoggerFactory.getLogger(XmlPermDefMiner.class);
 
-    /**
-     * This takes a JaxbItemList object and marshalls it into a .xml file
-     *
-     * @param data JaxbItemList to be marshalled
-     * @param file file to marshall the data into
-     */
-    public static void saveMetadataXml(JaxbItemList data, File file) throws JAXBException {
-        Marshaller jbMarshaller = JAXBContext.newInstance(JaxbItemList.class).createMarshaller();
-        jbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        jbMarshaller.marshal(data, file);
-    }
+    public static void minePermissionDefs(String metadataJar, File outputFile) throws JAXBException, IOException {
+        List<JaxbItem> jaxbItems = loadMetadataXml(metadataJar);
+        jaxbItems = filterItemList(jaxbItems);
+        PermissionDefList permissionDefList = buildPermissionDefList(jaxbItems);
 
-    public static void save(PermissionDefList permissionDefList, File file) throws JAXBException, IOException {
-        Marshaller marshaller = JAXBContext.newInstance(PermissionDefList.class).createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-        Path path = file.toPath();
-        if (path.getParent() != null) {
-            Files.createDirectories(path.getParent());
-        }
-        marshaller.marshal(permissionDefList, file);
+        JaxbUtil.save(permissionDefList, PermissionDefList.class, outputFile);
     }
 
     /**
@@ -65,14 +48,6 @@ public class XmlPermDefMiner {
         return unfilteredItems.stream().filter(item ->
                 item.getAnnotations().stream().anyMatch(anno -> anno.getName().contains("RequiresPermission"))
         ).collect(Collectors.toList());
-    }
-
-    static void extractPermissionDefs(String metadataJar, File outputFile) throws JAXBException, IOException {
-        List<JaxbItem> jaxbItems = loadMetadataXml(metadataJar);
-        jaxbItems = filterItemList(jaxbItems);
-        PermissionDefList permissionDefList = buildPermissionDefList(jaxbItems);
-
-        save(permissionDefList, outputFile);
     }
 
     private static PermissionDefList buildPermissionDefList(List<JaxbItem> jaxbItems) {

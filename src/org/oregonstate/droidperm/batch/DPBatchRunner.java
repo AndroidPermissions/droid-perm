@@ -8,7 +8,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
-import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDefList;
@@ -331,7 +330,7 @@ public class DPBatchRunner {
         Path aggregateAnnoFile = Paths.get(logDir.toString(), "_collected_perm_anno.xml");
         PermissionDefList out = new PermissionDefList();
         out.setPermissionDefs(new ArrayList<>(permissionDefs.keySet()));
-        XmlPermDefMiner.save(out, aggregateAnnoFile.toFile());
+        JaxbUtil.save(out, PermissionDefList.class, aggregateAnnoFile.toFile());
     }
 
     private void saveCollectSensitivesModeDigest() {
