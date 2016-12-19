@@ -1,6 +1,6 @@
 package org.oregonstate.droidperm.perm;
 
-import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
+import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
@@ -33,7 +33,7 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
     private final Set<SootMethodAndClass> parametricSensDefs;
 
     public XMLPermissionDefProvider(File xmlPermDefFile) throws JAXBException {
-        this(XmlPermDefMiner.load(xmlPermDefFile));
+        this(JaxbUtil.load(PermissionDefList.class, xmlPermDefFile));
     }
 
     public XMLPermissionDefProvider(PermissionDefList permDefList) {

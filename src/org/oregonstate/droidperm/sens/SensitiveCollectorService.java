@@ -3,8 +3,6 @@ package org.oregonstate.droidperm.sens;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
-import org.oregonstate.droidperm.perm.PermissionDefConverter;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
@@ -84,24 +82,13 @@ public class SensitiveCollectorService {
                     new ArrayList<>(declaredDangerousPerm),
                     new ArrayList<>(referredPerm),
                     new ArrayList<>(dangerousPermWithSensitives),
-                    buildXmlPermDefs(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef));
+                    UndetectedItemsUtil
+                            .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef));
             JaxbUtil.save(data, SensitiveCollectorJaxbData.class, xmlOut);
         }
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
-    }
-
-    private static List<PermissionDef> buildXmlPermDefs(
-            Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap,
-            Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap,
-            ScenePermissionDefService scenePermDef) {
-        return Stream.concat(
-                permToReferredMethodSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
-                        .map(meth -> PermissionDefConverter.forMethod(scenePermDef.getPermDefFor(meth))),
-                permToReferredFieldSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
-                        .map(field -> PermissionDefConverter.forField(scenePermDef.getPermDefFor(field)))
-        ).collect(Collectors.toList());
     }
 
     private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {

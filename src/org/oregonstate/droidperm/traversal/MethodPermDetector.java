@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.traversal;
 import com.google.common.collect.*;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
@@ -15,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.SootMethod;
+import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 
@@ -135,9 +138,16 @@ public class MethodPermDetector {
         lastStepTime = currentTime;
 
         UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
-        UndetectedItemsUtil.printUndetectedMethSensitives(scenePermDef, sensEdges, classpathFilter);
 
-        lastStepTime = System.currentTimeMillis();//already printed as part of undetected items analysis
+        lastStepTime = System.currentTimeMillis(); //already printed as part of undetected checkers analysis above
+        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedSensMap =
+                UndetectedItemsUtil.buildPermToUndetectedMethodSensMap(scenePermDef, sensEdges, classpathFilter);
+        UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
+        currentTime = System.currentTimeMillis();
+        System.out.println("\nUndetected sensitives execution time: "
+                + (currentTime - lastStepTime) / 1E3 + " seconds");
+        lastStepTime = currentTime;
+
         printCheckersInContext(true);
         printSensitivesInContext(true);
 
@@ -151,6 +161,9 @@ public class MethodPermDetector {
             }
         }
         if (xmlOut != null) {
+            List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
+                    .getPermDefsFor(permToUndetectedSensMap, Collections.emptyMap(), scenePermDef);
+            jaxbData.setUndetectedPermDefs(undetectedPermDefs);
             JaxbUtil.save(jaxbData, xmlOut);
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "

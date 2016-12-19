@@ -3,6 +3,8 @@ package org.oregonstate.droidperm.scene;
 import com.google.common.collect.*;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
+import org.oregonstate.droidperm.perm.PermissionDefConverter;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.StreamUtil;
@@ -13,6 +15,7 @@ import soot.options.Options;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * All Permission, sensitive and checker-related data structures at scene level.
@@ -227,5 +230,18 @@ public class ScenePermissionDefService {
     public FieldSensitiveDef getPermDefFor(SootField field) {
         return sceneFieldSensMap.keySet().stream().filter(sensDef -> sceneFieldSensMap.get(sensDef).equals(field))
                 .findAny().orElse(null);
+    }
+
+    public List<PermissionDef> getPermDefsFor(Collection<SootMethod> methodSens, Collection<SootField> fieldSens) {
+        if (methodSens == null) {
+            methodSens = Collections.emptyList();
+        }
+        if (fieldSens == null) {
+            fieldSens = Collections.emptyList();
+        }
+        return Stream.concat(
+                methodSens.stream().map(meth -> PermissionDefConverter.forMethod(getPermDefFor(meth))),
+                fieldSens.stream().map(field -> PermissionDefConverter.forField(getPermDefFor(field)))
+        ).collect(Collectors.toList());
     }
 }

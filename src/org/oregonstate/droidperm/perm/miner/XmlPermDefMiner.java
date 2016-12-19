@@ -15,7 +15,6 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -54,16 +53,6 @@ public class XmlPermDefMiner {
             Files.createDirectories(path.getParent());
         }
         marshaller.marshal(permissionDefList, file);
-    }
-
-    public static PermissionDefList load(File file) throws JAXBException {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(PermissionDefList.class).createUnmarshaller();
-        return (PermissionDefList) unmarshaller.unmarshal(file);
-    }
-
-    public static PermissionDefList load(URL url) throws JAXBException {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(PermissionDefList.class).createUnmarshaller();
-        return (PermissionDefList) unmarshaller.unmarshal(url);
     }
 
     /**

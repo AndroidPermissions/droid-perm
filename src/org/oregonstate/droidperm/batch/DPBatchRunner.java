@@ -6,6 +6,7 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
+import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.XmlPermDefMiner;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
@@ -193,7 +194,6 @@ public class DPBatchRunner {
         String androidClassPath = droidPermHomeDir + "/android-23-cr+util_io.zip";
         Path logFile = Paths.get(logDir.toString(), appName + ".log");
         Path errorFile = Paths.get(logDir.toString(), appName + ".error.log");
-        Path annoXmlFile = Paths.get(logDir.toString(), appName + ".anno.xml");
         Path xmlOut = Paths.get(logDir.toString(), appName + ".out.xml");
 
         List<String> processBuilderArgs = new ArrayList<>();
@@ -214,6 +214,7 @@ public class DPBatchRunner {
             permDefFiles += ";config/javadoc-perm-def-API-23.xml;config/perm-def-manual.xml";
         }
         processBuilderArgs.addAll(Arrays.asList("--perm-def-files", permDefFiles));
+        processBuilderArgs.addAll(Arrays.asList("--xml-out", xmlOut.toString()));
 
         switch (mode) {
             case DROID_PERM:
@@ -223,11 +224,10 @@ public class DPBatchRunner {
                         "--taint-analysis-enabled", "true", "--logsourcesandsinks", "--pathalgo", "CONTEXTSENSITIVE"));
                 break;
             case COLLECT_ANNO:
-                processBuilderArgs
-                        .addAll(Arrays.asList("--xml-out", annoXmlFile.toString(), "--COLLECT-PERM-ANNO-MODE"));
+                processBuilderArgs.addAll(Collections.singletonList("--COLLECT-PERM-ANNO-MODE"));
                 break;
             case COLLECT_SENSITIVES:
-                processBuilderArgs.addAll(Arrays.asList("--collect-sens-mode", "--xml-out", xmlOut.toString()));
+                processBuilderArgs.addAll(Collections.singletonList("--collect-sens-mode"));
                 break;
         }
 
@@ -250,10 +250,12 @@ public class DPBatchRunner {
             } else {
                 switch (mode) {
                     case COLLECT_ANNO:
-                        collectAnnotations(annoXmlFile);
+                        collectAnnotations(xmlOut);
                         break;
                     case COLLECT_SENSITIVES:
                         collectUnusedPermissions(xmlOut, appName);
+                    case DROID_PERM:
+                        printAppAnalysisSummary(xmlOut, appName);
                 }
             }
         } catch (InterruptedException e) {
@@ -262,8 +264,15 @@ public class DPBatchRunner {
         }
     }
 
+    private void printAppAnalysisSummary(Path xmlOut, String appName) throws JAXBException {
+        JaxbCallbackList droidPermOut = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
+        if (!droidPermOut.getUndetectedPermDefs().isEmpty()) {
+            logger.info(appName + " : undetected sensitive defs: " + droidPermOut.getUndetectedPermDefs().size());
+        }
+    }
+
     private void collectAnnotations(Path annoXmlFile) throws JAXBException {
-        List<PermissionDef> newAnnos = XmlPermDefMiner.load(annoXmlFile.toFile()).getPermissionDefs();
+        List<PermissionDef> newAnnos = JaxbUtil.load(PermissionDefList.class, annoXmlFile.toFile()).getPermissionDefs();
         Set<PermissionDef> existingAnnos = new LinkedHashSet<>(newAnnos);
         existingAnnos.retainAll(permissionDefs.keySet());
         existingAnnos.stream()
@@ -280,8 +289,7 @@ public class DPBatchRunner {
     }
 
     private void collectUnusedPermissions(Path xmlOut, String appName) throws IOException, JAXBException {
-        SensitiveCollectorJaxbData data =
-                (SensitiveCollectorJaxbData) JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
+        SensitiveCollectorJaxbData data = JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
         Set<String> referredPerms =
                 data.getReferredPerms() != null ? new LinkedHashSet<>(data.getReferredPerms()) : Collections.emptySet();
         Set<String> permsWithSensitives = data.getPermsWithSensitives() != null

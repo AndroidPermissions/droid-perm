@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.scene;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
 import soot.SootField;
@@ -153,5 +154,17 @@ public class UndetectedItemsUtil {
                 }
             }
         }
+    }
+
+    public static List<PermissionDef> getPermDefsFor(
+            Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap,
+            Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap,
+            ScenePermissionDefService scenePermDef) {
+        return scenePermDef.getPermDefsFor(
+                permToReferredMethodSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
+                        .collect(Collectors.toList()),
+                permToReferredFieldSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
+                        .collect(Collectors.toList())
+        );
     }
 }

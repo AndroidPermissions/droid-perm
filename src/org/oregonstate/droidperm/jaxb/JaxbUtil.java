@@ -17,6 +17,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -90,9 +91,16 @@ public class JaxbUtil {
         jaxbMarshaller.marshal(data, file);
     }
 
-    public static Object load(Class<?> dataClass, File file) throws JAXBException {
+    public static <T> T load(Class<T> dataClass, File file) throws JAXBException {
         Unmarshaller unmarshaller = JAXBContext.newInstance(dataClass).createUnmarshaller();
-        return unmarshaller.unmarshal(file);
+        //noinspection unchecked
+        return (T) unmarshaller.unmarshal(file);
+    }
+
+    public static <T> T load(Class<T> dataClass, URL url) throws JAXBException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(dataClass).createUnmarshaller();
+        //noinspection unchecked
+        return (T) unmarshaller.unmarshal(url);
     }
 
     public static <T> void print(T data, Class<T> dataClass) throws JAXBException {
