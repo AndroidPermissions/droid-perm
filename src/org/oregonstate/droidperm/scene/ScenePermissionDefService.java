@@ -1,6 +1,9 @@
 package org.oregonstate.droidperm.scene;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermissionDefConverter;
@@ -11,7 +14,6 @@ import org.oregonstate.droidperm.util.StreamUtil;
 import soot.*;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
-import soot.options.Options;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,10 +25,6 @@ import java.util.stream.Stream;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 10/27/2016.
  */
 public class ScenePermissionDefService {
-
-    //So far unused. Put hereclasses that have to be loaded explicitly.
-    private static final List<String> additionalClassesToLoad = ImmutableList.<String>builder()
-            .build();
 
     private Set<SootMethodAndClass> permCheckerDefs;
     private Set<AndroidMethod> methodSensitiveDefs;
@@ -54,7 +52,6 @@ public class ScenePermissionDefService {
         methodSensitiveDefs = permissionDefProvider.getMethodSensitiveDefs();
         fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
         parametricSensDefs = permissionDefProvider.getParametricSensDefs();
-        loadSceneDependencies();
 
         sceneMethodSensMap = buildSceneMethodSensMap();
         permissionToSensitivesMap = buildPermissionToSensitivesMap();
@@ -98,22 +95,6 @@ public class ScenePermissionDefService {
                         StreamUtil.throwingMerger(),
                         LinkedHashMap::new
                 ));
-    }
-
-    /**
-     * Load classes that are not loaded by default in Scene but are required to resolve correctly fields and methods
-     */
-    private void loadSceneDependencies() {
-        Scene scene = Scene.v();
-        //Workaround: Classes with intents might not be resolved at this point, due to bytecode constant inlining.
-        Options.v().set_ignore_resolving_levels(true);
-        fieldSensitiveDefs.stream()
-                //filter out classes not in the classpath
-                .filter(def -> SourceLocator.v().getClassSource(def.getClassName()) != null)
-                .forEach(def -> scene.loadClassAndSupport(def.getClassName()));
-
-        additionalClassesToLoad.forEach(scene::loadClassAndSupport);
-        Options.v().set_allow_phantom_refs(false);//may be messed up by the lines above
     }
 
     private ListMultimap<Set<String>, SootField> buildPermissionToFieldSensMap() {

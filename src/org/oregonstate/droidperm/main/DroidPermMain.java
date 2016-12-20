@@ -8,9 +8,12 @@
 package org.oregonstate.droidperm.main;
 
 import com.beust.jcommander.ParameterException;
+import com.google.common.collect.ImmutableList;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.infoflow.android.DPSetupApplication;
 import org.oregonstate.droidperm.perm.AnnoPermissionDefUtil;
+import org.oregonstate.droidperm.perm.FieldSensitiveDef;
+import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermDefProviderFactory;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ClasspathFilterService;
@@ -23,6 +26,7 @@ import org.oregonstate.droidperm.util.UnitComparator;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.Main;
 import soot.Scene;
+import soot.SourceLocator;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
@@ -36,10 +40,7 @@ import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +51,10 @@ import java.util.stream.Stream;
  * @see soot.jimple.infoflow.android.TestApps.Test
  */
 public class DroidPermMain {
+
+    //So far unused. Put hereclasses that have to be loaded explicitly.
+    private static final List<String> additionalClassesToLoad = ImmutableList.<String>builder()
+            .build();
 
     public static final File classpathExclusionListFile = new File("config/ClasspathExclusionList.txt");
 
@@ -103,6 +108,7 @@ public class DroidPermMain {
     }
 
     private static long initTime;
+    private static IPermissionDefProvider permissionDefProvider;
 
     /**
      * @param args Program arguments. args[0] = path to apk-file, args[1] = path to android-dir
@@ -499,6 +505,7 @@ public class DroidPermMain {
         // Directory handling
         System.out.println("Analyzing file " + apkFile + "...");
 
+        permissionDefProvider = PermDefProviderFactory.create(permDefFiles, useAnnoPermDef);
         if (collectPermAnnoMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
             AnnoPermissionDefUtil.collectPermAnno(xmlOut);
@@ -507,7 +514,7 @@ public class DroidPermMain {
         if (collectSensitivesMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
             ScenePermissionDefService scenePermDef =
-                    new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
+                    new ScenePermissionDefService(permissionDefProvider);
             ClasspathFilter classpathFilter =
                     new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
             SensitiveCollectorService.hierarchySensitivesAnalysis(scenePermDef, classpathFilter, apkFile, xmlOut);
@@ -537,11 +544,29 @@ public class DroidPermMain {
             AnnoPermissionDefUtil.printAnnoPermDefs();
         }
         ScenePermissionDefService scenePermDef =
-                new ScenePermissionDefService(PermDefProviderFactory.create(permDefFiles, useAnnoPermDef));
+                new ScenePermissionDefService(permissionDefProvider);
         ClasspathFilter classpathFilter
                 = new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
         new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
+    }
+
+    /**
+     * Load classes that are not loaded by default in Scene but are required to resolve correctly field and method
+     * sensitives.
+     */
+    private static void loadSceneDependencies() {
+        Set<FieldSensitiveDef> fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
+        Scene scene = Scene.v();
+        fieldSensitiveDefs.stream()
+                //filter out classes not in the classpath
+                .filter(def -> SourceLocator.v().getClassSource(def.getClassName()) != null)
+                .forEach(def -> scene.addBasicClass(def.getClassName()));
+
+        additionalClassesToLoad.stream()
+                .filter(clazz -> SourceLocator.v().getClassSource(clazz) != null)
+                .forEach(scene::addBasicClass);
+        //Options.v().set_allow_phantom_refs(false);//may be messed up by the lines above
     }
 
     private static InfoflowResults runAnalysis(final String fileName, final String androidJar) {
@@ -571,6 +596,7 @@ public class DroidPermMain {
                 options.setPhaseOption("cg.spark", "geom-dump-verbose:sootOutput/geom-dump-verbose");
 
                 //options.set_verbose(true);//for low-level debugging of Soot.
+                loadSceneDependencies();
             });
 
             setupApplication.setTaintWrapper(createTaintWrapper());
@@ -750,6 +776,8 @@ public class DroidPermMain {
         Options.v().set_soot_classpath(getClasspath(androidJarORSdkDir, apkFile));
         Options.v().set_whole_program(true); //required by HierarchyUtil.
         Main.v().autoSetOptions();
+
+        loadSceneDependencies();
         Scene.v().loadNecessaryClasses();
 
         //Critically important. Otherwise unused permission def classes will be loaded as phantom
