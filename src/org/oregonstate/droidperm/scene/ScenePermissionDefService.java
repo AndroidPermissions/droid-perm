@@ -65,7 +65,7 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getPermCheckers() {
-        return HierarchyUtil.resolveAbstractDispatches(permCheckerDefs);
+        return HierarchyUtil.resolveAbstractDispatches(permCheckerDefs, false);
     }
 
     private ListMultimap<AndroidMethod, SootMethod> buildSceneMethodSensMap() {
@@ -112,7 +112,7 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getSceneMethodSensitives() {
         if (sceneMethodSensitives == null) {
-            sceneMethodSensitives = HierarchyUtil.resolveAbstractDispatches(methodSensitiveDefs, false);
+            sceneMethodSensitives = sceneMethodSensMap.values().stream().distinct().collect(Collectors.toList());
         }
         return sceneMethodSensitives;
     }

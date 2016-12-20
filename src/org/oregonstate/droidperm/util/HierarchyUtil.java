@@ -80,10 +80,6 @@ public class HierarchyUtil {
 
     private static boolean dispatchExceptionLogged = false;
 
-    public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs) {
-        return resolveAbstractDispatches(methodDefs, false);
-    }
-
     public static List<SootMethod> resolveAbstractDispatches(Collection<? extends SootMethodAndClass> methodDefs,
                                                              boolean ignoreUnresolved) {
         return methodDefs.stream().map(methodDef -> resolveAbstractDispatch(methodDef, ignoreUnresolved))
