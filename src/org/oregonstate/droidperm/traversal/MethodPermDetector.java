@@ -8,6 +8,7 @@ import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
@@ -163,7 +164,9 @@ public class MethodPermDetector {
         if (xmlOut != null) {
             List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
                     .getPermDefsFor(permToUndetectedSensMap, Collections.emptyMap(), scenePermDef);
-            jaxbData.setUndetectedPermDefs(undetectedPermDefs);
+            List<PermissionDef> undetectedDangerousPermDefs =
+                    SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
+            jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
             JaxbUtil.save(jaxbData, JaxbCallbackList.class, xmlOut);
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "

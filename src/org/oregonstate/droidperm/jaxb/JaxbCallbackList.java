@@ -17,16 +17,16 @@ public class JaxbCallbackList {
     private List<JaxbCallback> callbacks = new ArrayList<>();
 
     @XmlElementWrapper
-    @XmlElement(name = "referredPermDef")
-    private List<PermissionDef> undetectedPermDefs;
+    @XmlElement(name = "permDef")
+    private List<PermissionDef> undetectedDangerousPermDefs;
 
     public JaxbCallbackList() {
     }
 
     public JaxbCallbackList(List<JaxbCallback> callbacks,
-                            List<PermissionDef> undetectedPermDefs) {
+                            List<PermissionDef> undetectedDangerousPermDefs) {
         this.callbacks = callbacks;
-        this.undetectedPermDefs = undetectedPermDefs;
+        this.undetectedDangerousPermDefs = undetectedDangerousPermDefs;
     }
 
     public List<JaxbCallback> getCallbacks() {
@@ -41,11 +41,11 @@ public class JaxbCallbackList {
         callbacks.add(callback);
     }
 
-    public List<PermissionDef> getUndetectedPermDefs() {
-        return undetectedPermDefs;
+    public List<PermissionDef> getUndetectedDangerousPermDefs() {
+        return undetectedDangerousPermDefs;
     }
 
-    public void setUndetectedPermDefs(List<PermissionDef> undetectedPermDefs) {
-        this.undetectedPermDefs = undetectedPermDefs;
+    public void setUndetectedDangerousPermDefs(List<PermissionDef> undetectedDangerousPermDefs) {
+        this.undetectedDangerousPermDefs = undetectedDangerousPermDefs;
     }
 }

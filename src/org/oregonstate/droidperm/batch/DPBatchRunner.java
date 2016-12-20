@@ -265,8 +265,9 @@ public class DPBatchRunner {
 
     private void printAppAnalysisSummary(Path xmlOut, String appName) throws JAXBException {
         JaxbCallbackList droidPermOut = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
-        if (!droidPermOut.getUndetectedPermDefs().isEmpty()) {
-            logger.info(appName + " : undetected sensitive defs: " + droidPermOut.getUndetectedPermDefs().size());
+        if (!droidPermOut.getUndetectedDangerousPermDefs().isEmpty()) {
+            logger.info(
+                    appName + " : undetected sensitive defs: " + droidPermOut.getUndetectedDangerousPermDefs().size());
         }
     }
 

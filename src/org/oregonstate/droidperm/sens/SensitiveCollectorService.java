@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.sens;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
+import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
@@ -111,5 +112,12 @@ public class SensitiveCollectorService {
         return Files.readAllLines(DANGEROUS_PERM_FILE).stream()
                 .filter(line -> !(line.trim().isEmpty() || line.startsWith("%")))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public static List<PermissionDef> retainDangerousPermissionDefs(List<PermissionDef> undetectedPermDefs) {
+        return undetectedPermDefs.stream()
+                .filter(permDef -> permDef.getPermissions().stream()
+                        .anyMatch(jaxbPerm -> getAllDangerousPerm().contains(jaxbPerm.getName())))
+                .collect(Collectors.toList());
     }
 }
