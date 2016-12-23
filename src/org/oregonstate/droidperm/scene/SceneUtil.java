@@ -2,7 +2,6 @@ package org.oregonstate.droidperm.scene;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.oregonstate.droidperm.util.MyCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -30,8 +29,8 @@ public class SceneUtil {
     public static Set<SootMethod> grabMethods(List<String> signatures) {
         Predicate<String> methodSigTester = Pattern.compile("^\\s*<(.*?):\\s*(.*?)>\\s*$").asPredicate();
 
-        return signatures.stream().map(sig -> resolveSigQuery(methodSigTester, sig))
-                .collect(MyCollectors.toFlatSet());
+        return signatures.stream().flatMap(sig -> resolveSigQuery(methodSigTester, sig).stream())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static List<SootMethod> resolveSigQuery(Predicate<String> methodSigTester, String sigQuery) {

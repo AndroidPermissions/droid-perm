@@ -1,7 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
 import soot.SootMethod;
-import soot.jimple.infoflow.util.SystemClassHandler;
 
 import java.util.Set;
 import java.util.function.Predicate;
@@ -19,9 +18,20 @@ public class ClasspathFilter implements Predicate<SootMethod> {
         this.ignoreSet = ignoreSet;
     }
 
+    /**
+     * true means class is valid, should not be excluded.
+     */
     @Override
     public boolean test(SootMethod sootMethod) {
-        return !SystemClassHandler.isClassInSystemPackage(sootMethod.getDeclaringClass().getName())
-                && !ignoreSet.contains(sootMethod);
+        //Important: classes whose implementation is fully modeled, like Thread or AsyncTask, should not be excluded.
+        String className = sootMethod.getDeclaringClass().getName();
+        //classes inside java.* and javax.* are not excluded
+        return className.equals("android.os.AsyncTask") ||
+                !(className.startsWith("android.")
+                        || className.startsWith("sun.")
+                        || className.startsWith("com.google.android.")
+                        || className.startsWith("org.omg.")
+                        || className.startsWith("org.w3c.dom.")
+                        || ignoreSet.contains(sootMethod));
     }
 }

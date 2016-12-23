@@ -34,6 +34,7 @@ public class ClasspathFilterService {
 
         //sensitives should be added to ignore set, to prevent their body from being analyzed
         ignoreSet.addAll(scenePermDef.getSceneMethodSensitives());
+        ignoreSet.addAll(scenePermDef.getSceneParametricSensitives());
 
         return new ClasspathFilter(ignoreSet);
     }
