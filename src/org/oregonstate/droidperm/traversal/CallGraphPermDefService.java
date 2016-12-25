@@ -10,18 +10,13 @@ import org.oregonstate.droidperm.util.PrintUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
-import soot.jimple.NullConstant;
-import soot.jimple.Stmt;
-import soot.jimple.StringConstant;
+import soot.jimple.*;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.scalar.SimpleLiveLocals;
 import soot.toolkits.scalar.SmartLocalDefs;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -49,44 +44,48 @@ public class CallGraphPermDefService {
         }
 
         //Maybe this edge is a parametric sensitive.
-        SootField sensArgument = getSensitiveArgument(sensEdge);
-        return scenePermDef.getPermissionsFor(sensArgument);
+        List<SootField> sensArguments = getSensitiveArgValues(sensEdge);
+        Set<Set<String>> permSets = sensArguments.stream().map(scenePermDef::getPermissionsFor)
+                .filter(set -> !set.isEmpty())
+                .collect(Collectors.toSet());
+        if (permSets.size() > 1) {
+            logger.warn("Edge has multiple permission sets: " + permSets + ".\nEdge is " + sensEdge);
+        }
+        return permSets.stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
     /**
      * Only to be called for edges representing parametric sensitives. Returns null if this is a parametric sensitive
      * but the argument is not a sensitive field.
      */
-    public SootField getSensitiveArgument(Edge sensEdge) {
+    public List<SootField> getSensitiveArgValues(Edge sensEdge) {
         Stmt srcStmt = sensEdge.srcStmt();
         assert srcStmt != null; //sensitive edges always come from method calls
-        Value arg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
-        if (arg instanceof StringConstant) {
-            return scenePermDef.getFieldFor(((StringConstant) arg).value);
-        } else if (arg instanceof Local) {
+        Value sensArg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
+        List<Value> argValues;
+        if (sensArg instanceof Local) {
             //noinspection ConstantConditions
             ExceptionalUnitGraph graph = new ExceptionalUnitGraph(sensEdge.src().retrieveActiveBody());
             SmartLocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
-            List<Unit> argAssignPoints = localDefs.getDefsOfAt((Local) arg, srcStmt);
-            if (argAssignPoints.size() != 1) {
-                throw new RuntimeException(
-                        "parametric sensitive " + sensEdge + " has a value with assignments number != 1: "
-                                + argAssignPoints);
-            }
-            Stmt assign = (Stmt) argAssignPoints.get(0);
-            if (assign.containsFieldRef()) {
-                return assign.getFieldRef().getField();
+            List<Unit> argAssignPoints = localDefs.getDefsOfAt((Local) sensArg, srcStmt);
+            argValues = argAssignPoints.stream().map(unit -> ((DefinitionStmt) unit).getRightOp())
+                    .collect(Collectors.toList());
+        } else {
+            argValues = Collections.singletonList(sensArg);
+        }
+        return argValues.stream().map(value -> {
+            if (value instanceof FieldRef) {
+                return ((FieldRef) value).getField();
+            } else if (value instanceof StringConstant) {
+                return scenePermDef.getFieldFor(((StringConstant) value).value);
+            } else if (value instanceof NullConstant) {
+                return null;
             } else {
-                logger.warn(
-                        "Parametric sensitive " + sensEdge + " has a parameter with unsupported assignment: " + assign);
+                logger.warn("Parametric sensitive " + sensEdge + " has a parameter with unsupported value: "
+                        + value);
                 return null;
             }
-        } else if (arg instanceof NullConstant) {
-            //Valid case. Happens in dummy main when app uses com.google.firebase API.
-            return null;
-        } else {
-            throw new RuntimeException("parametric sensitive " + sensEdge + " has unsupported arg: " + arg);
-        }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public LinkedHashSet<Edge> buildSensEdges() {
@@ -107,7 +106,7 @@ public class CallGraphPermDefService {
     public void printSensitiveContext(Edge sensEdge, String prefix) {
         System.out.println(prefix + "context " + PrintUtil.toMethodLogString(sensEdge.srcStmt()));
         if (scenePermDef.isParametric(sensEdge.tgt())) {
-            System.out.println(prefix + "param " + getSensitiveArgument(sensEdge));
+            System.out.println(prefix + "param " + getSensitiveArgValues(sensEdge));
         }
     }
 }
