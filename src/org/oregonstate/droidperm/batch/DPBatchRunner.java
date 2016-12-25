@@ -269,6 +269,9 @@ public class DPBatchRunner {
             logger.info(
                     appName + " : undetected sensitive defs: " + droidPermOut.getUndetectedDangerousPermDefs().size());
         }
+        if (!droidPermOut.isCompileApi23Plus()) {
+            logger.warn(appName + " : compileSdkVersion is < 23");
+        }
     }
 
     private void collectAnnotations(Path annoXmlFile) throws JAXBException {

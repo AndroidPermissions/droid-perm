@@ -103,34 +103,25 @@ public class HierarchyUtil {
         SootClass clazz = scene.getSootClassUnsafe(methodDef.getClassName());
         if (clazz == null) {
             return Collections.emptyList();
+        } else if (clazz.isPhantom() && !ignoreUnresolved) {
+            throw new RuntimeException("Checker/sensitive declaring class is phantom: " + clazz);
         } else {
             SootMethod method = scene.grabMethod(methodDef.getSignature());
 
             //Workaround for soot bug: sometimes scene contains methods with name wrapped into ''.
             //Example: SubscriptionManager.from()
-            if (method == null && !clazz.isPhantom()) {
+            if (method == null) {
                 method = scene.grabMethod(getSignatureWithQuotes(methodDef));
             }
 
-            if (method == null) {
-                if (ignoreUnresolved) {
-                    logger.warn("Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
-                    return Collections.emptyList();
-                } else {
-                    if (clazz.isPhantom()) {
-                        System.err.println("Checker/sensitive declaring class is phantom: " + clazz);
-                    } else {
-                        System.err.println("Existing methods in " + clazz + " :");
-                        clazz.getMethods().forEach(System.err::println);
-                    }
-                    throw new RuntimeException(
-                            "Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
-                    //                logger.warn("Nonexistent sensitive/checker method: " + methodDef);
-                    //                return Collections.emptyList();
-                }
+            if (method != null) {
+                return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);
+            } else {
+                logger.warn("Class " + clazz + " is in Scene but method " + methodDef.getSignature() + " is not.");
+                System.err.println("Existing methods in " + clazz + " :");
+                clazz.getMethods().forEach(System.err::println);
+                return Collections.emptyList();
             }
-
-            return scene.getActiveHierarchy().resolveAbstractDispatch(clazz, method);
         }
     }
 

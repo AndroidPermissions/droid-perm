@@ -20,6 +20,9 @@ public class JaxbCallbackList {
     @XmlElement(name = "permDef")
     private List<PermissionDef> undetectedDangerousPermDefs;
 
+    @XmlElement
+    private boolean compileApi23Plus = true;
+
     public JaxbCallbackList() {
     }
 
@@ -47,5 +50,13 @@ public class JaxbCallbackList {
 
     public void setUndetectedDangerousPermDefs(List<PermissionDef> undetectedDangerousPermDefs) {
         this.undetectedDangerousPermDefs = undetectedDangerousPermDefs;
+    }
+
+    public boolean isCompileApi23Plus() {
+        return compileApi23Plus;
+    }
+
+    public void setCompileApi23Plus(boolean compileApi23Plus) {
+        this.compileApi23Plus = compileApi23Plus;
     }
 }

@@ -167,6 +167,7 @@ public class MethodPermDetector {
             List<PermissionDef> undetectedDangerousPermDefs =
                     SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
             jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
+            jaxbData.setCompileApi23Plus(scenePermDef.isCompileSdkVersion_23_OrMore());
             JaxbUtil.save(jaxbData, JaxbCallbackList.class, xmlOut);
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "

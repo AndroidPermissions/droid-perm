@@ -53,7 +53,7 @@ public class ScenePermissionDefService {
         fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
         parametricSensDefs = permissionDefProvider.getParametricSensDefs();
 
-        sceneMethodSensMap = buildSceneMethodSensMap();
+        sceneMethodSensMap = HierarchyUtil.resolveAbstractDispatchesToMap(methodSensitiveDefs);
         permissionToSensitivesMap = buildPermissionToSensitivesMap();
         sensitivesToPermissionsMap = permissionToSensitivesMap.entries().stream()
                 .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
@@ -66,10 +66,6 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getPermCheckers() {
         return HierarchyUtil.resolveAbstractDispatches(permCheckerDefs, false);
-    }
-
-    private ListMultimap<AndroidMethod, SootMethod> buildSceneMethodSensMap() {
-        return HierarchyUtil.resolveAbstractDispatchesToMap(methodSensitiveDefs);
     }
 
     private SetMultimap<Set<String>, SootMethod> buildPermissionToSensitivesMap() {
@@ -224,5 +220,12 @@ public class ScenePermissionDefService {
                 methodSens.stream().map(meth -> PermissionDefConverter.forMethod(getPermDefFor(meth))),
                 fieldSens.stream().map(field -> PermissionDefConverter.forField(getPermDefFor(field)))
         ).collect(Collectors.toList());
+    }
+
+    public boolean isCompileSdkVersion_23_OrMore() {
+        SootMethodAndClass contextCheckSelfPerm = permCheckerDefs.stream()
+                .filter(permDef -> permDef.getClassName().equals("android.content.Context")
+                        && permDef.getMethodName().equals("checkSelfPermission")).findAny().orElse(null);
+        return !HierarchyUtil.resolveAbstractDispatch(contextCheckSelfPerm, false).isEmpty();
     }
 }
