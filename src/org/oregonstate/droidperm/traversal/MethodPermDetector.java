@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.MethodOrMethodContext;
 import soot.Scene;
+import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
@@ -141,9 +142,14 @@ public class MethodPermDetector {
         UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
 
         lastStepTime = System.currentTimeMillis(); //already printed as part of undetected checkers analysis above
-        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedSensMap =
+        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedMethSensMap =
                 UndetectedItemsUtil.buildPermToUndetectedMethodSensMap(scenePermDef, sensEdges, classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
+        UndetectedItemsUtil
+                .printUndetectedSensitives(permToUndetectedMethSensMap, "Undetected method sensitives", false);
+        Map<Set<String>, SetMultimap<SootField, Stmt>> permToUndetectedFieldSensMap =
+                UndetectedItemsUtil.buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
+        UndetectedItemsUtil
+                .printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives", true);
         currentTime = System.currentTimeMillis();
         System.out.println("\nUndetected sensitives execution time: "
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
@@ -163,7 +169,7 @@ public class MethodPermDetector {
         }
         if (xmlOut != null) {
             List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
-                    .getPermDefsFor(permToUndetectedSensMap, Collections.emptyMap(), scenePermDef);
+                    .getPermDefsFor(permToUndetectedMethSensMap, Collections.emptyMap(), scenePermDef);
             List<PermissionDef> undetectedDangerousPermDefs =
                     SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
             jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);

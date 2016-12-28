@@ -41,11 +41,12 @@ public class SensitiveCollectorService {
 
         Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedMethodSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(permToReferredMethodSensMap, "Collected method sensitives");
+        UndetectedItemsUtil
+                .printUndetectedSensitives(permToReferredMethodSensMap, "Collected method sensitives", false);
 
         Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives");
+        UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives", false);
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(
                 permToReferredMethodSensMap.keySet().stream()

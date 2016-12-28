@@ -23,10 +23,7 @@ import java.util.stream.Collectors;
  */
 public class UndetectedItemsUtil {
 
-    /**
-     * todo this will be getUndetectedFields
-     */
-    private static Multimap<SootField, Stmt> getFieldUsages(
+    private static Multimap<SootField, Stmt> getUndetectedFieldRefs(
             Collection<SootField> sootFields, Predicate<SootMethod> classpathFilter) {
         Multimap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields, classpathFilter);
         Multimap<SootField, Stmt> copy = HashMultimap.create(undetected);
@@ -49,24 +46,12 @@ public class UndetectedItemsUtil {
     public static Map<Set<String>, SetMultimap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
             ScenePermissionDefService scenePermDef, Predicate<SootMethod> classpathFilter) {
         Multimap<SootField, Stmt> undetectedSens =
-                getFieldUsages(scenePermDef.getSceneFieldSensitives(), classpathFilter);
+                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), classpathFilter);
 
         return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
                 scenePermDef::getPermissionsFor,
                 MyCollectors.toMultimapForCollection(field -> field, undetectedSens::get)
         ));
-    }
-
-    public static void printUndetectedFieldSensitives(ScenePermissionDefService scenePermDef,
-                                                      Predicate<SootMethod> classpathFilter) {
-        long startTime = System.currentTimeMillis();
-
-        Map<Set<String>, SetMultimap<SootField, Stmt>> permToUndetectedFieldSensMap =
-                buildPermToUndetectedFieldSensMap(scenePermDef, classpathFilter);
-        printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives");
-
-        System.out.println("\nUndetected field sensitives execution time: "
-                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
     /**
@@ -106,18 +91,6 @@ public class UndetectedItemsUtil {
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
 
-    public static void printUndetectedMethSensitives(ScenePermissionDefService scenePermDef,
-                                                     Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
-        long startTime = System.currentTimeMillis();
-
-        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedSensMap =
-                buildPermToUndetectedMethodSensMap(scenePermDef, detected, classpathFilter);
-        printUndetectedSensitives(permToUndetectedSensMap, "Undetected sensitives");
-
-        System.out.println("\nUndetected sensitives execution time: "
-                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
-    }
-
     /**
      * Map lvl 1: from permission sets to undetected sensitives having this set.
      * <p>
@@ -134,11 +107,12 @@ public class UndetectedItemsUtil {
     }
 
     /**
-     * @param <T> Type representing a sensitive. Either SootMethod or SootField.
+     * @param <T>       Type representing a sensitive. Either SootMethod or SootField.
+     * @param printStmt - if true, also print the statement that refers this sensitive.
      */
     public static <T> void printUndetectedSensitives(
             Map<Set<String>, SetMultimap<T, Stmt>> permToUndetectedSensMap,
-            final String header) {
+            final String header, boolean printStmt) {
         int count = permToUndetectedSensMap.values().stream().mapToInt(mMap -> mMap.values().size()).sum();
 
         System.out.println("\n\n" + header + " : " + count + "\n"
@@ -151,6 +125,9 @@ public class UndetectedItemsUtil {
                 System.out.println(sens);
                 for (Stmt stmt : currentSensMMap.get(sens)) {
                     System.out.println("\tfrom " + PrintUtil.toMethodLogString(stmt));
+                    if (printStmt) {
+                        System.out.println("\t\t" + stmt);
+                    }
                 }
             }
         }
