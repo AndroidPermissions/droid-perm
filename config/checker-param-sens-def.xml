@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--File was manually edited after automatic generation through javadoc miner.
+  Added a couple of param sensitives, deleted others, added checker defs manually.-->
 <PermissionDefinitions>
   <checkerDefs>
     <checkerDef className="android.content.Context" target="int checkSelfPermission(java.lang.String)"/>
