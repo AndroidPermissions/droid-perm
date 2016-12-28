@@ -739,14 +739,22 @@ public class DPSetupApplication {
 		Options.v().set_src_prec(Options.src_prec_apk_class_jimple);
 		Options.v().set_keep_line_number(false);
 		Options.v().set_keep_offset(false);
-		
-		// Set the Soot configuration options. Note that this will needs to be
-		// done before we compute the classpath.
-		if (sootConfig != null)
-			sootConfig.setSootOptions(Options.v());
-		
+
 		Options.v().set_soot_classpath(getClasspath());
 		Main.v().autoSetOptions();
+
+		// Set the Soot configuration options. Note that this will needs to be
+		// done before we compute the classpath.
+
+		/*DroidPerm: moved setSootOptions() after set_soot_classpath() to fix a problem:
+		setSootOptions() also loads classes containing field sensitives, which needs soot_classpath to be set above.
+		As a result API23 classes are all phantom during callback analysis, but are available later
+		for CG consturction.
+		This problem potentially missed some code from callback analysis, nothing else. Fixed now.
+		Code analysis shows fix should not change callback analysis result.
+		Yet testing on cx.ring shows significantly more callbacks are found after the fix.*/
+		if (sootConfig != null)
+			sootConfig.setSootOptions(Options.v());
 
 		// Configure the callgraph algorithm
 		if (constructCallgraph) {
