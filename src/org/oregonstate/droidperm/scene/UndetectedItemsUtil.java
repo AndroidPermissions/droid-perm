@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class UndetectedItemsUtil {
 
     private static Multimap<SootField, Stmt> getUndetectedFieldRefs(
-            Collection<SootField> sootFields, Predicate<SootMethod> classpathFilter) {
+            Collection<SootField> sootFields, Set<Stmt> detected, Predicate<SootMethod> classpathFilter) {
         Multimap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields, classpathFilter);
         Multimap<SootField, Stmt> copy = HashMultimap.create(undetected);
 
@@ -34,7 +34,8 @@ public class UndetectedItemsUtil {
                     .forEach(pair -> undetected.remove(sensField, pair));
         }
 
-        //todo filter out detected
+        //filter out detected
+        undetected.values().removeAll(detected);
         return undetected;
     }
 
@@ -44,9 +45,9 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
     public static Map<Set<String>, SetMultimap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
-            ScenePermissionDefService scenePermDef, Predicate<SootMethod> classpathFilter) {
+            ScenePermissionDefService scenePermDef, Set<Stmt> detected, Predicate<SootMethod> classpathFilter) {
         Multimap<SootField, Stmt> undetectedSens =
-                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), classpathFilter);
+                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), detected, classpathFilter);
 
         return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
                 scenePermDef::getPermissionsFor,

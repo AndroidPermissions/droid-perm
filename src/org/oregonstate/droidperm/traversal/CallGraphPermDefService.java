@@ -44,7 +44,7 @@ public class CallGraphPermDefService {
         }
 
         //Maybe this edge is a parametric sensitive.
-        List<SootField> sensArguments = getSensitiveArgValues(sensEdge);
+        List<SootField> sensArguments = getSensitiveArgFields(sensEdge);
         Set<Set<String>> permSets = sensArguments.stream().map(scenePermDef::getPermissionsFor)
                 .filter(set -> !set.isEmpty())
                 .collect(Collectors.toSet());
@@ -55,24 +55,11 @@ public class CallGraphPermDefService {
     }
 
     /**
-     * Only to be called for edges representing parametric sensitives. Returns null if this is a parametric sensitive
-     * but the argument is not a sensitive field.
+     * Only to be called for edges representing parametric sensitives. Returns an empty list if this is a parametric
+     * sensitive but the argument is not a sensitive field.
      */
-    public List<SootField> getSensitiveArgValues(Edge sensEdge) {
-        Stmt srcStmt = sensEdge.srcStmt();
-        assert srcStmt != null; //sensitive edges always come from method calls
-        Value sensArg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
-        List<Value> argValues;
-        if (sensArg instanceof Local) {
-            //noinspection ConstantConditions
-            ExceptionalUnitGraph graph = new ExceptionalUnitGraph(sensEdge.src().retrieveActiveBody());
-            SmartLocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
-            List<Unit> argAssignPoints = localDefs.getDefsOfAt((Local) sensArg, srcStmt);
-            argValues = argAssignPoints.stream().map(unit -> ((DefinitionStmt) unit).getRightOp())
-                    .collect(Collectors.toList());
-        } else {
-            argValues = Collections.singletonList(sensArg);
-        }
+    public List<SootField> getSensitiveArgFields(Edge sensEdge) {
+        List<Value> argValues = getSensitiveArgInitializerValues(sensEdge);
         return argValues.stream().map(value -> {
             if (value instanceof FieldRef) {
                 return ((FieldRef) value).getField();
@@ -86,6 +73,37 @@ public class CallGraphPermDefService {
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    private List<Value> getSensitiveArgInitializerValues(Edge sensEdge) {
+        List<Stmt> initStmts = getSensitiveArgInitializerStmts(sensEdge);
+        return initStmts.stream().map(stmt -> stmt instanceof DefinitionStmt
+                                              ? ((DefinitionStmt) stmt).getRightOp()
+                                              : stmt.getInvokeExpr()
+                                                      .getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()))
+        ).collect(Collectors.toList());
+    }
+
+    /**
+     * Returned statements are either DefinitionStmt for assignments or statements containign invocations for direct
+     * parametric sensitive call.
+     */
+    public List<Stmt> getSensitiveArgInitializerStmts(Edge sensEdge) {
+        Stmt srcStmt = sensEdge.srcStmt();
+        assert srcStmt != null; //sensitive edges always come from method calls
+        Value sensArg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
+        List<Stmt> argInitStmts;
+        if (sensArg instanceof Local) {
+            //noinspection ConstantConditions
+            ExceptionalUnitGraph graph = new ExceptionalUnitGraph(sensEdge.src().retrieveActiveBody());
+            SmartLocalDefs localDefs = new SmartLocalDefs(graph, new SimpleLiveLocals(graph));
+            List<Unit> argAssignPoints = localDefs.getDefsOfAt((Local) sensArg, srcStmt);
+            argInitStmts = argAssignPoints.stream().map(unit -> ((DefinitionStmt) unit))
+                    .collect(Collectors.toList());
+        } else {
+            argInitStmts = Collections.singletonList(srcStmt);
+        }
+        return argInitStmts;
     }
 
     public LinkedHashSet<Edge> buildSensEdges() {
@@ -106,7 +124,7 @@ public class CallGraphPermDefService {
     public void printSensitiveContext(Edge sensEdge, String prefix) {
         System.out.println(prefix + "context " + PrintUtil.toMethodLogString(sensEdge.srcStmt()));
         if (scenePermDef.isParametric(sensEdge.tgt())) {
-            System.out.println(prefix + "param " + getSensitiveArgValues(sensEdge));
+            System.out.println(prefix + "param " + getSensitiveArgFields(sensEdge));
         }
     }
 }
