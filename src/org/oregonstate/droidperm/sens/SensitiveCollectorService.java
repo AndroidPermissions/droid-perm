@@ -59,8 +59,9 @@ public class SensitiveCollectorService {
         Set<String> declaredPermissions = manifest.getDeclaredPermissions();
         PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
-        Set<String> referredPerm = SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter).keySet();
-        PrintUtil.printCollection(referredPerm, "Permissions referred in the code");
+        Set<String> referredDangerousPerm =
+                SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter).keySet();
+        PrintUtil.printCollection(referredDangerousPerm, "Permissions referred in the code");
 
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
@@ -82,7 +83,7 @@ public class SensitiveCollectorService {
             SensitiveCollectorJaxbData data = new SensitiveCollectorJaxbData(
                     new ArrayList<>(declaredPermissions),
                     new ArrayList<>(declaredDangerousPerm),
-                    new ArrayList<>(referredPerm),
+                    new ArrayList<>(referredDangerousPerm),
                     new ArrayList<>(dangerousPermWithSensitives),
                     UndetectedItemsUtil
                             .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef),

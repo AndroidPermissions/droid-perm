@@ -23,7 +23,7 @@ public class SensitiveCollectorJaxbData {
 
     @XmlElementWrapper
     @XmlElement(name = "referredPerm")
-    private List<String> referredPerms;
+    private List<String> referredDangerousPerms;
 
     @XmlElementWrapper
     @XmlElement(name = "permWithSensitives")
@@ -40,11 +40,11 @@ public class SensitiveCollectorJaxbData {
     }
 
     public SensitiveCollectorJaxbData(List<String> allDeclaredPerms, List<String> declaredDangerousPerms,
-                                      List<String> referredPerms, List<String> permsWithSensitives,
+                                      List<String> referredDangerousPerms, List<String> permsWithSensitives,
                                       List<PermissionDef> referredPermDefs, int targetSdkVersion) {
         this.allDeclaredPerms = allDeclaredPerms;
         this.declaredDangerousPerms = declaredDangerousPerms;
-        this.referredPerms = referredPerms;
+        this.referredDangerousPerms = referredDangerousPerms;
         this.permsWithSensitives = permsWithSensitives;
         this.referredPermDefs = referredPermDefs;
         this.targetSdkVersion = targetSdkVersion;
@@ -58,8 +58,8 @@ public class SensitiveCollectorJaxbData {
         return declaredDangerousPerms;
     }
 
-    public List<String> getReferredPerms() {
-        return referredPerms;
+    public List<String> getReferredDangerousPerms() {
+        return referredDangerousPerms;
     }
 
     public List<String> getPermsWithSensitives() {

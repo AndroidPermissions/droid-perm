@@ -3,9 +3,7 @@ package org.oregonstate.droidperm.batch;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import org.oregonstate.droidperm.jaxb.JaxbCallbackList;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermTargetKind;
@@ -85,6 +83,11 @@ public class DPBatchRunner {
     private List<String> appsWithMethodSensOnly = new ArrayList<>();
     private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
+
+    /**
+     * Map from alls to permissions it over-declares.
+     */
+    private ListMultimap<String, String> appsWithOverdeclaredPerm = ArrayListMultimap.create();
 
     /**
      * Run droidPerm on all the apps in the given directory.
@@ -248,13 +251,15 @@ public class DPBatchRunner {
                 logger.error(appName + " analysis returned exit code " + exitCode);
             } else {
                 switch (mode) {
+                    case DROID_PERM:
+                        droidPermModeFor(xmlOut, appName);
+                        break;
                     case COLLECT_ANNO:
-                        collectAnnotations(xmlOut);
+                        collectAnnotationsFor(xmlOut);
                         break;
                     case COLLECT_SENSITIVES:
-                        collectUnusedPermissions(xmlOut, appName);
-                    case DROID_PERM:
-                        printAppAnalysisSummary(xmlOut, appName);
+                        collectSensitivesFor(xmlOut, appName);
+                        break;
                 }
             }
         } catch (InterruptedException e) {
@@ -263,21 +268,21 @@ public class DPBatchRunner {
         }
     }
 
-    private void printAppAnalysisSummary(Path xmlOut, String appName) throws JAXBException {
-        JaxbCallbackList droidPermOut = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
-        if (!droidPermOut.getUndetectedDangerousPermDefs().isEmpty()) {
+    private void droidPermModeFor(Path xmlOut, String appName) throws JAXBException {
+        JaxbCallbackList data = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
+        if (!data.getUndetectedDangerousPermDefs().isEmpty()) {
             logger.info(
-                    appName + " : undetected sensitive defs: " + droidPermOut.getUndetectedDangerousPermDefs().size());
+                    appName + " : undetected sensitive defs: " + data.getUndetectedDangerousPermDefs().size());
         }
-        if (!droidPermOut.isCompileApi23Plus()) {
+        if (!data.isCompileApi23Plus()) {
             logger.warn(appName + " : compileSdkVersion is < 23");
         }
-        if (droidPermOut.getTargetSdkVersion() != 23) {
-            logger.warn(appName + " : targetSdkVersion = " + droidPermOut.getTargetSdkVersion());
+        if (data.getTargetSdkVersion() != 23) {
+            logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
         }
     }
 
-    private void collectAnnotations(Path annoXmlFile) throws JAXBException {
+    private void collectAnnotationsFor(Path annoXmlFile) throws JAXBException {
         List<PermissionDef> newAnnos = JaxbUtil.load(PermissionDefList.class, annoXmlFile.toFile()).getPermissionDefs();
         Set<PermissionDef> existingAnnos = new LinkedHashSet<>(newAnnos);
         existingAnnos.retainAll(permissionDefs.keySet());
@@ -294,14 +299,15 @@ public class DPBatchRunner {
         }
     }
 
-    private void collectUnusedPermissions(Path xmlOut, String appName) throws IOException, JAXBException {
+    private void collectSensitivesFor(Path xmlOut, String appName) throws IOException, JAXBException {
         SensitiveCollectorJaxbData data = JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
         if (data.getTargetSdkVersion() != 23) {
             logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
         }
 
         Set<String> referredPerms =
-                data.getReferredPerms() != null ? new LinkedHashSet<>(data.getReferredPerms()) : Collections.emptySet();
+                data.getReferredDangerousPerms() != null ? new LinkedHashSet<>(data.getReferredDangerousPerms())
+                                                         : Collections.emptySet();
         Set<String> permsWithSensitives = data.getPermsWithSensitives() != null
                                           ? new LinkedHashSet<>(data.getPermsWithSensitives()) : Collections.emptySet();
         Set<String> unusedPerms = Sets.difference(referredPerms, permsWithSensitives);
@@ -331,6 +337,13 @@ public class DPBatchRunner {
         }
         if (declaresNonStoragePermOnly) {
             appsDeclaringNonStoragePermOnly.add(appName);
+        }
+
+        Collection<String> overdeclaredPerm = Collections2.filter(data.getDeclaredDangerousPerms(),
+                perm -> !data.getReferredDangerousPerms().contains(perm));
+        if (!overdeclaredPerm.isEmpty()) {
+            logger.warn(appName + " : has overdeclared dangerous permissions: " + overdeclaredPerm.size());
+            appsWithOverdeclaredPerm.putAll(appName, overdeclaredPerm);
         }
     }
 
@@ -365,6 +378,16 @@ public class DPBatchRunner {
                 + "========================================================================");
         for (String perm : unusedPermFrequency.keySet()) {
             System.out.println(perm + " : " + unusedPermFrequency.get(perm));
+        }
+
+        System.out.println("\n\nApps with over-declared permissions : " + appsWithOverdeclaredPerm.keySet().size()
+                + "\n========================================================================");
+        for (String app : appsWithOverdeclaredPerm.keySet()) {
+            List<String> permList = appsWithOverdeclaredPerm.get(app);
+            System.out.println(app + " : " + permList.size());
+            for (String perm : permList) {
+                System.out.println("\t" + perm);
+            }
         }
 
         if (collectMethodSensOnlyApps) {
