@@ -547,7 +547,7 @@ public class DroidPermMain {
                 new ScenePermissionDefService(permissionDefProvider);
         ClasspathFilter classpathFilter
                 = new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
-        new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter).analyzeAndPrint();
+        new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter, apkFile).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
     }
 

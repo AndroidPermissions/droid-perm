@@ -8,6 +8,7 @@ import org.oregonstate.droidperm.scene.ClasspathFilter;
 import org.oregonstate.droidperm.scene.ScenePermissionDefService;
 import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.oregonstate.droidperm.sens.DPProcessManifest;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
@@ -15,6 +16,7 @@ import org.oregonstate.droidperm.util.PrintUtil;
 import org.oregonstate.droidperm.util.SortUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmlpull.v1.XmlPullParserException;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootField;
@@ -25,6 +27,7 @@ import soot.toolkits.scalar.Pair;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +43,7 @@ public class MethodPermDetector {
     private File xmlOut;
     private ScenePermissionDefService scenePermDef;
     private CallGraphPermDefService cgService;
+    private final DPProcessManifest manifest;
 
     private ClasspathFilter classpathFilter;
 
@@ -83,12 +87,14 @@ public class MethodPermDetector {
     }
 
     public MethodPermDetector(File txtOut, File xmlOut, ScenePermissionDefService scenePermDef,
-                              ClasspathFilter classpathFilter) {
+                              ClasspathFilter classpathFilter, File apkFile)
+            throws IOException, XmlPullParserException {
         this.txtOut = txtOut;
         this.xmlOut = xmlOut;
         this.scenePermDef = scenePermDef;
         this.classpathFilter = classpathFilter;
         this.cgService = new CallGraphPermDefService(scenePermDef);
+        this.manifest = new DPProcessManifest(apkFile);
     }
 
     public void analyzeAndPrint() throws Exception {
@@ -177,6 +183,7 @@ public class MethodPermDetector {
                     SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
             jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
             jaxbData.setCompileApi23Plus(scenePermDef.isCompileSdkVersion_23_OrMore());
+            jaxbData.setTargetSdkVersion(manifest.targetSdkVersion());
             JaxbUtil.save(jaxbData, JaxbCallbackList.class, xmlOut);
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "

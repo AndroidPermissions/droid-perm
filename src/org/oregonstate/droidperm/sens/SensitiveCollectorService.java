@@ -10,7 +10,6 @@ import org.oregonstate.droidperm.scene.SceneUtil;
 import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
-import org.xmlpull.v1.XmlPullParserException;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -38,6 +37,7 @@ public class SensitiveCollectorService {
                                                    ClasspathFilter classpathFilter, File apkFile, File xmlOut)
             throws Exception {
         long startTime = System.currentTimeMillis();
+        DPProcessManifest manifest = new DPProcessManifest(apkFile);
 
         Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedMethodSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
@@ -56,7 +56,7 @@ public class SensitiveCollectorService {
         ).collect(Collectors.toCollection(LinkedHashSet::new));
         PrintUtil.printCollection(sensitivePermissionSets, "Permission sets required by sensitives");
 
-        Set<String> declaredPermissions = getDeclaredPermissions(apkFile);
+        Set<String> declaredPermissions = manifest.getDeclaredPermissions();
         PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
         Set<String> referredPerm = SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter).keySet();
@@ -85,17 +85,13 @@ public class SensitiveCollectorService {
                     new ArrayList<>(referredPerm),
                     new ArrayList<>(dangerousPermWithSensitives),
                     UndetectedItemsUtil
-                            .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef));
+                            .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef),
+                    manifest.targetSdkVersion());
             JaxbUtil.save(data, SensitiveCollectorJaxbData.class, xmlOut);
         }
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
-    }
-
-    private static Set<String> getDeclaredPermissions(File apkFile) throws IOException, XmlPullParserException {
-        DPProcessManifest manifest = new DPProcessManifest(apkFile);
-        return manifest.getDeclaredPermissions();
     }
 
     public static Set<String> getAllDangerousPerm() {

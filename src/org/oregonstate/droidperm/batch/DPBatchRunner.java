@@ -272,6 +272,9 @@ public class DPBatchRunner {
         if (!droidPermOut.isCompileApi23Plus()) {
             logger.warn(appName + " : compileSdkVersion is < 23");
         }
+        if (droidPermOut.getTargetSdkVersion() != 23) {
+            logger.warn(appName + " : targetSdkVersion = " + droidPermOut.getTargetSdkVersion());
+        }
     }
 
     private void collectAnnotations(Path annoXmlFile) throws JAXBException {
@@ -293,6 +296,10 @@ public class DPBatchRunner {
 
     private void collectUnusedPermissions(Path xmlOut, String appName) throws IOException, JAXBException {
         SensitiveCollectorJaxbData data = JaxbUtil.load(SensitiveCollectorJaxbData.class, xmlOut.toFile());
+        if (data.getTargetSdkVersion() != 23) {
+            logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
+        }
+
         Set<String> referredPerms =
                 data.getReferredPerms() != null ? new LinkedHashSet<>(data.getReferredPerms()) : Collections.emptySet();
         Set<String> permsWithSensitives = data.getPermsWithSensitives() != null

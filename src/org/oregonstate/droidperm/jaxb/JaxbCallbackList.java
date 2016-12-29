@@ -23,6 +23,9 @@ public class JaxbCallbackList {
     @XmlElement
     private boolean compileApi23Plus = true;
 
+    @XmlElement
+    private int targetSdkVersion;
+
     public JaxbCallbackList() {
     }
 
@@ -58,5 +61,13 @@ public class JaxbCallbackList {
 
     public void setCompileApi23Plus(boolean compileApi23Plus) {
         this.compileApi23Plus = compileApi23Plus;
+    }
+
+    public int getTargetSdkVersion() {
+        return targetSdkVersion;
+    }
+
+    public void setTargetSdkVersion(int targetSdkVersion) {
+        this.targetSdkVersion = targetSdkVersion;
     }
 }
