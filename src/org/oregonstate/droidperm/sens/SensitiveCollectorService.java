@@ -115,6 +115,9 @@ public class SensitiveCollectorService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
+    /**
+     * @return a new list that contains all dangerous permission defs from undetectedPermDefs
+     */
     public static List<PermissionDef> retainDangerousPermissionDefs(List<PermissionDef> undetectedPermDefs) {
         return undetectedPermDefs.stream()
                 .filter(permDef -> permDef.getPermissions().stream()

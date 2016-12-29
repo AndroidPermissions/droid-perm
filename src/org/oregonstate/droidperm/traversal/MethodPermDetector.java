@@ -172,7 +172,7 @@ public class MethodPermDetector {
         }
         if (xmlOut != null) {
             List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
-                    .getPermDefsFor(permToUndetectedMethSensMap, Collections.emptyMap(), scenePermDef);
+                    .getPermDefsFor(permToUndetectedMethSensMap, permToUndetectedFieldSensMap, scenePermDef);
             List<PermissionDef> undetectedDangerousPermDefs =
                     SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
             jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
