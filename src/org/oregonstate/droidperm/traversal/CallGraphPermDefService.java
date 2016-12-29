@@ -85,13 +85,20 @@ public class CallGraphPermDefService {
     }
 
     /**
-     * Returned statements are either DefinitionStmt for assignments or statements containign invocations for direct
+     * Returned statements are either DefinitionStmt for assignments or statements containing invocations for direct
      * parametric sensitive call.
+     * <p>
+     * If edge is not a parametric sensitive, returns an empty list.
      */
     public List<Stmt> getSensitiveArgInitializerStmts(Edge sensEdge) {
         Stmt srcStmt = sensEdge.srcStmt();
         assert srcStmt != null; //sensitive edges always come from method calls
-        Value sensArg = srcStmt.getInvokeExpr().getArg(scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt()));
+        Integer sensitiveArgumentIndex = scenePermDef.getSensitiveArgumentIndex(sensEdge.tgt());
+        if (sensitiveArgumentIndex == null) {
+            return Collections.emptyList();
+        }
+
+        Value sensArg = srcStmt.getInvokeExpr().getArg(sensitiveArgumentIndex);
         List<Stmt> argInitStmts;
         if (sensArg instanceof Local) {
             //noinspection ConstantConditions

@@ -125,9 +125,10 @@ public class ScenePermissionDefService {
     }
 
     /**
-     * @return The index of the sensitive argument for the given parametric sensitive.
+     * @return The index of the sensitive argument for the given parametric sensitive. Or null if the given method is
+     * not a parametric sensitive.
      */
-    public int getSensitiveArgumentIndex(SootMethod parametricSens) {
+    public Integer getSensitiveArgumentIndex(SootMethod parametricSens) {
         if (parametricSensToArgIndexMap == null) {
             parametricSensToArgIndexMap = getSceneParametricSensitives().stream()
                     .collect(Collectors.toMap(
