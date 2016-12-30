@@ -78,36 +78,35 @@ public class DPBatchRunner {
      */
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
-    private Set<String> dangerousPermisisons;
-    private LinkedListMultimap<String, String> appToUnusedPermMap = LinkedListMultimap.create();
     private List<String> appsWithMethodSensOnly = new ArrayList<>();
     private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
 
-    /**
-     * Map from alls to permissions it over-declares.
-     */
-    private ListMultimap<String, String> appsWithOverdeclaredPerm = ArrayListMultimap.create();
+    private enum PermUsage {
+        DECLARED, REFERRED, CONSUMED
+    }
+
+    private static Map<Pair<PermUsage, PermUsage>, String> discrepancyNames =
+            ImmutableMap.<Pair<PermUsage, PermUsage>, String>builder()
+                    .put(new Pair<>(PermUsage.DECLARED, PermUsage.REFERRED), "over-declared")
+                    .put(new Pair<>(PermUsage.REFERRED, PermUsage.DECLARED), "under-declared")
+                    .put(new Pair<>(PermUsage.DECLARED, PermUsage.CONSUMED), "over-declared (vs sensitives)")
+                    .put(new Pair<>(PermUsage.CONSUMED, PermUsage.DECLARED), "under-declared (vs sensitives)")
+                    .put(new Pair<>(PermUsage.REFERRED, PermUsage.CONSUMED), "over-referred (unused)")
+                    .put(new Pair<>(PermUsage.CONSUMED, PermUsage.REFERRED), "under-referred")
+                    .build();
 
     /**
-     * Run droidPerm on all the apps in the given directory.
+     * Table from (app name, perm discrepancy) to set of permissions in that discrepancy. A discrepancy is a difference
+     * between 2 permission sets in the 3 reported permission sets of the app: declared permissions, referred
+     * permissions and consumed permissions (e.g. those required by sensitives).
+     */
+    Table<String, Pair<PermUsage, PermUsage>, Set<String>> appToPermDiscrepanciesTable = HashBasedTable.create();
+
+    /**
+     * Run DroidPerm on all the apps in the given directory.
      * <p>
-     * Command line arguments:
-     * <p>
-     * args[0] = path to root directory. Every directory directly inside this path is assumed to be an app repository.
-     * Should containt the files: droid-perm.jar, android-23-cr+util_io.zip
-     * <p>
-     * args[1] = path to DroidPerm home dir, with content similar to droid-perm-plugin/dp-lib
-     * <p>
-     * args[2] = path to output location, where log files will be stored.
-     * <p>
-     * args[3] = --taint-analysis-enabled or --taint-analysis-disabled. Pick first for overnight run. Leads to longer
-     * execution time, important for storage permissions.
-     * <p>
-     * args[4] = --cgalgo=GEOM or --cgalgo=SPARK. Unless otherwise noted, use --cgalgo=GEOM.
-     * <p>
-     * args[5] = list of VM arguments, in quotes if more than one. Could be left empty. Recommended value to increase
-     * heap memory: -Xmx4g
+     * For help on command line arguments use option --help
      */
     public static void main(final String[] args) throws IOException, InterruptedException, JAXBException {
         DPBatchRunner main = new DPBatchRunner();
@@ -142,10 +141,6 @@ public class DPBatchRunner {
         logger.info("cgalgo: " + cgAlgo);
         logger.info("useJavadocPerm: " + useJavadocPerm);
         logger.info("vmArgs: " + vmArgs + "\n");
-
-        if (mode == Mode.COLLECT_SENSITIVES) {
-            dangerousPermisisons = SensitiveCollectorService.getAllDangerousPerm();
-        }
 
         Files.createDirectories(logDir);
         ListMultimap<String, Path> appNamesToApksMap = Files.list(appsDir).sorted()
@@ -305,30 +300,35 @@ public class DPBatchRunner {
             logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
         }
 
-        Set<String> referredPerms =
-                data.getReferredDangerousPerms() != null ? new LinkedHashSet<>(data.getReferredDangerousPerms())
-                                                         : Collections.emptySet();
-        Set<String> permsWithSensitives = data.getPermsWithSensitives() != null
-                                          ? new LinkedHashSet<>(data.getPermsWithSensitives()) : Collections.emptySet();
-        Set<String> unusedPerms = Sets.difference(referredPerms, permsWithSensitives);
-        List<String> dangerousUnusedPerms = unusedPerms.stream().filter(dangerousPermisisons::contains)
-                .sorted().collect(Collectors.toList());
+        //compute perm discrepancies
+        Map<PermUsage, Set<String>> permUsagesMap = new HashMap<>();
+        permUsagesMap.put(PermUsage.DECLARED, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
+        permUsagesMap.put(PermUsage.REFERRED, new LinkedHashSet<>(data.getReferredDangerousPerms()));
+        permUsagesMap.put(PermUsage.CONSUMED, new LinkedHashSet<>(data.getPermsWithSensitives()));
+        for (Pair<PermUsage, PermUsage> discrepancy : discrepancyNames.keySet()) {
+            Set<String> permSet =
+                    Sets.difference(permUsagesMap.get(discrepancy.getO1()), permUsagesMap.get(discrepancy.getO2()));
+            if (!permSet.isEmpty()) {
+                logger.warn(appName + " : has " + discrepancyNames.get(discrepancy)
+                        + " permissions: " + permSet.size());
+                appToPermDiscrepanciesTable.put(appName, discrepancy, permSet);
+            }
+        }
+
+        //compute the rest
+        Pair<PermUsage, PermUsage> unusedPermDiscrepancy = new Pair<>(PermUsage.REFERRED, PermUsage.CONSUMED);
+        boolean noDangerousUnusedPerms = appToPermDiscrepanciesTable.get(appName, unusedPermDiscrepancy) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
                 && referredPermDefsOnlyMethod
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
-                && dangerousUnusedPerms.isEmpty();
+                && noDangerousUnusedPerms;
         boolean methodOrFieldSensOnly = !data.getReferredPermDefs().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
-                && dangerousUnusedPerms.isEmpty();
+                && noDangerousUnusedPerms;
         boolean declaresNonStoragePermOnly = !data.getDeclaredDangerousPerms().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm);
-        if (!dangerousUnusedPerms.isEmpty()) {
-            logger.info(appName + " : referred permissions with no corresponding sensitives: "
-                    + dangerousUnusedPerms.size());
-            appToUnusedPermMap.putAll(appName, dangerousUnusedPerms);
-        }
         if (methodSensOnly) {
             appsWithMethodSensOnly.add(appName);
         }
@@ -337,13 +337,6 @@ public class DPBatchRunner {
         }
         if (declaresNonStoragePermOnly) {
             appsDeclaringNonStoragePermOnly.add(appName);
-        }
-
-        Collection<String> overdeclaredPerm = Collections2.filter(data.getDeclaredDangerousPerms(),
-                perm -> !data.getReferredDangerousPerms().contains(perm));
-        if (!overdeclaredPerm.isEmpty()) {
-            logger.warn(appName + " : has overdeclared dangerous permissions: " + overdeclaredPerm.size());
-            appsWithOverdeclaredPerm.putAll(appName, overdeclaredPerm);
         }
     }
 
@@ -358,38 +351,39 @@ public class DPBatchRunner {
     }
 
     private void saveCollectSensitivesModeDigest() {
-        //todo it could make sense after all to create a print 2-level collection utility class
-        System.out.println("\n\nApps with unused permissions : " + appToUnusedPermMap.keySet().size() + "\n"
-                + "========================================================================");
-        for (String app : appToUnusedPermMap.keySet()) {
-            List<String> permList = appToUnusedPermMap.get(app);
-            System.out.println(app + " : " + permList.size());
-            for (String perm : permList) {
-                System.out.println("\t" + perm);
+        //print permission discrepancies
+        for (Pair<PermUsage, PermUsage> discrepancy : discrepancyNames.keySet()) {
+            String discrepancyName = discrepancyNames.get(discrepancy);
+            Set<String> apps = appToPermDiscrepanciesTable.column(discrepancy).keySet();
+            if (apps.isEmpty()) {
+                System.out.println("\nApps with " + discrepancyName + " permissions : " + apps.size());
+            } else {
+                System.out.println("\n\nApps with " + discrepancyName + " permissions : " + apps.size() + "\n"
+                        + "========================================================================");
+                for (String app : apps) {
+                    Set<String> permSet = appToPermDiscrepanciesTable.get(app, discrepancy);
+                    System.out.println(app + " : " + permSet.size());
+                    for (String perm : permSet) {
+                        System.out.println("\t" + perm);
+                    }
+                }
+
+                Map<String, Long> permFrequency = appToPermDiscrepanciesTable.values().stream()
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.groupingBy(perm -> perm, TreeMap::new, Collectors.counting()));
+                long totalInstances = permFrequency.values().stream().mapToLong(l -> l).sum();
+                System.out.println(
+                        "\n\nTotal permissions " + discrepancyName + " in some apps : " + permFrequency.size());
+                System.out.println(
+                        "Total <app, " + discrepancyName + " permission> instances : " + totalInstances + "\n"
+                                + "------------------------------------------------------------------------");
+                for (String perm : permFrequency.keySet()) {
+                    System.out.println(perm + " : " + permFrequency.get(perm));
+                }
             }
         }
 
-        Map<String, Long> unusedPermFrequency = appToUnusedPermMap.keySet().stream()
-                .flatMap(app -> appToUnusedPermMap.get(app).stream().map(perm -> new Pair<>(app, perm)))
-                .collect(Collectors.groupingBy(Pair::getO2, TreeMap::new, Collectors.counting()));
-        long totalInstances = unusedPermFrequency.values().stream().mapToLong(l -> l).sum();
-        System.out.println("\n\nUnused permissions, nr apps for each : " + unusedPermFrequency.size());
-        System.out.println("Total unused permissions instances : " + totalInstances + "\n"
-                + "========================================================================");
-        for (String perm : unusedPermFrequency.keySet()) {
-            System.out.println(perm + " : " + unusedPermFrequency.get(perm));
-        }
-
-        System.out.println("\n\nApps with over-declared permissions : " + appsWithOverdeclaredPerm.keySet().size()
-                + "\n========================================================================");
-        for (String app : appsWithOverdeclaredPerm.keySet()) {
-            List<String> permList = appsWithOverdeclaredPerm.get(app);
-            System.out.println(app + " : " + permList.size());
-            for (String perm : permList) {
-                System.out.println("\t" + perm);
-            }
-        }
-
+        //print all the rest
         if (collectMethodSensOnlyApps) {
             PrintUtil.printCollection(appsWithMethodSensOnly, "Apps with method sensitives only");
         }
