@@ -181,7 +181,7 @@ public class DPBatchRunner {
                 saveCollectAnnoModeDigest();
                 break;
             case COLLECT_SENSITIVES:
-                saveCollectSensitivesModeDigest();
+                printCollectSensitivesModeDigest();
                 break;
         }
     }
@@ -350,26 +350,26 @@ public class DPBatchRunner {
         JaxbUtil.save(out, PermissionDefList.class, aggregateAnnoFile.toFile());
     }
 
-    private void saveCollectSensitivesModeDigest() {
+    private void printCollectSensitivesModeDigest() {
         //print permission discrepancies
         for (Pair<PermUsage, PermUsage> discrepancy : discrepancyNames.keySet()) {
             String discrepancyName = discrepancyNames.get(discrepancy);
-            Set<String> apps = appToPermDiscrepanciesTable.column(discrepancy).keySet();
+            Map<String, Set<String>> discrepancyMap = appToPermDiscrepanciesTable.column(discrepancy);
+            Set<String> apps = discrepancyMap.keySet();
             if (apps.isEmpty()) {
                 System.out.println("\nApps with " + discrepancyName + " permissions : " + apps.size());
             } else {
                 System.out.println("\n\nApps with " + discrepancyName + " permissions : " + apps.size() + "\n"
                         + "========================================================================");
                 for (String app : apps) {
-                    Set<String> permSet = appToPermDiscrepanciesTable.get(app, discrepancy);
+                    Set<String> permSet = discrepancyMap.get(app);
                     System.out.println(app + " : " + permSet.size());
                     for (String perm : permSet) {
                         System.out.println("\t" + perm);
                     }
                 }
 
-                Map<String, Long> permFrequency = appToPermDiscrepanciesTable.values().stream()
-                        .flatMap(Collection::stream)
+                Map<String, Long> permFrequency = discrepancyMap.values().stream().flatMap(Collection::stream)
                         .collect(Collectors.groupingBy(perm -> perm, TreeMap::new, Collectors.counting()));
                 long totalInstances = permFrequency.values().stream().mapToLong(l -> l).sum();
                 System.out.println(
