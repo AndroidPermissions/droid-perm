@@ -83,25 +83,30 @@ public class DPBatchRunner {
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
 
     private enum PermUsage {
-        DECLARED, REFERRED, CONSUMED
+        MANIFEST, CODE, SENSITIVE
     }
 
-    private static Map<Pair<PermUsage, PermUsage>, String> discrepancyNames =
-            ImmutableMap.<Pair<PermUsage, PermUsage>, String>builder()
-                    .put(new Pair<>(PermUsage.DECLARED, PermUsage.REFERRED), "over-declared")
-                    .put(new Pair<>(PermUsage.REFERRED, PermUsage.DECLARED), "under-declared")
-                    .put(new Pair<>(PermUsage.DECLARED, PermUsage.CONSUMED), "over-declared (vs sensitives)")
-                    .put(new Pair<>(PermUsage.CONSUMED, PermUsage.DECLARED), "under-declared (vs sensitives)")
-                    .put(new Pair<>(PermUsage.REFERRED, PermUsage.CONSUMED), "over-referred (unused)")
-                    .put(new Pair<>(PermUsage.CONSUMED, PermUsage.REFERRED), "under-referred")
-                    .build();
+    private static List<Set<PermUsage>> permDistributions = Arrays.asList(
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),   //normal usage
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE),                        //unknown sensitive
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),                   //invalid migration to A6
+            ImmutableSet.of(PermUsage.MANIFEST),                                        //overprivileged in A5
+            ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE),                       //implausible
+            ImmutableSet.of(PermUsage.CODE),                                            //implausible
+            ImmutableSet.of(PermUsage.SENSITIVE)                                        //unreaclable sensitive
+    );
+
+    private static Set<PermUsage> validDistribution =
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE);
+
+    private Set<String> dangerousPerm = SensitiveCollectorService.getAllDangerousPerm();
 
     /**
      * Table from (app name, perm discrepancy) to set of permissions in that discrepancy. A discrepancy is a difference
      * between 2 permission sets in the 3 reported permission sets of the app: declared permissions, referred
      * permissions and consumed permissions (e.g. those required by sensitives).
      */
-    Table<String, Pair<PermUsage, PermUsage>, Set<String>> appToPermDiscrepanciesTable = HashBasedTable.create();
+    Table<String, Set<PermUsage>, Set<String>> appToPermDiscrepanciesTable = HashBasedTable.create();
 
     /**
      * Run DroidPerm on all the apps in the given directory.
@@ -302,21 +307,32 @@ public class DPBatchRunner {
 
         //compute perm discrepancies
         Map<PermUsage, Set<String>> permUsagesMap = new HashMap<>();
-        permUsagesMap.put(PermUsage.DECLARED, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
-        permUsagesMap.put(PermUsage.REFERRED, new LinkedHashSet<>(data.getReferredDangerousPerms()));
-        permUsagesMap.put(PermUsage.CONSUMED, new LinkedHashSet<>(data.getPermsWithSensitives()));
-        for (Pair<PermUsage, PermUsage> discrepancy : discrepancyNames.keySet()) {
-            Set<String> permSet =
-                    Sets.difference(permUsagesMap.get(discrepancy.getO1()), permUsagesMap.get(discrepancy.getO2()));
+        permUsagesMap.put(PermUsage.MANIFEST, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
+        permUsagesMap.put(PermUsage.CODE, new LinkedHashSet<>(data.getReferredDangerousPerms()));
+        permUsagesMap.put(PermUsage.SENSITIVE, new LinkedHashSet<>(data.getPermsWithSensitives()));
+        for (Set<PermUsage> distribution : permDistributions) {
+            Set<String> permSet = new LinkedHashSet<>(dangerousPerm);
+            for (PermUsage usage : PermUsage.values()) {
+                if (distribution.contains(usage)) {
+                    permSet.retainAll(permUsagesMap.get(usage));
+                } else {
+                    permSet.removeAll(permUsagesMap.get(usage));
+                }
+            }
             if (!permSet.isEmpty()) {
-                logger.warn(appName + " : has " + discrepancyNames.get(discrepancy)
-                        + " permissions: " + permSet.size());
-                appToPermDiscrepanciesTable.put(appName, discrepancy, permSet);
+                String logString =
+                        appName + " : permissions with distribution " + distribution + " : " + permSet.size();
+                if (distribution.equals(validDistribution)) {
+                    logger.info(logString);
+                } else {
+                    logger.warn(logString);
+                }
+                appToPermDiscrepanciesTable.put(appName, distribution, permSet);
             }
         }
 
         //compute the rest
-        Pair<PermUsage, PermUsage> unusedPermDiscrepancy = new Pair<>(PermUsage.REFERRED, PermUsage.CONSUMED);
+        Pair<PermUsage, PermUsage> unusedPermDiscrepancy = new Pair<>(PermUsage.CODE, PermUsage.SENSITIVE);
         boolean noDangerousUnusedPerms = appToPermDiscrepanciesTable.get(appName, unusedPermDiscrepancy) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
@@ -351,31 +367,32 @@ public class DPBatchRunner {
     }
 
     private void printCollectSensitivesModeDigest() {
-        //print permission discrepancies
-        for (Pair<PermUsage, PermUsage> discrepancy : discrepancyNames.keySet()) {
-            String discrepancyName = discrepancyNames.get(discrepancy);
-            Map<String, Set<String>> discrepancyMap = appToPermDiscrepanciesTable.column(discrepancy);
-            Set<String> apps = discrepancyMap.keySet();
-            if (apps.isEmpty()) {
-                System.out.println("\nApps with " + discrepancyName + " permissions : " + apps.size());
+        //print permission distributions
+        for (Set<PermUsage> distribution : permDistributions) {
+            Map<String, Set<String>> distributionData = appToPermDiscrepanciesTable.column(distribution);
+            Set<String> apps = distributionData.keySet();
+            if (apps.isEmpty() || distribution.equals(validDistribution)) {
+                System.out.println("\nApps with permission dist " + distribution + " : " + apps.size());
             } else {
-                System.out.println("\n\nApps with " + discrepancyName + " permissions : " + apps.size() + "\n"
+                System.out.println("\n\nApps with permission dist " + distribution + " : " + apps.size() + "\n"
                         + "========================================================================");
                 for (String app : apps) {
-                    Set<String> permSet = discrepancyMap.get(app);
+                    Set<String> permSet = distributionData.get(app);
                     System.out.println(app + " : " + permSet.size());
                     for (String perm : permSet) {
                         System.out.println("\t" + perm);
                     }
                 }
 
-                Map<String, Long> permFrequency = discrepancyMap.values().stream().flatMap(Collection::stream)
+            }
+            if (!apps.isEmpty()) {
+                Map<String, Long> permFrequency = distributionData.values().stream().flatMap(Collection::stream)
                         .collect(Collectors.groupingBy(perm -> perm, TreeMap::new, Collectors.counting()));
                 long totalInstances = permFrequency.values().stream().mapToLong(l -> l).sum();
                 System.out.println(
-                        "\n\nTotal permissions " + discrepancyName + " in some apps : " + permFrequency.size());
+                        "\n\nTotal permissions " + distribution + " in some apps : " + permFrequency.size());
                 System.out.println(
-                        "Total <app, " + discrepancyName + " permission> instances : " + totalInstances + "\n"
+                        "Total <app, " + distribution + " permission> instances : " + totalInstances + "\n"
                                 + "------------------------------------------------------------------------");
                 for (String perm : permFrequency.keySet()) {
                     System.out.println(perm + " : " + permFrequency.get(perm));
