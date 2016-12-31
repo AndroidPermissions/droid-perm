@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author George Harder <harderg@oregonstate.edu> Created on 7/5/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 7/5/2016.
  */
 public class GradleAssembleRunner {
 

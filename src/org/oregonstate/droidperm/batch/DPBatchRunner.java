@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author George Harder <harderg@oregonstate.edu> Created on 7/5/2016.
+ * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 7/5/2016.
  */
 public class DPBatchRunner {
 
@@ -85,7 +85,7 @@ public class DPBatchRunner {
         MANIFEST, CODE, SENSITIVE
     }
 
-    private static List<Set<PermUsage>> permDistributions = Arrays.asList(
+    private static List<Set<PermUsage>> permSpectra = Arrays.asList(
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),   //normal usage
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE),                        //unknown sensitive
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),                   //invalid migration to A6
@@ -95,17 +95,15 @@ public class DPBatchRunner {
             ImmutableSet.of(PermUsage.SENSITIVE)                                        //unreaclable sensitive
     );
 
-    private static Set<PermUsage> validDistribution =
+    private static Set<PermUsage> normalSpectrum =
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE);
 
     private Set<String> dangerousPerm = SensitiveCollectorService.getAllDangerousPerm();
 
     /**
-     * Table from (app name, perm discrepancy) to set of permissions in that discrepancy. A discrepancy is a difference
-     * between 2 permission sets in the 3 reported permission sets of the app: declared permissions, referred
-     * permissions and consumed permissions (e.g. those required by sensitives).
+     * Table from (app name, perm usage spectrum) to set of permissions having that spectrum.
      */
-    Table<String, Set<PermUsage>, Set<String>> appToPermDistributionsTable = HashBasedTable.create();
+    Table<String, Set<PermUsage>, Set<String>> appToPermSpectraTable = HashBasedTable.create();
 
     /**
      * Run DroidPerm on all the apps in the given directory.
@@ -307,7 +305,7 @@ public class DPBatchRunner {
         computePermDistributions(appName, data);
 
         Set<PermUsage> unusedPermDist = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE);
-        boolean noDangerousUnusedPerms = appToPermDistributionsTable.get(appName, unusedPermDist) == null;
+        boolean noDangerousUnusedPerms = appToPermSpectraTable.get(appName, unusedPermDist) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
@@ -336,7 +334,7 @@ public class DPBatchRunner {
         permUsagesMap.put(PermUsage.MANIFEST, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
         permUsagesMap.put(PermUsage.CODE, new LinkedHashSet<>(data.getReferredDangerousPerms()));
         permUsagesMap.put(PermUsage.SENSITIVE, new LinkedHashSet<>(data.getPermsWithSensitives()));
-        for (Set<PermUsage> distribution : permDistributions) {
+        for (Set<PermUsage> distribution : permSpectra) {
             Set<String> permSet = new LinkedHashSet<>(dangerousPerm);
             for (PermUsage usage : PermUsage.values()) {
                 if (distribution.contains(usage)) {
@@ -346,13 +344,13 @@ public class DPBatchRunner {
                 }
             }
             //First we put all distributions in the table. The next for will cleanup the empty ones.
-            appToPermDistributionsTable.put(appName, distribution, permSet);
+            appToPermSpectraTable.put(appName, distribution, permSet);
         }
 
         //Part 2, alter the table according to special rules for Sensitives. See DP-379 for details.
-        Set<String> validDistPerm = appToPermDistributionsTable.get(appName, validDistribution);
+        Set<String> normalSpectrumPerm = appToPermSpectraTable.get(appName, normalSpectrum);
         Set<PermissionDef> unsatisfiedPermDefs = data.getReferredPermDefs().stream()
-                .filter(permDef -> Collections.disjoint(permDef.getPermissionNames(), validDistPerm))
+                .filter(permDef -> Collections.disjoint(permDef.getPermissionNames(), normalSpectrumPerm))
                 .collect(Collectors.toSet());
         Set<String> unsatisfiedPerm = unsatisfiedPermDefs.stream()
                 .flatMap(permDef -> permDef.getPermissionNames().stream()).collect(Collectors.toSet());
@@ -361,29 +359,28 @@ public class DPBatchRunner {
 
         //For sensitive only distributions, retain only permissions which are among unsatisfied sensitives and ignore
         // the satisfied ones.
-        Set<PermUsage> distSensitiveOnly = ImmutableSet.of(PermUsage.SENSITIVE);
-        appToPermDistributionsTable.get(appName, distSensitiveOnly).removeAll(satisfiedOnlyPerm);
+        Set<PermUsage> spectrumSensitive = ImmutableSet.of(PermUsage.SENSITIVE);
+        appToPermSpectraTable.get(appName, spectrumSensitive).removeAll(satisfiedOnlyPerm);
 
         //For distribution Manifest+Sensitive, treat permissions as Manifest only if they are satisfied.
         //E.g. move them from Manifest+Sensitive to Manifest.
         //If unsatisfied, leave them unchanged.
-        Set<PermUsage> distManifestAndSensitive = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE);
-        Set<PermUsage> distManifest = ImmutableSet.of(PermUsage.MANIFEST);
+        Set<PermUsage> spectrumManifestAndSensitive = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE);
+        Set<PermUsage> spectrumManifest = ImmutableSet.of(PermUsage.MANIFEST);
         Set<String> manifestAndSensButSatisfied = new LinkedHashSet<>(
-                Sets.intersection(appToPermDistributionsTable.get(appName, distManifestAndSensitive),
+                Sets.intersection(appToPermSpectraTable.get(appName, spectrumManifestAndSensitive),
                         satisfiedOnlyPerm));
-        appToPermDistributionsTable.get(appName, distManifestAndSensitive).removeAll(manifestAndSensButSatisfied);
-        appToPermDistributionsTable.get(appName, distManifest).addAll(manifestAndSensButSatisfied);
+        appToPermSpectraTable.get(appName, spectrumManifestAndSensitive).removeAll(manifestAndSensButSatisfied);
+        appToPermSpectraTable.get(appName, spectrumManifest).addAll(manifestAndSensButSatisfied);
 
         //Part 3. Cleanup empty elements in the table and log results for the app.
-        for (Set<PermUsage> distribution : permDistributions) {
-            Set<String> permSet = appToPermDistributionsTable.get(appName, distribution);
+        for (Set<PermUsage> spectrum : permSpectra) {
+            Set<String> permSet = appToPermSpectraTable.get(appName, spectrum);
             if (permSet.isEmpty()) {
-                appToPermDistributionsTable.remove(appName, distribution);
+                appToPermSpectraTable.remove(appName, spectrum);
             } else {
-                String logString =
-                        appName + " : permissions with distribution " + distribution + " : " + permSet.size();
-                if (distribution.equals(validDistribution)) {
+                String logString = appName + " : permissions with spectrum " + spectrum + " : " + permSet.size();
+                if (spectrum.equals(normalSpectrum)) {
                     logger.info(logString);
                 } else {
                     logger.warn(logString);
@@ -403,32 +400,31 @@ public class DPBatchRunner {
     }
 
     private void printCollectSensitivesModeDigest() {
-        //print permission distributions
-        for (Set<PermUsage> distribution : permDistributions) {
-            Map<String, Set<String>> distributionData = appToPermDistributionsTable.column(distribution);
-            Set<String> apps = distributionData.keySet();
-            if (apps.isEmpty() || distribution.equals(validDistribution)) {
-                System.out.println("\nApps with permission dist " + distribution + " : " + apps.size());
+        //print permission spectra
+        for (Set<PermUsage> spectrum : permSpectra) {
+            Map<String, Set<String>> spectrumData = appToPermSpectraTable.column(spectrum);
+            Set<String> apps = spectrumData.keySet();
+            if (apps.isEmpty() || spectrum.equals(normalSpectrum)) {
+                System.out.println("\nApps with permission spectrum " + spectrum + " : " + apps.size());
             } else {
-                System.out.println("\n\nApps with permission dist " + distribution + " : " + apps.size() + "\n"
+                System.out.println("\n\nApps with permission spectrum " + spectrum + " : " + apps.size() + "\n"
                         + "========================================================================");
                 for (String app : apps) {
-                    Set<String> permSet = distributionData.get(app);
+                    Set<String> permSet = spectrumData.get(app);
                     System.out.println(app + " : " + permSet.size());
                     for (String perm : permSet) {
                         System.out.println("\t" + perm);
                     }
                 }
-
             }
             if (!apps.isEmpty()) {
-                Map<String, Long> permFrequency = distributionData.values().stream().flatMap(Collection::stream)
+                Map<String, Long> permFrequency = spectrumData.values().stream().flatMap(Collection::stream)
                         .collect(Collectors.groupingBy(perm -> perm, TreeMap::new, Collectors.counting()));
                 long totalInstances = permFrequency.values().stream().mapToLong(l -> l).sum();
                 System.out.println(
-                        "\n\nTotal permissions " + distribution + " in some apps : " + permFrequency.size());
+                        "\n\nTotal permissions " + spectrum + " in some apps : " + permFrequency.size());
                 System.out.println(
-                        "Total <app, " + distribution + " permission> instances : " + totalInstances + "\n"
+                        "Total <app, " + spectrum + " permission> instances : " + totalInstances + "\n"
                                 + "------------------------------------------------------------------------");
                 for (String perm : permFrequency.keySet()) {
                     System.out.println(perm + " : " + permFrequency.get(perm));
