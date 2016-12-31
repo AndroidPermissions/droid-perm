@@ -306,8 +306,8 @@ public class DPBatchRunner {
 
         computePermDistributions(appName, data);
 
-        Set<PermUsage> unusedPermDiscrepancy = ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE);
-        boolean noDangerousUnusedPerms = appToPermDistributionsTable.get(appName, unusedPermDiscrepancy) == null;
+        Set<PermUsage> unusedPermDist = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE);
+        boolean noDangerousUnusedPerms = appToPermDistributionsTable.get(appName, unusedPermDist) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
