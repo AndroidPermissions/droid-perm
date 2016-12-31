@@ -16,7 +16,6 @@ import org.oregonstate.droidperm.util.PrintUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.jimple.infoflow.InfoflowConfiguration;
-import soot.toolkits.scalar.Pair;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -106,7 +105,7 @@ public class DPBatchRunner {
      * between 2 permission sets in the 3 reported permission sets of the app: declared permissions, referred
      * permissions and consumed permissions (e.g. those required by sensitives).
      */
-    Table<String, Set<PermUsage>, Set<String>> appToPermDiscrepanciesTable = HashBasedTable.create();
+    Table<String, Set<PermUsage>, Set<String>> appToPermDistributionsTable = HashBasedTable.create();
 
     /**
      * Run DroidPerm on all the apps in the given directory.
@@ -305,35 +304,10 @@ public class DPBatchRunner {
             logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
         }
 
-        //compute perm discrepancies
-        Map<PermUsage, Set<String>> permUsagesMap = new HashMap<>();
-        permUsagesMap.put(PermUsage.MANIFEST, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
-        permUsagesMap.put(PermUsage.CODE, new LinkedHashSet<>(data.getReferredDangerousPerms()));
-        permUsagesMap.put(PermUsage.SENSITIVE, new LinkedHashSet<>(data.getPermsWithSensitives()));
-        for (Set<PermUsage> distribution : permDistributions) {
-            Set<String> permSet = new LinkedHashSet<>(dangerousPerm);
-            for (PermUsage usage : PermUsage.values()) {
-                if (distribution.contains(usage)) {
-                    permSet.retainAll(permUsagesMap.get(usage));
-                } else {
-                    permSet.removeAll(permUsagesMap.get(usage));
-                }
-            }
-            if (!permSet.isEmpty()) {
-                String logString =
-                        appName + " : permissions with distribution " + distribution + " : " + permSet.size();
-                if (distribution.equals(validDistribution)) {
-                    logger.info(logString);
-                } else {
-                    logger.warn(logString);
-                }
-                appToPermDiscrepanciesTable.put(appName, distribution, permSet);
-            }
-        }
+        computePermDistributions(appName, data);
 
-        //compute the rest
-        Pair<PermUsage, PermUsage> unusedPermDiscrepancy = new Pair<>(PermUsage.CODE, PermUsage.SENSITIVE);
-        boolean noDangerousUnusedPerms = appToPermDiscrepanciesTable.get(appName, unusedPermDiscrepancy) == null;
+        Set<PermUsage> unusedPermDiscrepancy = ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE);
+        boolean noDangerousUnusedPerms = appToPermDistributionsTable.get(appName, unusedPermDiscrepancy) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
@@ -356,6 +330,68 @@ public class DPBatchRunner {
         }
     }
 
+    private void computePermDistributions(String appName, SensitiveCollectorJaxbData data) {
+        //Part 1. Compute initial table for this app.
+        Map<PermUsage, Set<String>> permUsagesMap = new HashMap<>();
+        permUsagesMap.put(PermUsage.MANIFEST, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
+        permUsagesMap.put(PermUsage.CODE, new LinkedHashSet<>(data.getReferredDangerousPerms()));
+        permUsagesMap.put(PermUsage.SENSITIVE, new LinkedHashSet<>(data.getPermsWithSensitives()));
+        for (Set<PermUsage> distribution : permDistributions) {
+            Set<String> permSet = new LinkedHashSet<>(dangerousPerm);
+            for (PermUsage usage : PermUsage.values()) {
+                if (distribution.contains(usage)) {
+                    permSet.retainAll(permUsagesMap.get(usage));
+                } else {
+                    permSet.removeAll(permUsagesMap.get(usage));
+                }
+            }
+            //First we put all distributions in the table. The next for will cleanup the empty ones.
+            appToPermDistributionsTable.put(appName, distribution, permSet);
+        }
+
+        //Part 2, alter the table according to special rules for Sensitives. See DP-379 for details.
+        Set<String> validDistPerm = appToPermDistributionsTable.get(appName, validDistribution);
+        Set<PermissionDef> unsatisfiedPermDefs = data.getReferredPermDefs().stream()
+                .filter(permDef -> Collections.disjoint(permDef.getPermissionNames(), validDistPerm))
+                .collect(Collectors.toSet());
+        Set<String> unsatisfiedPerm = unsatisfiedPermDefs.stream()
+                .flatMap(permDef -> permDef.getPermissionNames().stream()).collect(Collectors.toSet());
+        //more exactly those are all dangerous permissions which are "not unsatisfied"
+        Set<String> satisfiedOnlyPerm = Sets.difference(dangerousPerm, unsatisfiedPerm);
+
+        //For sensitive only distributions, retain only permissions which are among unsatisfied sensitives and ignore
+        // the satisfied ones.
+        Set<PermUsage> distSensitiveOnly = ImmutableSet.of(PermUsage.SENSITIVE);
+        appToPermDistributionsTable.get(appName, distSensitiveOnly).removeAll(satisfiedOnlyPerm);
+
+        //For distribution Manifest+Sensitive, treat permissions as Manifest only if they are satisfied.
+        //E.g. move them from Manifest+Sensitive to Manifest.
+        //If unsatisfied, leave them unchanged.
+        Set<PermUsage> distManifestAndSensitive = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE);
+        Set<PermUsage> distManifest = ImmutableSet.of(PermUsage.MANIFEST);
+        Set<String> manifestAndSensButSatisfied = new LinkedHashSet<>(
+                Sets.intersection(appToPermDistributionsTable.get(appName, distManifestAndSensitive),
+                        satisfiedOnlyPerm));
+        appToPermDistributionsTable.get(appName, distManifestAndSensitive).removeAll(manifestAndSensButSatisfied);
+        appToPermDistributionsTable.get(appName, distManifest).addAll(manifestAndSensButSatisfied);
+
+        //Part 3. Cleanup empty elements in the table and log results for the app.
+        for (Set<PermUsage> distribution : permDistributions) {
+            Set<String> permSet = appToPermDistributionsTable.get(appName, distribution);
+            if (permSet.isEmpty()) {
+                appToPermDistributionsTable.remove(appName, distribution);
+            } else {
+                String logString =
+                        appName + " : permissions with distribution " + distribution + " : " + permSet.size();
+                if (distribution.equals(validDistribution)) {
+                    logger.info(logString);
+                } else {
+                    logger.warn(logString);
+                }
+            }
+        }
+    }
+
     /**
      * Save all collected annotations to a file.
      */
@@ -369,7 +405,7 @@ public class DPBatchRunner {
     private void printCollectSensitivesModeDigest() {
         //print permission distributions
         for (Set<PermUsage> distribution : permDistributions) {
-            Map<String, Set<String>> distributionData = appToPermDiscrepanciesTable.column(distribution);
+            Map<String, Set<String>> distributionData = appToPermDistributionsTable.column(distribution);
             Set<String> apps = distributionData.keySet();
             if (apps.isEmpty() || distribution.equals(validDistribution)) {
                 System.out.println("\nApps with permission dist " + distribution + " : " + apps.size());
