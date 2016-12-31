@@ -77,22 +77,33 @@ public class DPBatchRunner {
      */
     private Map<PermissionDef, PermissionDef> permissionDefs = new LinkedHashMap<>();
 
-    private List<String> appsWithMethodSensOnly = new ArrayList<>();
-    private List<String> appsWithMethodOrFieldSensOnly = new ArrayList<>();
+    private List<String> appsWithSafeMethodSensOnly = new ArrayList<>();
+    private List<String> appsWithSafeMethodOrFieldSensOnly = new ArrayList<>();
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
 
     private enum PermUsage {
         MANIFEST, CODE, SENSITIVE
     }
 
-    private static List<Set<PermUsage>> permSpectra = Arrays.asList(
+    private static List<Set<PermUsage>> permSpectra = ImmutableList.of(
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),   //normal usage
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE),                        //unknown sensitive
-            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),                   //invalid migration to A6
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),                   //incorrect migration to A6
             ImmutableSet.of(PermUsage.MANIFEST),                                        //overprivileged in A5
             ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE),                       //implausible
             ImmutableSet.of(PermUsage.CODE),                                            //implausible
             ImmutableSet.of(PermUsage.SENSITIVE)                                        //unreaclable sensitive
+    );
+
+    /**
+     * If spectra below are present, this indicates the app might be either incorrectly migrated to API23 or have
+     * unknown sensitives.
+     */
+    private static List<Set<PermUsage>> unsafePermSpectra = ImmutableList.of(
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE),
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.CODE)
     );
 
     private static Set<PermUsage> normalSpectrum =
@@ -304,24 +315,24 @@ public class DPBatchRunner {
 
         computePermSpectra(appName, data);
 
-        Set<PermUsage> unusedPermSpectrum = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE);
-        boolean noDangerousUnusedPerms = appToPermSpectraTable.get(appName, unusedPermSpectrum) == null;
+        boolean noUnsafeSpectra = unsafePermSpectra.stream()
+                .allMatch(spectrum -> appToPermSpectraTable.get(appName, spectrum) == null);
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
-        boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
+        boolean safeMethodSensOnly = !data.getReferredPermDefs().isEmpty()
                 && referredPermDefsOnlyMethod
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
-                && noDangerousUnusedPerms;
-        boolean methodOrFieldSensOnly = !data.getReferredPermDefs().isEmpty()
+                && noUnsafeSpectra;
+        boolean safeMethodOrFieldSensOnly = !data.getReferredPermDefs().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm)
-                && noDangerousUnusedPerms;
+                && noUnsafeSpectra;
         boolean declaresNonStoragePermOnly = !data.getDeclaredDangerousPerms().isEmpty()
                 && Collections.disjoint(data.getAllDeclaredPerms(), SensitiveCollectorService.storagePerm);
-        if (methodSensOnly) {
-            appsWithMethodSensOnly.add(appName);
+        if (safeMethodSensOnly) {
+            appsWithSafeMethodSensOnly.add(appName);
         }
-        if (methodOrFieldSensOnly) {
-            appsWithMethodOrFieldSensOnly.add(appName);
+        if (safeMethodOrFieldSensOnly) {
+            appsWithSafeMethodOrFieldSensOnly.add(appName);
         }
         if (declaresNonStoragePermOnly) {
             appsDeclaringNonStoragePermOnly.add(appName);
@@ -434,10 +445,11 @@ public class DPBatchRunner {
 
         //print all the rest
         if (collectMethodSensOnlyApps) {
-            PrintUtil.printCollection(appsWithMethodSensOnly, "Apps with method sensitives only");
+            PrintUtil.printCollection(appsWithSafeMethodSensOnly, "Apps with safe method sensitives only");
         }
         if (collectMethodOrFieldSensOnlyApps) {
-            PrintUtil.printCollection(appsWithMethodOrFieldSensOnly, "Apps with method or field sensitives only");
+            PrintUtil.printCollection(appsWithSafeMethodOrFieldSensOnly,
+                    "Apps with safe method or field sensitives only");
             PrintUtil.printCollection(appsDeclaringNonStoragePermOnly, "Apps declaring non-storage permissions only");
         }
     }
