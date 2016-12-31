@@ -302,10 +302,10 @@ public class DPBatchRunner {
             logger.warn(appName + " : targetSdkVersion = " + data.getTargetSdkVersion());
         }
 
-        computePermDistributions(appName, data);
+        computePermSpectra(appName, data);
 
-        Set<PermUsage> unusedPermDist = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE);
-        boolean noDangerousUnusedPerms = appToPermSpectraTable.get(appName, unusedPermDist) == null;
+        Set<PermUsage> unusedPermSpectrum = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE);
+        boolean noDangerousUnusedPerms = appToPermSpectraTable.get(appName, unusedPermSpectrum) == null;
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean methodSensOnly = !data.getReferredPermDefs().isEmpty()
@@ -328,23 +328,23 @@ public class DPBatchRunner {
         }
     }
 
-    private void computePermDistributions(String appName, SensitiveCollectorJaxbData data) {
+    private void computePermSpectra(String appName, SensitiveCollectorJaxbData data) {
         //Part 1. Compute initial table for this app.
         Map<PermUsage, Set<String>> permUsagesMap = new HashMap<>();
         permUsagesMap.put(PermUsage.MANIFEST, new LinkedHashSet<>(data.getDeclaredDangerousPerms()));
         permUsagesMap.put(PermUsage.CODE, new LinkedHashSet<>(data.getReferredDangerousPerms()));
         permUsagesMap.put(PermUsage.SENSITIVE, new LinkedHashSet<>(data.getPermsWithSensitives()));
-        for (Set<PermUsage> distribution : permSpectra) {
+        for (Set<PermUsage> spectrum : permSpectra) {
             Set<String> permSet = new LinkedHashSet<>(dangerousPerm);
             for (PermUsage usage : PermUsage.values()) {
-                if (distribution.contains(usage)) {
+                if (spectrum.contains(usage)) {
                     permSet.retainAll(permUsagesMap.get(usage));
                 } else {
                     permSet.removeAll(permUsagesMap.get(usage));
                 }
             }
-            //First we put all distributions in the table. The next for will cleanup the empty ones.
-            appToPermSpectraTable.put(appName, distribution, permSet);
+            //First we put all spectra in the table. The next for will cleanup the empty ones.
+            appToPermSpectraTable.put(appName, spectrum, permSet);
         }
 
         //Part 2, alter the table according to special rules for Sensitives. See DP-379 for details.
@@ -357,13 +357,13 @@ public class DPBatchRunner {
         //more exactly those are all dangerous permissions which are "not unsatisfied"
         Set<String> satisfiedOnlyPerm = Sets.difference(dangerousPerm, unsatisfiedPerm);
 
-        //For sensitive only distributions, retain only permissions which are among unsatisfied sensitives and ignore
+        //For sensitive only spectra, retain only permissions which are among unsatisfied sensitives and ignore
         // the satisfied ones.
         Set<PermUsage> spectrumSensitive = ImmutableSet.of(PermUsage.SENSITIVE);
         appToPermSpectraTable.get(appName, spectrumSensitive).removeAll(satisfiedOnlyPerm);
 
-        //For distribution Manifest+Sensitive, treat permissions as Manifest only if they are satisfied.
-        //E.g. move them from Manifest+Sensitive to Manifest.
+        //For spectrum MANIFEST+SENSITIVE, treat permissions as MANIFEST only if they are satisfied.
+        //E.g. move them from MANIFEST+SENSITIVE to MANIFEST.
         //If unsatisfied, leave them unchanged.
         Set<PermUsage> spectrumManifestAndSensitive = ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE);
         Set<PermUsage> spectrumManifest = ImmutableSet.of(PermUsage.MANIFEST);
