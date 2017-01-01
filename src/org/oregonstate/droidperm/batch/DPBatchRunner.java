@@ -59,6 +59,11 @@ public class DPBatchRunner {
         DROID_PERM, TAINT_ANALYSIS, COLLECT_ANNO, COLLECT_SENSITIVES
     }
 
+    @Parameter(names = "--fast-run",
+            description = "If specified, analysis process won't be executed. "
+                    + "Instead, batch log will be re-computed based on existing xml files. Useful for debugging.")
+    private boolean fastRun;
+
     @Parameter(names = "--collect-method-sens-only-apps",
             description = "Collect apps that only use method-based dangerous permissions. "
                     + "Used in conjunction with COLLECT_SENSITIVES mode.")
@@ -146,6 +151,7 @@ public class DPBatchRunner {
 
     private void batchRun() throws IOException, JAXBException {
         logger.info("DroidPerm Mode: " + mode);
+        logger.info("fastRun: " + fastRun);
         logger.info("collectMethodSensOnlyApps: " + collectMethodSensOnlyApps);
         logger.info("collectMethodOrFieldSensOnlyApps: " + collectMethodOrFieldSensOnlyApps);
         logger.info("appsDir: " + appsDir);
@@ -194,7 +200,9 @@ public class DPBatchRunner {
                 saveCollectAnnoModeDigest();
                 break;
             case COLLECT_SENSITIVES:
-                printCollectSensitivesModeDigest();
+                printSafeApps();
+                printPermissionSpectraStatistics();
+                printAppsPermissionProfile();
                 break;
         }
     }
@@ -249,30 +257,35 @@ public class DPBatchRunner {
         logger.info(appName + " ... ");
 
         long time = System.currentTimeMillis();
-
-        Process process = processBuilder.start();
-        try {
-            int exitCode = process.waitFor();
-            long newTime = System.currentTimeMillis();
-            logger.info(appName + " analyzed: " + (newTime - time) / 1E3 + " sec");
-            if (exitCode != 0) {
-                logger.error(appName + " analysis returned exit code " + exitCode);
-            } else {
-                switch (mode) {
-                    case DROID_PERM:
-                        droidPermModeFor(xmlOut, appName);
-                        break;
-                    case COLLECT_ANNO:
-                        collectAnnotationsFor(xmlOut);
-                        break;
-                    case COLLECT_SENSITIVES:
-                        collectSensitivesFor(xmlOut, appName);
-                        break;
-                }
+        int exitCode;
+        if (!fastRun) {
+            Process process = processBuilder.start();
+            try {
+                exitCode = process.waitFor();
+            } catch (InterruptedException e) {
+                process.destroy();
+                throw new RuntimeException(e);
             }
-        } catch (InterruptedException e) {
-            process.destroy();
-            throw new RuntimeException(e);
+        } else {
+            exitCode = Files.exists(xmlOut) ? 0 : 1;
+        }
+
+        long newTime = System.currentTimeMillis();
+        logger.info(appName + " analyzed: " + (newTime - time) / 1E3 + " sec");
+        if (exitCode == 0) {
+            switch (mode) {
+                case DROID_PERM:
+                    droidPermModeFor(xmlOut, appName);
+                    break;
+                case COLLECT_ANNO:
+                    collectAnnotationsFor(xmlOut);
+                    break;
+                case COLLECT_SENSITIVES:
+                    collectSensitivesFor(xmlOut, appName);
+                    break;
+            }
+        } else {
+            logger.error(appName + " analysis returned exit code " + exitCode);
         }
     }
 
@@ -410,8 +423,18 @@ public class DPBatchRunner {
         JaxbUtil.save(out, PermissionDefList.class, aggregateAnnoFile.toFile());
     }
 
-    private void printCollectSensitivesModeDigest() {
-        //print permission spectra
+    private void printSafeApps() {
+        if (collectMethodSensOnlyApps) {
+            PrintUtil.printCollection(appsWithSafeMethodSensOnly, "Apps with safe method sensitives only");
+        }
+        if (collectMethodOrFieldSensOnlyApps) {
+            PrintUtil.printCollection(appsWithSafeMethodOrFieldSensOnly,
+                    "Apps with safe method or field sensitives only");
+            PrintUtil.printCollection(appsDeclaringNonStoragePermOnly, "Apps declaring non-storage permissions only");
+        }
+    }
+
+    private void printPermissionSpectraStatistics() {
         for (Set<PermUsage> spectrum : permSpectra) {
             Map<String, Set<String>> spectrumData = appToPermSpectraTable.column(spectrum);
             Set<String> apps = spectrumData.keySet();
@@ -442,15 +465,11 @@ public class DPBatchRunner {
                 }
             }
         }
+    }
 
-        //print all the rest
-        if (collectMethodSensOnlyApps) {
-            PrintUtil.printCollection(appsWithSafeMethodSensOnly, "Apps with safe method sensitives only");
-        }
-        if (collectMethodOrFieldSensOnlyApps) {
-            PrintUtil.printCollection(appsWithSafeMethodOrFieldSensOnly,
-                    "Apps with safe method or field sensitives only");
-            PrintUtil.printCollection(appsDeclaringNonStoragePermOnly, "Apps declaring non-storage permissions only");
-        }
+    private void printAppsPermissionProfile() {
+        //Print permission profile for each app. Apps grouped by their permission spectra.
+        //todo save xml data for all apps in a data structure, to compute this map.
+        SetMultimap<Set<Set<String>>, String> spectraSetToAppsMap;
     }
 }
