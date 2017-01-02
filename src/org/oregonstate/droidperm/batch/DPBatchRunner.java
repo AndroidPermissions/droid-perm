@@ -100,6 +100,8 @@ public class DPBatchRunner {
             ImmutableSet.of(PermUsage.SENSITIVE)                                        //unreaclable sensitive
     );
 
+    private static Set<Set<PermUsage>> permSpectraSet = new LinkedHashSet<>(permSpectra);//for sorting purposes
+
     /**
      * If spectra below are present, this indicates the app might be either incorrectly migrated to API23 or have
      * unknown sensitives.
@@ -468,8 +470,63 @@ public class DPBatchRunner {
     }
 
     private void printAppsPermissionProfile() {
-        //Print permission profile for each app. Apps grouped by their permission spectra.
-        //todo save xml data for all apps in a data structure, to compute this map.
-        SetMultimap<Set<Set<String>>, String> spectraSetToAppsMap;
+        //noinspection Convert2MethodRef
+        SetMultimap<Set<Set<PermUsage>>, String> spectraSetToAppsMap = appToPermSpectraTable.rowKeySet().stream()
+                .collect(MyCollectors.toMultimapGroupingBy(
+                        () -> LinkedHashMultimap.create(),
+                        (String app) -> appToPermSpectraTable.row(app).keySet()
+                ));
+        Set<Set<Set<PermUsage>>> sortedSpectraSets = spectraSetToAppsMap.keySet().stream()
+                .collect(Collectors.toCollection(() -> new TreeSet<>(new PermProfilesComparator())));
+
+        System.out.println("\n\nApp permission profiles. Total profiles : " + sortedSpectraSets.size()
+                + "\n========================================================================");
+
+        for (Set<Set<PermUsage>> spectraSet : sortedSpectraSets) {
+            Set<Set<PermUsage>> sortedSpectraSet = Sets.intersection(permSpectraSet, spectraSet);
+            Set<String> apps = spectraSetToAppsMap.get(spectraSet);
+
+            //printing the spectra set. One spectrum per line.
+            boolean first = true;
+            for (Set<PermUsage> spectrum : sortedSpectraSet) {
+                if (first) {
+                    System.out.print("\n\nProfile [");
+                    first = false;
+                } else {
+                    System.out.print(",\n         ");
+                }
+                System.out.print(spectrum);
+            }
+            System.out.println("] : " + apps.size() + " apps"
+                    + "\n------------------------------------------------------------------------");
+
+            //printing app profiles for this spectra set
+            for (String app : apps) {
+                System.out.println("\n" + app + "\n+-------------------------------------");
+                for (Set<PermUsage> spectrum : spectraSet) {
+                    System.out.println("\t" + spectrum);
+                    appToPermSpectraTable.get(app, spectrum).forEach(perm -> System.out.println("\t\t" + perm));
+                }
+            }
+        }
+    }
+
+    /**
+     * Comapre 2 permission profiles (sets of sets of permission usages).
+     * <p>
+     * A profile is "smaller" if it contains a "smaller" spectrum. Thus profiles will be sorted in the order of smallest
+     * spectrum they contain.
+     */
+    private class PermProfilesComparator implements Comparator<Set<Set<PermUsage>>> {
+        @Override
+        public int compare(Set<Set<PermUsage>> o1, Set<Set<PermUsage>> o2) {
+            for (Set<PermUsage> spectrum : permSpectra) {
+                if (o1.contains(spectrum) == o2.contains(spectrum)) {
+                    continue;
+                }
+                return o1.contains(spectrum) ? -1 : 1;
+            }
+            return 0;
+        }
     }
 }
