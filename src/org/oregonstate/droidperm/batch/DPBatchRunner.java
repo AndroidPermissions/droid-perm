@@ -100,7 +100,21 @@ public class DPBatchRunner {
             ImmutableSet.of(PermUsage.SENSITIVE)                                        //unreaclable sensitive
     );
 
-    private static Set<Set<PermUsage>> permSpectraSet = new LinkedHashSet<>(permSpectra);//for sorting purposes
+    /**
+     * Each spectrum in this list represents a tier of apps containing onthy this spectrum and those above it.
+     * <p>
+     * The map value represents the title for such apps
+     */
+    private static Map<Set<PermUsage>, String> appTierLastSpectra =
+            ImmutableMap.<Set<PermUsage>, String>builder()
+                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE), "safe apps")
+                    .put(ImmutableSet.of(PermUsage.SENSITIVE), "safe apps with unreachable sensitives")
+                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE), "apps with unknown sensitives")
+                    .put(ImmutableSet.of(PermUsage.MANIFEST), "apps with over-declared permissions")
+                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE), "incorrectly migrated apps")
+                    .put(ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE), "impossible apps 1")
+                    .put(ImmutableSet.of(PermUsage.CODE), "impossible apps 2")
+                    .build();
 
     /**
      * If spectra below are present, this indicates the app might be either incorrectly migrated to API23 or have
@@ -203,8 +217,8 @@ public class DPBatchRunner {
                 break;
             case COLLECT_SENSITIVES:
                 printSafeApps();
-                printPermissionSpectraStatistics();
                 printAppsPermissionProfile();
+                printPermissionSpectraStatistics();
                 break;
         }
     }
@@ -437,6 +451,8 @@ public class DPBatchRunner {
     }
 
     private void printPermissionSpectraStatistics() {
+        System.out.println("\n\nPermissions spectra statistics\n"
+                + "========================================================================");
         for (Set<PermUsage> spectrum : permSpectra) {
             Map<String, Set<String>> spectrumData = appToPermSpectraTable.column(spectrum);
             Set<String> apps = spectrumData.keySet();
@@ -444,7 +460,7 @@ public class DPBatchRunner {
                 System.out.println("\nApps with permission spectrum " + spectrum + " : " + apps.size());
             } else {
                 System.out.println("\n\nApps with permission spectrum " + spectrum + " : " + apps.size() + "\n"
-                        + "========================================================================");
+                        + "------------------------------------------------------------------------");
                 for (String app : apps) {
                     Set<String> permSet = spectrumData.get(app);
                     System.out.println(app + " : " + permSet.size());
@@ -470,42 +486,59 @@ public class DPBatchRunner {
     }
 
     private void printAppsPermissionProfile() {
-        //noinspection Convert2MethodRef
-        SetMultimap<Set<Set<PermUsage>>, String> spectraSetToAppsMap = appToPermSpectraTable.rowKeySet().stream()
-                .collect(MyCollectors.toMultimapGroupingBy(
-                        () -> LinkedHashMultimap.create(),
-                        (String app) -> appToPermSpectraTable.row(app).keySet()
-                ));
-        Set<Set<Set<PermUsage>>> sortedSpectraSets = spectraSetToAppsMap.keySet().stream()
-                .collect(Collectors.toCollection(() -> new TreeSet<>(new PermProfilesComparator())));
+        //compute app tiers
+        Map<Set<Set<PermUsage>>, String> appTiers = new LinkedHashMap<>();
+        Set<Set<PermUsage>> prevTier = new LinkedHashSet<>();
+        for (Set<PermUsage> tierLastSpectrum : appTierLastSpectra.keySet()) {
+            Set<Set<PermUsage>> tier = new LinkedHashSet<>(prevTier);
+            tier.add(tierLastSpectrum);
+            prevTier = tier;
+            appTiers.put(tier, appTierLastSpectra.get(tierLastSpectrum));
+        }
 
-        System.out.println("\n\nApp permission profiles. Total profiles : " + sortedSpectraSets.size()
+        SetMultimap<Set<Set<PermUsage>>, String> tiersToAppsMap = LinkedHashMultimap.create();
+        Set<String> appsInPrevTierAndAbove = Collections.emptySet();
+        for (Set<Set<PermUsage>> tier : appTiers.keySet()) {
+            Set<String> appsInTierAndAbove = appToPermSpectraTable.rowKeySet().stream()
+                    .filter(app -> tier.containsAll(appToPermSpectraTable.row(app).keySet()))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<String> appsInTier = Sets.difference(appsInTierAndAbove, appsInPrevTierAndAbove);
+            tiersToAppsMap.putAll(tier, appsInTier);
+            appsInPrevTierAndAbove = appsInTierAndAbove;
+        }
+
+        System.out.println("\n\nApp tiers by permission spectra. Total tiers : " + tiersToAppsMap.keySet().size()
                 + "\n========================================================================");
 
-        for (Set<Set<PermUsage>> spectraSet : sortedSpectraSets) {
-            Set<Set<PermUsage>> sortedSpectraSet = Sets.intersection(permSpectraSet, spectraSet);
-            Set<String> apps = spectraSetToAppsMap.get(spectraSet);
+        int tierNr = 0;
+        for (Set<Set<PermUsage>> tier : tiersToAppsMap.keySet()) {
+            tierNr++;
+            Set<String> apps = tiersToAppsMap.get(tier);
+            System.out.println("\n\nTier " + tierNr + " : " + appTiers.get(tier) + " : " + apps.size());
 
             //printing the spectra set. One spectrum per line.
             boolean first = true;
-            for (Set<PermUsage> spectrum : sortedSpectraSet) {
+            for (Set<PermUsage> spectrum : tier) {
                 if (first) {
-                    System.out.print("\n\nProfile [");
+                    System.out.print("[");
                     first = false;
                 } else {
-                    System.out.print(",\n         ");
+                    System.out.print(",\n ");
                 }
                 System.out.print(spectrum);
             }
-            System.out.println("] : " + apps.size() + " apps"
+            System.out.println("]"
                     + "\n------------------------------------------------------------------------");
 
             //printing app profiles for this spectra set
             for (String app : apps) {
                 System.out.println("\n" + app + "\n+-------------------------------------");
-                for (Set<PermUsage> spectrum : spectraSet) {
-                    System.out.println("\t" + spectrum);
-                    appToPermSpectraTable.get(app, spectrum).forEach(perm -> System.out.println("\t\t" + perm));
+                for (Set<PermUsage> spectrum : tier) {
+                    Set<String> permSet = appToPermSpectraTable.get(app, spectrum);
+                    if (permSet != null) {
+                        System.out.println("\t" + spectrum);
+                        permSet.forEach(perm -> System.out.println("\t\t" + perm));
+                    }
                 }
             }
         }
