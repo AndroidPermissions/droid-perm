@@ -58,7 +58,7 @@ public class UndetectedItemsUtil {
     /**
      * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
      */
-    private static Multimap<SootMethod, Stmt> getUndetectedCalls(
+    public static Multimap<SootMethod, Stmt> getUndetectedCalls(
             List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         Multimap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods, classpathFilter);
         Multimap<SootMethod, Stmt> copy = HashMultimap.create(undetected);
@@ -80,14 +80,8 @@ public class UndetectedItemsUtil {
         Multimap<SootMethod, Stmt> undetectedCheckers =
                 getUndetectedCalls(scenePermDef.getPermCheckers(), detected, classpathFilter);
 
-        System.out.println("\n\nUndetected checkers : " + undetectedCheckers.values().size() + "\n"
-                + "========================================================================");
-        for (SootMethod checker : undetectedCheckers.keySet()) {
-            System.out.println(checker);
-            for (Stmt stmt : undetectedCheckers.get(checker)) {
-                System.out.println("\tfrom " + PrintUtil.toMethodLogString(stmt));
-            }
-        }
+        PrintUtil.printMultimapOfStmtValues(undetectedCheckers, "Undetected checkers", "", "\t", "from ", false);
+
         System.out.println("\nUndetected checkers execution time: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
     }
@@ -125,10 +119,7 @@ public class UndetectedItemsUtil {
             for (T sens : currentSensMMap.keySet()) {
                 System.out.println(sens);
                 for (Stmt stmt : currentSensMMap.get(sens)) {
-                    System.out.println("\tfrom " + PrintUtil.toMethodLogString(stmt));
-                    if (printStmt) {
-                        System.out.println("\t\t" + stmt);
-                    }
+                    PrintUtil.printStmt(stmt, "\t", "from ", printStmt);
                 }
             }
         }

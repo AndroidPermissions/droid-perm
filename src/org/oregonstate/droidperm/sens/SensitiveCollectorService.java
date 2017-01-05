@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.sens;
 
+import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
@@ -46,7 +47,7 @@ public class SensitiveCollectorService {
 
         Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
                 .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives", false);
+        UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives", true);
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(
                 permToReferredMethodSensMap.keySet().stream()
@@ -59,9 +60,13 @@ public class SensitiveCollectorService {
         Set<String> declaredPermissions = manifest.getDeclaredPermissions();
         PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
-        Set<String> referredDangerousPerm =
-                SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter).keySet();
-        PrintUtil.printCollection(referredDangerousPerm, "Permissions referred in the code");
+        Multimap<String, Stmt> referredDangerousPerm =
+                SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter);
+        printPermissionReferences(referredDangerousPerm);
+
+        Multimap<SootMethod, Stmt> checkers = UndetectedItemsUtil
+                .getUndetectedCalls(scenePermDef.getPermCheckers(), Collections.emptySet(), classpathFilter);
+        PrintUtil.printMultimapOfStmtValues(checkers, "Checkers", "", "\t", "from ", false);
 
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
@@ -83,7 +88,7 @@ public class SensitiveCollectorService {
             SensitiveCollectorJaxbData data = new SensitiveCollectorJaxbData(
                     new ArrayList<>(declaredPermissions),
                     new ArrayList<>(declaredDangerousPerm),
-                    new ArrayList<>(referredDangerousPerm),
+                    new ArrayList<>(referredDangerousPerm.keySet()),
                     new ArrayList<>(dangerousPermWithSensitives),
                     UndetectedItemsUtil
                             .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef),
@@ -93,6 +98,12 @@ public class SensitiveCollectorService {
 
         System.out.println("\nTime to collect sensitives: "
                 + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
+    }
+
+    public static void printPermissionReferences(Multimap<String, Stmt> referredDangerousPerm) {
+        PrintUtil.printCollection(referredDangerousPerm.keySet(), "Permissions referred in the code");
+        PrintUtil.printMultimapOfStmtValues(referredDangerousPerm, "Permissions referred in the code, code references",
+                "", "\t", "in ", true);
     }
 
     public static Set<String> getAllDangerousPerm() {

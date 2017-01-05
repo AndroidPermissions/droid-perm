@@ -159,6 +159,11 @@ public class MethodPermDetector {
                 UndetectedItemsUtil.buildPermToUndetectedFieldSensMap(scenePermDef, sensFieldRefs, classpathFilter);
         UndetectedItemsUtil
                 .printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives", true);
+
+        Multimap<String, Stmt> referredDangerousPerm =
+                SceneUtil.resolveConstantUsages(SensitiveCollectorService.getAllDangerousPerm(), classpathFilter);
+        SensitiveCollectorService.printPermissionReferences(referredDangerousPerm);
+
         currentTime = System.currentTimeMillis();
         System.out.println("\nUndetected sensitives execution time: "
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
