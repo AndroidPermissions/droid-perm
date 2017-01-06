@@ -60,6 +60,7 @@ public class SensitiveCollectorService {
         Set<String> declaredPermissions = manifest.getDeclaredPermissions();
         PrintUtil.printCollection(declaredPermissions, "Permissions declared in manifest");
 
+        //Permissions referred in the code
         Multimap<String, Stmt> referredDangerousPerm =
                 SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter);
         printPermissionReferences(referredDangerousPerm);
