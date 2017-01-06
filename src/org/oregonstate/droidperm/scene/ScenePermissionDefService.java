@@ -26,10 +26,7 @@ import java.util.stream.Stream;
  */
 public class ScenePermissionDefService {
 
-    private Set<SootMethodAndClass> permCheckerDefs;
-    private Set<AndroidMethod> methodSensitiveDefs;
-    private Set<FieldSensitiveDef> fieldSensitiveDefs;
-    private final Set<SootMethodAndClass> parametricSensDefs;
+    private IPermissionDefProvider permissionDefProvider;
     private ListMultimap<AndroidMethod, SootMethod> sceneMethodSensMap;
     private SetMultimap<Set<String>, SootMethod> permissionToSensitivesMap;
     private SetMultimap<SootMethod, String> sensitivesToPermissionsMap;
@@ -48,12 +45,10 @@ public class ScenePermissionDefService {
     private Map<SootMethod, Integer> parametricSensToArgIndexMap;
 
     public ScenePermissionDefService(IPermissionDefProvider permissionDefProvider) {
-        permCheckerDefs = permissionDefProvider.getPermCheckerDefs();
-        methodSensitiveDefs = permissionDefProvider.getMethodSensitiveDefs();
-        fieldSensitiveDefs = permissionDefProvider.getFieldSensitiveDefs();
-        parametricSensDefs = permissionDefProvider.getParametricSensDefs();
+        this.permissionDefProvider = permissionDefProvider;
 
-        sceneMethodSensMap = HierarchyUtil.resolveAbstractDispatchesToMap(methodSensitiveDefs);
+        sceneMethodSensMap =
+                HierarchyUtil.resolveAbstractDispatchesToMap(permissionDefProvider.getMethodSensitiveDefs());
         permissionToSensitivesMap = buildPermissionToSensitivesMap();
         sensitivesToPermissionsMap = permissionToSensitivesMap.entries().stream()
                 .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
@@ -65,12 +60,17 @@ public class ScenePermissionDefService {
     }
 
     public List<SootMethod> getPermCheckers() {
-        return HierarchyUtil.resolveAbstractDispatches(permCheckerDefs, false);
+        return HierarchyUtil.resolveAbstractDispatches(permissionDefProvider.getPermCheckerDefs(), false);
+    }
+
+    public List<SootMethod> getPermRequesters() {
+        return HierarchyUtil.resolveAbstractDispatches(permissionDefProvider.getPermRequesterDefs(), false);
     }
 
     private SetMultimap<Set<String>, SootMethod> buildPermissionToSensitivesMap() {
-        Map<Set<String>, List<AndroidMethod>> permissionToSensitiveDefMap = methodSensitiveDefs
-                .stream().collect(Collectors.groupingBy(AndroidMethod::getPermissions));
+        Map<Set<String>, List<AndroidMethod>> permissionToSensitiveDefMap =
+                permissionDefProvider.getMethodSensitiveDefs()
+                        .stream().collect(Collectors.groupingBy(AndroidMethod::getPermissions));
         return permissionToSensitiveDefMap.keySet().stream()
                 .collect(MyCollectors.toMultimap(
                         LinkedHashMultimap::create,
@@ -82,7 +82,7 @@ public class ScenePermissionDefService {
 
     private Map<FieldSensitiveDef, SootField> buildSceneFieldSensMap() {
         Scene scene = Scene.v();
-        return fieldSensitiveDefs.stream()
+        return permissionDefProvider.getFieldSensitiveDefs().stream()
                 .filter(def -> scene.containsClass(def.getClassName())
                         && scene.getSootClass(def.getClassName()).getFieldByNameUnsafe(def.getName()) != null)
                 .collect(Collectors.toMap(
@@ -94,8 +94,9 @@ public class ScenePermissionDefService {
     }
 
     private ListMultimap<Set<String>, SootField> buildPermissionToFieldSensMap() {
-        Map<Set<String>, List<FieldSensitiveDef>> permissionToFieldSensDefMap = fieldSensitiveDefs.stream()
-                .collect(Collectors.groupingBy(FieldSensitiveDef::getPermissions));
+        Map<Set<String>, List<FieldSensitiveDef>> permissionToFieldSensDefMap =
+                permissionDefProvider.getFieldSensitiveDefs().stream()
+                        .collect(Collectors.groupingBy(FieldSensitiveDef::getPermissions));
         return permissionToFieldSensDefMap.keySet().stream()
                 .collect(MyCollectors.toMultimap(
                         ArrayListMultimap::create,
@@ -119,7 +120,8 @@ public class ScenePermissionDefService {
 
     public List<SootMethod> getSceneParametricSensitives() {
         if (sceneParametricSensitives == null) {
-            sceneParametricSensitives = HierarchyUtil.resolveAbstractDispatches(parametricSensDefs, false);
+            sceneParametricSensitives =
+                    HierarchyUtil.resolveAbstractDispatches(permissionDefProvider.getParametricSensDefs(), false);
         }
         return sceneParametricSensitives;
     }
@@ -165,7 +167,8 @@ public class ScenePermissionDefService {
      * @return all sets of permissions for which there is a sensitive method definition.
      */
     public Set<Set<String>> getMethodPermissionSets() {
-        return methodSensitiveDefs.stream().map(AndroidMethod::getPermissions).collect(Collectors.toSet());
+        return permissionDefProvider.getMethodSensitiveDefs().stream()
+                .map(AndroidMethod::getPermissions).collect(Collectors.toSet());
     }
 
     /**
@@ -224,7 +227,7 @@ public class ScenePermissionDefService {
     }
 
     public boolean isCompileSdkVersion_23_OrMore() {
-        SootMethodAndClass contextCheckSelfPerm = permCheckerDefs.stream()
+        SootMethodAndClass contextCheckSelfPerm = permissionDefProvider.getPermCheckerDefs().stream()
                 .filter(permDef -> permDef.getClassName().equals("android.content.Context")
                         && permDef.getMethodName().equals("checkSelfPermission")).findAny().orElse(null);
         return !HierarchyUtil.resolveAbstractDispatch(contextCheckSelfPerm, false).isEmpty();

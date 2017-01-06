@@ -166,6 +166,11 @@ class TxtPermissionDefProvider implements IPermissionDefProvider {
     }
 
     @Override
+    public Set<SootMethodAndClass> getPermRequesterDefs() {
+        return Collections.emptySet();
+    }
+
+    @Override
     public Set<AndroidMethod> getMethodSensitiveDefs() {
         return methodSensitiveDefs;
     }

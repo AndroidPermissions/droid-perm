@@ -28,6 +28,7 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
     private static final Pattern methodSigPattern = Pattern.compile(methodSigRegex);
 
     private final Set<SootMethodAndClass> permCheckerDefs;
+    private final Set<SootMethodAndClass> permRequesterDefs;
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
     private final Set<SootMethodAndClass> parametricSensDefs;
@@ -38,6 +39,9 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
 
     public XMLPermissionDefProvider(PermissionDefList permDefList) {
         permCheckerDefs = permDefList.getCheckerDefs().stream()
+                .map(XMLPermissionDefProvider::toSootMethodAndClass)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        permRequesterDefs = permDefList.getRequesterDefs().stream()
                 .map(XMLPermissionDefProvider::toSootMethodAndClass)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         methodSensitiveDefs = permDefList.getPermissionDefs().stream()
@@ -53,20 +57,21 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
     }
 
     private static SootMethodAndClass toSootMethodAndClass(ParametricSensDef parametricSensDef) {
-        return toSootMethodAndClass(new CheckerDef(parametricSensDef.getClassName(), parametricSensDef.getTarget()));
+        return toSootMethodAndClass(
+                new MethodBasedDef(parametricSensDef.getClassName(), parametricSensDef.getTarget()));
     }
 
-    private static SootMethodAndClass toSootMethodAndClass(CheckerDef checkerDef) {
-        Matcher matcher = methodSigPattern.matcher(checkerDef.getTarget());
+    private static SootMethodAndClass toSootMethodAndClass(MethodBasedDef methodBasedDef) {
+        Matcher matcher = methodSigPattern.matcher(methodBasedDef.getTarget());
         if (!matcher.find()) {
-            throw new RuntimeException("Invalid signature for permission checker: " + checkerDef.getTarget());
+            throw new RuntimeException("Invalid signature for permission checker: " + methodBasedDef.getTarget());
         }
         String returnType = matcher.group(1);
         String methodName = matcher.group(2);
         String unsplitParameters = matcher.group(3);
         List<String> parameters =
                 Stream.of(unsplitParameters.split(",")).map(String::trim).collect(Collectors.toList());
-        return new SootMethodAndClass(methodName, checkerDef.getClassName(), returnType, parameters);
+        return new SootMethodAndClass(methodName, methodBasedDef.getClassName(), returnType, parameters);
     }
 
     private static FieldSensitiveDef toFieldSensitiveDef(PermissionDef permissionDef) {
@@ -92,6 +97,11 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
     @Override
     public Set<SootMethodAndClass> getPermCheckerDefs() {
         return permCheckerDefs;
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getPermRequesterDefs() {
+        return permRequesterDefs;
     }
 
     @Override

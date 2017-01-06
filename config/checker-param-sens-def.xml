@@ -5,10 +5,18 @@
   <checkerDefs>
     <checkerDef className="android.content.Context" target="int checkSelfPermission(java.lang.String)"/>
     <checkerDef className="android.support.v4.content.ContextCompat"
-                target="int checkSelfPermission(android.content.Context,java.lang.String)"/>
+                target="int checkSelfPermission(android.content.Context, java.lang.String)"/>
     <checkerDef className="android.support.v4.content.PermissionChecker"
-                target="int checkSelfPermission(android.content.Context,java.lang.String)"/>
+                target="int checkSelfPermission(android.content.Context, java.lang.String)"/>
   </checkerDefs>
+  <requesterDefs>
+    <requesterDef className="android.app.Activity" target="void requestPermissions(java.lang.String[], int)"/>
+    <requesterDef className="android.app.Fragment" target="void requestPermissions(java.lang.String[], int)"/>
+    <requesterDef className="android.support.v4.app.ActivityCompat"
+                  target="void requestPermissions(android.app.Activity, java.lang.String[], int)"/>
+    <requesterDef className="android.support.v4.app.Fragment"
+                  target="void requestPermissions(java.lang.String[], int)"/>
+  </requesterDefs>
   <parametricSensDefs>
     <parametricSensDef className="android.content.Intent" target="void &lt;init&gt;(java.lang.String)"/>
     <parametricSensDef className="android.content.Intent"

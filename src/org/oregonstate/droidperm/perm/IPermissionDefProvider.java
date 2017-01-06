@@ -12,6 +12,8 @@ public interface IPermissionDefProvider {
 
     Set<SootMethodAndClass> getPermCheckerDefs();
 
+    Set<SootMethodAndClass> getPermRequesterDefs();
+
     Set<AndroidMethod> getMethodSensitiveDefs();
 
     Set<FieldSensitiveDef> getFieldSensitiveDefs();

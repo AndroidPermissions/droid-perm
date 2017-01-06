@@ -66,7 +66,11 @@ public class SensitiveCollectorService {
 
         Multimap<SootMethod, Stmt> checkers = UndetectedItemsUtil
                 .getUndetectedCalls(scenePermDef.getPermCheckers(), Collections.emptySet(), classpathFilter);
-        PrintUtil.printMultimapOfStmtValues(checkers, "Checkers", "", "\t", "from ", false);
+        PrintUtil.printMultimapOfStmtValues(checkers, "Perm checkers", "", "\t", "from ", false);
+
+        Multimap<SootMethod, Stmt> requesters = UndetectedItemsUtil
+                .getUndetectedCalls(scenePermDef.getPermRequesters(), Collections.emptySet(), classpathFilter);
+        PrintUtil.printMultimapOfStmtValues(requesters, "Perm requesters", "", "\t", "from ", false);
 
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))

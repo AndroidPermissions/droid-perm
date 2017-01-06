@@ -18,6 +18,7 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
     private static final Logger logger = LoggerFactory.getLogger(AggregatePermDefProvider.class);
 
     private final Set<SootMethodAndClass> permCheckerDefs;
+    private final Set<SootMethodAndClass> permRequesterDefs;
     private final Set<AndroidMethod> methodSensitiveDefs;
     private final Set<FieldSensitiveDef> fieldSensitiveDefs;
     private final Set<SootMethodAndClass> parametricSensDefs;
@@ -27,6 +28,10 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
                 sourceProviders.stream().map(IPermissionDefProvider::getPermCheckerDefs),
                 SootMethodAndClass::getSignature,
                 "permission checker defs"));
+        this.permRequesterDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
+                sourceProviders.stream().map(IPermissionDefProvider::getPermRequesterDefs),
+                SootMethodAndClass::getSignature,
+                "permission requester defs"));
         this.methodSensitiveDefs = Collections.unmodifiableSet(computeAndVerifyUniqueSet(
                 sourceProviders.stream().map(IPermissionDefProvider::getMethodSensitiveDefs),
                 SootMethodAndClass::getSignature,
@@ -66,6 +71,11 @@ class AggregatePermDefProvider implements IPermissionDefProvider {
     @Override
     public Set<SootMethodAndClass> getPermCheckerDefs() {
         return permCheckerDefs;
+    }
+
+    @Override
+    public Set<SootMethodAndClass> getPermRequesterDefs() {
+        return permRequesterDefs;
     }
 
     @Override

@@ -15,7 +15,10 @@ public class PermissionDefList {
     private List<PermissionDef> permissionDefs = new ArrayList<>();
     @XmlElementWrapper
     @XmlElement(name = "checkerDef")
-    private List<CheckerDef> checkerDefs = new ArrayList<>();
+    private List<MethodBasedDef> checkerDefs = new ArrayList<>();
+    @XmlElementWrapper
+    @XmlElement(name = "requesterDef")
+    private List<MethodBasedDef> requesterDefs = new ArrayList<>();
     @XmlElementWrapper
     @XmlElement(name = "parametricSensDef")
     private List<ParametricSensDef> parametricSensDefs = new ArrayList<>();
@@ -27,7 +30,7 @@ public class PermissionDefList {
         this.permissionDefs = permissionDefs;
     }
 
-    public PermissionDefList(List<PermissionDef> permissionDefs, List<CheckerDef> checkerDefs,
+    public PermissionDefList(List<PermissionDef> permissionDefs, List<MethodBasedDef> checkerDefs,
                              List<ParametricSensDef> parametricSensDefs) {
         this.permissionDefs = permissionDefs;
         this.checkerDefs = checkerDefs;
@@ -38,8 +41,12 @@ public class PermissionDefList {
         return permissionDefs;
     }
 
-    public List<CheckerDef> getCheckerDefs() {
+    public List<MethodBasedDef> getCheckerDefs() {
         return checkerDefs;
+    }
+
+    public List<MethodBasedDef> getRequesterDefs() {
+        return requesterDefs;
     }
 
     public List<ParametricSensDef> getParametricSensDefs() {
