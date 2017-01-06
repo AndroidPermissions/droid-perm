@@ -73,7 +73,9 @@ public class DroidPermMain {
     private static String flowDroidXmlOut;
 
     private static String additionalClasspath = "";
-    private static List<File> permDefFiles = Collections.singletonList(new File("config/perm-def-default.txt"));
+    private static List<File> permDefFiles = buildPermDefFiles(
+            "config/checker-param-sens-def.xml;config/perm-def-API-23.xml;config/perm-def-play-services.xml;"
+                    + "config/javadoc-perm-def-API-23.xml;config/perm-def-manual.xml");
     private static boolean useAnnoPermDef;//whether to use permission annotations.
     private static File txtOut;
     private static File xmlOut;
