@@ -101,20 +101,63 @@ public class DPBatchRunner {
     );
 
     /**
-     * Each spectrum in this list represents a tier of apps containing onthy this spectrum and those above it.
-     * <p>
-     * The map value represents the title for such apps
+     * Newspectrum for each tier compared to previous one.
      */
-    private static Map<Set<PermUsage>, String> appTierLastSpectra =
-            ImmutableMap.<Set<PermUsage>, String>builder()
-                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE), "safe apps")
-                    .put(ImmutableSet.of(PermUsage.SENSITIVE), "safe apps with unreachable sensitives")
-                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE), "apps with unknown sensitives")
-                    .put(ImmutableSet.of(PermUsage.MANIFEST), "apps with over-declared permissions")
-                    .put(ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE), "incorrectly migrated apps")
-                    .put(ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE), "impossible apps 1")
-                    .put(ImmutableSet.of(PermUsage.CODE), "impossible apps 2")
-                    .build();
+    @SuppressWarnings("unchecked")
+    private static List<Set<PermUsage>> appTierSpectrumToAdd = Lists.newArrayList(
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE),
+            ImmutableSet.of(PermUsage.MANIFEST),
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE), //added 2nd time
+            ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.CODE));
+
+    /**
+     * Map from spectra sets that describe a tier to their names.
+     */
+    @SuppressWarnings("unchecked")
+    private static List<Set<PermUsage>> appTierSpectrumToRemove = Lists.newArrayList(
+            null,
+            null,
+            null,
+            null,
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),
+            null, null, null);
+
+    private static List<String> appTierNames =
+            ImmutableList.of(
+                    "safe apps",
+                    "safe apps with unreachable sensitives",
+                    "apps with unknown sensitives",
+                    "apps with over-declared permissions",
+                    "apps with some permissions [MANIFEST, SENSITIVE]",
+                    "incorrectly migrated apps",
+                    "impossible apps 1",
+                    "impossible apps 2");
+
+    private static Map<Set<Set<PermUsage>>, String> appTiers;
+
+    static {
+        appTiers = new LinkedHashMap<>();
+        Set<Set<PermUsage>> prevTier = new LinkedHashSet<>();
+        for (int i = 0; i < appTierNames.size(); i++) {
+            Set<PermUsage> spectrumToAdd = appTierSpectrumToAdd.get(i);
+            Set<PermUsage> spectrumToRemove = appTierSpectrumToRemove.get(i);
+            String spectrumName = appTierNames.get(i);
+
+            Set<Set<PermUsage>> tier = new LinkedHashSet<>(prevTier);
+            if (spectrumToAdd != null) {
+                tier.add(spectrumToAdd);
+            }
+            if (spectrumToRemove != null) {
+                tier.remove(spectrumToRemove);
+            }
+            prevTier = tier;
+            appTiers.put(tier, spectrumName);
+        }
+    }
 
     /**
      * If spectra below are present, this indicates the app might be either incorrectly migrated to API23 or have
@@ -486,22 +529,13 @@ public class DPBatchRunner {
     }
 
     private void printAppsPermissionProfile() {
-        //compute app tiers
-        Map<Set<Set<PermUsage>>, String> appTiers = new LinkedHashMap<>();
-        Set<Set<PermUsage>> prevTier = new LinkedHashSet<>();
-        for (Set<PermUsage> tierLastSpectrum : appTierLastSpectra.keySet()) {
-            Set<Set<PermUsage>> tier = new LinkedHashSet<>(prevTier);
-            tier.add(tierLastSpectrum);
-            prevTier = tier;
-            appTiers.put(tier, appTierLastSpectra.get(tierLastSpectrum));
-        }
-
         SetMultimap<Set<Set<PermUsage>>, String> tiersToAppsMap = LinkedHashMultimap.create();
         Set<String> appsInPrevTierAndAbove = Collections.emptySet();
         for (Set<Set<PermUsage>> tier : appTiers.keySet()) {
-            Set<String> appsInTierAndAbove = appToPermSpectraTable.rowKeySet().stream()
+            Set<String> appsInTierAndAbove = new LinkedHashSet<>(appsInPrevTierAndAbove);
+            appToPermSpectraTable.rowKeySet().stream()
                     .filter(app -> tier.containsAll(appToPermSpectraTable.row(app).keySet()))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
+                    .forEach(appsInTierAndAbove::add);
             Set<String> appsInTier = Sets.difference(appsInTierAndAbove, appsInPrevTierAndAbove);
             tiersToAppsMap.putAll(tier, appsInTier);
             appsInPrevTierAndAbove = appsInTierAndAbove;
