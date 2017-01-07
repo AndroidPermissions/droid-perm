@@ -132,8 +132,8 @@ public class DPBatchRunner {
                     "safe apps with unreachable sensitives",
                     "apps with unknown sensitives",
                     "apps with over-declared permissions",
-                    "apps with some permissions [MANIFEST, SENSITIVE]",
                     "incorrectly migrated apps",
+                    "apps with some permissions [MANIFEST, SENSITIVE]",
                     "impossible apps 1",
                     "impossible apps 2");
 
