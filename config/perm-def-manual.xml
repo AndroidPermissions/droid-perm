@@ -2,12 +2,10 @@
 <PermissionDefinitions>
     <permissionDef className="android.net.wifi.WifiManager" conditional="true" permissionRel="AllOf" target="SCAN_RESULTS_AVAILABLE_ACTION" targetKind="Field">
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
     </permissionDef>
     <permissionDef className="android.telephony.TelephonyManager" conditional="true" permissionRel="AllOf" target="java.util.List getNeighboringCellInfo()" targetKind="Method">
         <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
-    </permissionDef>
-    <permissionDef className="android.telephony.TelephonyManager" conditional="true" permissionRel="AllOf" target="void listen(android.telephony.PhoneStateListener, int)" targetKind="Method">
-        <permission name="android.permission.READ_PHONE_STATE"/>
     </permissionDef>
     <permissionDef className="android.provider.Telephony$Carriers" conditional="true" permissionRel="AllOf" target="CONTENT_URI" targetKind="Field">
         <permission name="android.permission.READ_SMS"/>
@@ -85,12 +83,19 @@
         <permission name="android.permission.READ_SMS"/>
     </permissionDef>
     <permissionDef className="android.provider.Telephony$Sms$Intents" conditional="true" permissionRel="AllOf" target="SMS_RECEIVED_ACTION" targetKind="Field">
-        <permission name="android.permission.READ_SMS"/>
+        <permission name="android.permission.RECEIVE_SMS"/>
     </permissionDef>
     <permissionDef className="android.provider.ContactsContract$Contacts" conditional="true" permissionRel="AllOf" target="android.net.Uri lookupContact(android.content.ContentResolver, android.net.Uri)" targetKind="Method">
         <permission name="android.permission.READ_CONTACTS"/>
         <permission name="android.permission.WRITE_CONTACTS"/>
     </permissionDef>
+    <permissionDef className="android.media.MediaRecorder" conditional="true" permissionRel="AllOf" target="void setAudioSource(int)" targetKind="Method">
+        <permission name="android.permission.RECORD_AUDIO"/>
+    </permissionDef>
+    <permissionDef className="android.media.AudioRecord" conditional="true" permissionRel="AllOf" target="void &lt;init&gt;(int, int, int, int, int)" targetKind="Method">
+        <permission name="android.permission.RECORD_AUDIO"/>
+    </permissionDef>
     <checkerDefs/>
+    <requesterDefs/>
     <parametricSensDefs/>
 </PermissionDefinitions>

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
+import soot.tagkit.IntegerConstantValueTag;
 import soot.tagkit.StringConstantValueTag;
 
 import java.util.*;
@@ -130,12 +131,13 @@ public class SceneUtil {
     }
 
     /**
-     * @return A map from fields to actual statements in context possibly referring that fields.
+     * @return A map from fields to actual statements in context possibly referring that fields. Fields representing
+     * integer constants are not analyzed, to avoid too many false positives.
      */
     public static Multimap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
                                                                Predicate<SootMethod> classpathFilter) {
         Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
-        Map<String, SootField> constantFieldsMap = buildConstantFieldsMap(sensFieldsSet);
+        Map<String, SootField> constantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
         Multimap<SootField, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
                 (stmt, method) -> collectResolvedFields(sensFieldsSet, constantFieldsMap, result, stmt));
@@ -150,17 +152,31 @@ public class SceneUtil {
         );
     }
 
-    public static Map<String, SootField> buildConstantFieldsMap(Set<SootField> sensFields) {
+    public static Map<String, SootField> buildStringConstantFieldsMap(Set<SootField> sensFields) {
         //If there are multiple sensitive fields initialized with same constant, exception will be thrown.
-        return sensFields.stream().filter(field -> getConstantValue(field) != null).collect(Collectors.toMap(
-                SceneUtil::getConstantValue,
+        return sensFields.stream().filter(field -> getStringConstantValue(field) != null).collect(Collectors.toMap(
+                SceneUtil::getStringConstantValue,
                 field -> field
         ));
     }
 
-    public static String getConstantValue(SootField field) {
+    public static String getStringConstantValue(SootField field) {
         return field.getTags().stream().filter(tag -> tag instanceof StringConstantValueTag)
                 .map(constTag -> ((StringConstantValueTag) constTag).getStringValue())
+                .findAny().orElse(null);
+    }
+
+    public static Map<Integer, SootField> buildIntConstantFieldsMap(Set<SootField> sensFields) {
+        //If there are multiple sensitive fields initialized with same constant, exception will be thrown.
+        return sensFields.stream().filter(field -> getIntConstantValue(field) != null).collect(Collectors.toMap(
+                SceneUtil::getIntConstantValue,
+                field -> field
+        ));
+    }
+
+    public static Integer getIntConstantValue(SootField field) {
+        return field.getTags().stream().filter(tag -> tag instanceof IntegerConstantValueTag)
+                .map(constTag -> ((IntegerConstantValueTag) constTag).getIntValue())
                 .findAny().orElse(null);
     }
 

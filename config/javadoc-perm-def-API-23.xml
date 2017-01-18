@@ -185,6 +185,62 @@
     </comment>
     <permission name="android.permission.READ_PHONE_STATE"/>
   </permissionDef>
+  <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="LISTEN_CALL_FORWARDING_INDICATOR" targetKind="Field">
+    <comment>
+      /**
+      * Listen for changes to the call-forwarding indicator.
+      * {@more}
+      * Requires Permission: {@link android.Manifest.permission#READ_PHONE_STATE
+      * READ_PHONE_STATE}
+      * @see #onCallForwardingIndicatorChanged
+      */
+    </comment>
+    <permission name="android.permission.READ_PHONE_STATE"/>
+  </permissionDef>
+  <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="LISTEN_CELL_LOCATION" targetKind="Field">
+    <comment>
+      * Listen for changes to the device's cell location. Note that
+      * this will result in frequent callbacks to the listener.
+      * {@more}
+      * Requires Permission: {@link android.Manifest.permission#ACCESS_COARSE_LOCATION
+      * ACCESS_COARSE_LOCATION}
+      * &lt;p&gt;
+      * If you need regular location updates but want more control over
+      * the update interval or location precision, you can set up a listener
+    </comment>
+    <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+  </permissionDef>
+  <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="LISTEN_MESSAGE_WAITING_INDICATOR" targetKind="Field">
+    <comment>
+      /**
+      * Listen for changes to the message-waiting indicator.
+      * {@more}
+      * Requires Permission: {@link android.Manifest.permission#READ_PHONE_STATE
+      * READ_PHONE_STATE}
+      * &lt;p&gt;
+      * Example: The status bar uses this to determine when to display the
+      * voicemail icon.
+      *
+      * @see #onMessageWaitingIndicatorChanged
+    </comment>
+    <permission name="android.permission.READ_PHONE_STATE"/>
+  </permissionDef>
+  <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="LISTEN_SIGNAL_STRENGTH" targetKind="Field">
+    <comment>
+      /**
+      * Listen for changes to the network signal strength (cellular).
+      * {@more}
+      * Requires Permission: {@link android.Manifest.permission#READ_PHONE_STATE
+      * READ_PHONE_STATE}
+      * &lt;p&gt;
+      *
+      * @see #onSignalStrengthChanged
+      *
+      * @deprecated by {@link #LISTEN_SIGNAL_STRENGTHS}
+      */
+    </comment>
+    <permission name="android.permission.READ_PHONE_STATE"/>
+  </permissionDef>
   <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="void onCallStateChanged(int, java.lang.String)" targetKind="Method">
     <comment>
       * @param state call state
@@ -780,4 +836,7 @@
   <permissionDef className="android.telephony.SubscriptionManager" conditional="true" permissionRel="AllOf" target="boolean isNetworkRoaming(int)" targetKind="Method">
     <permission name="android.permission.READ_PHONE_STATE"/>
   </permissionDef>
+  <checkerDefs/>
+  <requesterDefs/>
+  <parametricSensDefs/>
 </PermissionDefinitions>

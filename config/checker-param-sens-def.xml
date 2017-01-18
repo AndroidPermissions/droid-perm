@@ -18,6 +18,7 @@
                   target="void requestPermissions(java.lang.String[], int)"/>
   </requesterDefs>
   <parametricSensDefs>
+    <!--Intents-->
     <parametricSensDef className="android.content.Intent" target="void &lt;init&gt;(java.lang.String)"/>
     <parametricSensDef className="android.content.Intent"
                        target="void &lt;init&gt;(java.lang.String, android.net.Uri)"/>
@@ -26,6 +27,8 @@
     <parametricSensDef className="android.content.IntentFilter" target="void &lt;init&gt;(java.lang.String)"/>
     <parametricSensDef className="android.content.IntentFilter"
                        target="void &lt;init&gt;(java.lang.String, java.lang.String)"/>
+
+    <!--Parametric sensitives expecting an Uri-->
     <parametricSensDef className="android.content.ContentResolver"
                        target="android.database.Cursor query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)"/>
     <parametricSensDef className="android.content.ContentResolver"
@@ -54,5 +57,9 @@
     <parametricSensDef className="android.support.v4.content.CursorLoader" target="void setUri(android.net.Uri)"/>
     <parametricSensDef className="android.database.Cursor"
                        target="void setNotificationUri(android.content.ContentResolver, android.net.Uri)"/>
+
+    <!--int sensitive parameter-->
+    <parametricSensDef className="android.telephony.TelephonyManager"
+                       target="void listen(android.telephony.PhoneStateListener, int)"/>
   </parametricSensDefs>
 </PermissionDefinitions>

@@ -65,6 +65,8 @@ public class CallGraphPermDefService {
                 return ((FieldRef) value).getField();
             } else if (value instanceof StringConstant) {
                 return scenePermDef.getFieldFor(((StringConstant) value).value);
+            } else if (value instanceof IntConstant) {
+                return scenePermDef.getFieldFor(((IntConstant) value).value);
             } else if (value instanceof NullConstant) {
                 return null;
             } else {

@@ -1,9 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import org.oregonstate.droidperm.perm.FieldSensitiveDef;
 import org.oregonstate.droidperm.perm.IPermissionDefProvider;
 import org.oregonstate.droidperm.perm.PermissionDefConverter;
@@ -36,7 +33,8 @@ public class ScenePermissionDefService {
     private Map<FieldSensitiveDef, SootField> sceneFieldSensMap;
     private ListMultimap<Set<String>, SootField> permissionToFieldSensMap;
     private final SetMultimap<SootField, String> fieldSensToPermissionsMap;
-    private final Map<String, SootField> constantFieldsMap;
+    private final Map<String, SootField> stringConstantFieldsMap;
+    private final Map<Integer, SootField> intConstantFieldsMap;
     private List<SootMethod> sceneMethodSensitives;
     private List<SootMethod> sceneParametricSensitives;
     /**
@@ -56,7 +54,8 @@ public class ScenePermissionDefService {
         permissionToFieldSensMap = buildPermissionToFieldSensMap();
         fieldSensToPermissionsMap = permissionToFieldSensMap.entries().stream()
                 .collect(MyCollectors.toMultimapForCollection(Map.Entry::getValue, Map.Entry::getKey));
-        constantFieldsMap = SceneUtil.buildConstantFieldsMap(fieldSensToPermissionsMap.keySet());
+        stringConstantFieldsMap = SceneUtil.buildStringConstantFieldsMap(fieldSensToPermissionsMap.keySet());
+        intConstantFieldsMap = SceneUtil.buildIntConstantFieldsMap(fieldSensToPermissionsMap.keySet());
     }
 
     public List<SootMethod> getPermCheckers() {
@@ -115,7 +114,11 @@ public class ScenePermissionDefService {
     }
 
     public SootField getFieldFor(String actionString) {
-        return constantFieldsMap.get(actionString);
+        return stringConstantFieldsMap.get(actionString);
+    }
+
+    public SootField getFieldFor(int phoneStateListenerConst) {
+        return intConstantFieldsMap.get(phoneStateListenerConst);
     }
 
     public List<SootMethod> getSceneParametricSensitives() {
@@ -141,10 +144,16 @@ public class ScenePermissionDefService {
         return parametricSensToArgIndexMap.get(parametricSens);
     }
 
+    private static final Set<String> SENSITIVE_PARAM_TYPES =
+            ImmutableSet.of("java.lang.String", "android.net.Uri", "int");
+
+    /**
+     * @return the index of the first parameter whose type is String or Uri.
+     */
     private int computeSensitiveArgIndex(SootMethod parametricSens) {
         for (int i = 0; i < parametricSens.getParameterTypes().size(); i++) {
             Type type = parametricSens.getParameterType(i);
-            if (type.toString().equals("java.lang.String") || type.toString().equals("android.net.Uri")) {
+            if (SENSITIVE_PARAM_TYPES.contains(type.toString())) {
                 return i;
             }
         }
