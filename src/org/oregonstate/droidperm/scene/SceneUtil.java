@@ -11,6 +11,7 @@ import soot.tagkit.StringConstantValueTag;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -137,16 +138,19 @@ public class SceneUtil {
     public static Multimap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
                                                                Predicate<SootMethod> classpathFilter) {
         Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
-        Map<String, SootField> constantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
+        Map<String, SootField> stringConstantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
+        Map<Integer, SootField> intConstantFieldsMap = buildIntConstantFieldsMap(sensFieldsSet);
         Multimap<SootField, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
-                (stmt, method) -> collectResolvedFields(sensFieldsSet, constantFieldsMap, result, stmt));
+                (stmt, method) -> collectResolvedFields(sensFieldsSet, stringConstantFieldsMap, intConstantFieldsMap,
+                        result, stmt));
         return result;
     }
 
-    private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> constantFieldsMap,
+    private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> stringConstantFieldsMap,
+                                              Map<Integer, SootField> intConstantFieldsMap,
                                               Multimap<SootField, Stmt> result, Stmt stmt) {
-        List<SootField> fields = getReferredFields(stmt, constantFieldsMap);
+        List<SootField> fields = getReferredFields(stmt, stringConstantFieldsMap, intConstantFieldsMap);
         fields.stream().filter(sensFields::contains).forEach(field ->
                 result.put(field, stmt)
         );
@@ -180,7 +184,8 @@ public class SceneUtil {
                 .findAny().orElse(null);
     }
 
-    private static List<SootField> getReferredFields(Stmt stmt, Map<String, SootField> constantFieldsMap) {
+    private static List<SootField> getReferredFields(Stmt stmt, Map<String, SootField> stringConstantFieldsMap,
+                                                     Map<Integer, SootField> intConstantFieldsMap) {
         List<SootField> result = new ArrayList<>();
 
         //On incomplete code we might get field references on phantom classes. They should be skipped.
@@ -190,10 +195,22 @@ public class SceneUtil {
                 result.add(field);
             }
         }
-        //If the referred field is a constant, it will be inlined into the statement using it.
+        //If the referred field is a String constant, it will be inlined into the statement using it.
         //Thus we have to serch it among the constants.
-        getStringConstantsIfAny(stmt).stream().filter(constantFieldsMap::containsKey)
-                .forEach(stringConst -> result.add(constantFieldsMap.get(stringConst)));
+        getStringConstantsIfAny(stmt).stream().filter(stringConstantFieldsMap::containsKey)
+                .forEach(stringConst -> result.add(stringConstantFieldsMap.get(stringConst)));
+
+        //If the referred field is an int constant, it will be inlined into the statement using it.
+        //Thus we have to serch it among the constants.
+        //Only including int constants that are arguments to TelephonyManager.listen()
+        String telephonyManagerListen =
+                "<android.telephony.TelephonyManager: void listen(android.telephony.PhoneStateListener,int)>";
+        if (stmt.containsInvokeExpr() && stmt.getInvokeExpr().getMethodRef().getSignature()
+                .equals(telephonyManagerListen)) {
+            getIntConstantsIfAny(stmt).stream().filter(intConstantFieldsMap::containsKey)
+                    .forEach(intConst -> result.add(intConstantFieldsMap.get(intConst)));
+        }
+
         return result;
     }
 
@@ -225,24 +242,42 @@ public class SceneUtil {
         );
     }
 
+    private static List<String> getStringConstantsIfAny(Stmt stmt) {
+        return getConstantsIfAny(stmt, SceneUtil::getStringIfStringConstant);
+    }
+
+    private static List<Integer> getIntConstantsIfAny(Stmt stmt) {
+        return getConstantsIfAny(stmt, SceneUtil::getIntIfIntConstant);
+    }
+
     /**
      * Constants might be contained in either assignments on method calls (to my knowledge).
+     *
+     * @param valExtractor - function that takes a jimple Value and returns the constant of type ValT, if this Value
+     *                     object represents such a constant, or null otherwise.
      */
-    private static List<String> getStringConstantsIfAny(Stmt stmt) {
-        List<String> result = new ArrayList<>();
+    private static <ValT> List<ValT> getConstantsIfAny(Stmt stmt, Function<Value, ValT> valExtractor) {
+        List<ValT> result = new ArrayList<>();
         if (stmt.containsInvokeExpr()) {
             List<Value> args = stmt.getInvokeExpr().getArgs();
-            args.stream().filter(arg -> arg instanceof StringConstant)
-                    .map(constArg -> ((StringConstant) constArg).value)
+            args.stream().map(valExtractor).filter(Objects::nonNull)
                     .forEach(result::add);
         }
         if (stmt instanceof AssignStmt) {
-            AssignStmt assign = (AssignStmt) stmt;
-            if (assign.getRightOp() instanceof StringConstant) {
-                result.add(((StringConstant) assign.getRightOp()).value);
+            ValT constValOrNull = valExtractor.apply(((AssignStmt) stmt).getRightOp());
+            if (constValOrNull != null) {
+                result.add(constValOrNull);
             }
         }
         return result;
+    }
+
+    private static Integer getIntIfIntConstant(Value value) {
+        return value instanceof IntConstant ? ((IntConstant) value).value : null;
+    }
+
+    private static String getStringIfStringConstant(Value value) {
+        return value instanceof StringConstant ? ((StringConstant) value).value : null;
     }
 
     /**
