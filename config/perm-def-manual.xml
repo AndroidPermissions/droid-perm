@@ -95,6 +95,9 @@
     <permissionDef className="android.media.AudioRecord" conditional="true" permissionRel="AllOf" target="void &lt;init&gt;(int, int, int, int, int)" targetKind="Method">
         <permission name="android.permission.RECORD_AUDIO"/>
     </permissionDef>
+    <permissionDef className="android.telephony.PhoneStateListener" conditional="true" permissionRel="AllOf" target="LISTEN_SIGNAL_STRENGTHS" targetKind="Field">
+        <permission name="android.permission.READ_PHONE_STATE"/>
+    </permissionDef>
     <checkerDefs/>
     <requesterDefs/>
     <parametricSensDefs/>
