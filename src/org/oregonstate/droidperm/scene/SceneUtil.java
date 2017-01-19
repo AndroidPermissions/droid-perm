@@ -170,12 +170,18 @@ public class SceneUtil {
                 .findAny().orElse(null);
     }
 
+    /**
+     * Includes in the output only te fields that may be arguments to TelephonyManager.listen()
+     */
     public static Map<Integer, SootField> buildIntConstantFieldsMap(Set<SootField> sensFields) {
         //If there are multiple sensitive fields initialized with same constant, exception will be thrown.
-        return sensFields.stream().filter(field -> getIntConstantValue(field) != null).collect(Collectors.toMap(
-                SceneUtil::getIntConstantValue,
-                field -> field
-        ));
+        return sensFields.stream()
+                .filter(field -> getIntConstantValue(field) != null
+                        && field.getDeclaringClass().getName().equals("android.telephony.PhoneStateListener"))
+                .collect(Collectors.toMap(
+                        SceneUtil::getIntConstantValue,
+                        field -> field
+                ));
     }
 
     public static Integer getIntConstantValue(SootField field) {
@@ -207,7 +213,9 @@ public class SceneUtil {
                 "<android.telephony.TelephonyManager: void listen(android.telephony.PhoneStateListener,int)>";
         if (stmt.containsInvokeExpr() && stmt.getInvokeExpr().getMethodRef().getSignature()
                 .equals(telephonyManagerListen)) {
-            getIntConstantsIfAny(stmt).stream().filter(intConstantFieldsMap::containsKey)
+            getIntConstantsIfAny(stmt).stream()
+                    .flatMap(argInt -> intConstantFieldsMap.keySet().stream()
+                            .filter(fieldInt -> (fieldInt & argInt) != 0))
                     .forEach(intConst -> result.add(intConstantFieldsMap.get(intConst)));
         }
 

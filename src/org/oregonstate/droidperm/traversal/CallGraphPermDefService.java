@@ -1,5 +1,6 @@
 package org.oregonstate.droidperm.traversal;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.sun.istack.internal.Nullable;
@@ -17,6 +18,7 @@ import soot.toolkits.scalar.SimpleLiveLocals;
 import soot.toolkits.scalar.SmartLocalDefs;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -60,21 +62,21 @@ public class CallGraphPermDefService {
      */
     public List<SootField> getSensitiveArgFields(Edge sensEdge) {
         List<Value> argValues = getSensitiveArgInitializerValues(sensEdge);
-        return argValues.stream().map(value -> {
+        return argValues.stream().map((Function<Value, List<SootField>>) value -> {
             if (value instanceof FieldRef) {
-                return ((FieldRef) value).getField();
+                return ImmutableList.of(((FieldRef) value).getField());
             } else if (value instanceof StringConstant) {
-                return scenePermDef.getFieldFor(((StringConstant) value).value);
+                return ImmutableList.of(scenePermDef.getFieldFor(((StringConstant) value).value));
             } else if (value instanceof IntConstant) {
-                return scenePermDef.getFieldFor(((IntConstant) value).value);
+                return scenePermDef.getFieldsFor(((IntConstant) value).value);
             } else if (value instanceof NullConstant) {
-                return null;
+                return ImmutableList.of();
             } else {
                 logger.warn("Parametric sensitive " + sensEdge + " has a parameter with unsupported value: "
                         + value);
-                return null;
+                return ImmutableList.of();
             }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     private List<Value> getSensitiveArgInitializerValues(Edge sensEdge) {

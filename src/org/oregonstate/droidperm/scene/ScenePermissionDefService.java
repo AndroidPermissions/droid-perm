@@ -117,8 +117,9 @@ public class ScenePermissionDefService {
         return stringConstantFieldsMap.get(actionString);
     }
 
-    public SootField getFieldFor(int phoneStateListenerConst) {
-        return intConstantFieldsMap.get(phoneStateListenerConst);
+    public List<SootField> getFieldsFor(int phoneStateListenerArg) {
+        return intConstantFieldsMap.keySet().stream().filter(key -> (key & phoneStateListenerArg) != 0)
+                .map(intConstantFieldsMap::get).collect(Collectors.toList());
     }
 
     public List<SootMethod> getSceneParametricSensitives() {
