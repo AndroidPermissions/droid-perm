@@ -61,17 +61,32 @@ public class UndetectedItemsUtil {
     public static Multimap<SootMethod, Stmt> getUndetectedCalls(
             List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         Multimap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods, classpathFilter);
-        Multimap<SootMethod, Stmt> copy = HashMultimap.create(undetected);
+        filterOutIgnoredAndDetected(undetected, detected, classpathFilter);
+        return undetected;
+    }
 
+    /**
+     * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
+     */
+    public static Multimap<SootMethod, Stmt> getUndetectedCallsInCHA(
+            List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter,
+            SootMethod dummyMain) {
+        Multimap<SootMethod, Stmt> undetected =
+                SceneUtil.resolveMethodUsagesCHA(sootMethods, classpathFilter, dummyMain);
+        filterOutIgnoredAndDetected(undetected, detected, classpathFilter);
+        return undetected;
+    }
+
+    /**
+     * From resolved statements, filter out what's in detected and what's not accepted by classpathFilter.
+     */
+    private static void filterOutIgnoredAndDetected(Multimap<SootMethod, Stmt> resolvedStatements, Set<Edge> detected,
+                                                    Predicate<SootMethod> classpathFilter) {
         //filter out ignored
-        for (SootMethod sens : copy.keySet()) {
-            copy.get(sens).stream().filter(stmt -> !classpathFilter.test(SceneUtil.getMethodOf(stmt)))
-                    .forEach(pair -> undetected.remove(sens, pair));
-        }
+        resolvedStatements.entries().removeIf(entry -> !classpathFilter.test(SceneUtil.getMethodOf(entry.getValue())));
 
         //filter out detected
-        detected.forEach(edge -> undetected.remove(edge.tgt(), edge.srcStmt()));
-        return undetected;
+        detected.forEach(edge -> resolvedStatements.remove(edge.tgt(), edge.srcStmt()));
     }
 
     public static void printUndetectedCheckers(ScenePermissionDefService scenePermDef,
@@ -95,6 +110,22 @@ public class UndetectedItemsUtil {
             ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
         Multimap<SootMethod, Stmt> undetectedSens =
                 getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter);
+        return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
+                scenePermDef::getPermissionsFor,
+                MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
+        ));
+    }
+
+    /**
+     * Map lvl 1: from permission sets to undetected sensitives having this set.
+     * <p>
+     * Map lvl2: from sensitive to its calling context: method and stmt.
+     */
+    public static Map<Set<String>, SetMultimap<SootMethod, Stmt>> buildPermToUndetectedMethodSensMapCHA(
+            ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter,
+            SootMethod dummyMain) {
+        Multimap<SootMethod, Stmt> undetectedSens =
+                getUndetectedCallsInCHA(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter, dummyMain);
         return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
                 scenePermDef::getPermissionsFor,
                 MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)

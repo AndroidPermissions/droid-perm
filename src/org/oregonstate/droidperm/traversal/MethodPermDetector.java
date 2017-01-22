@@ -153,6 +153,12 @@ public class MethodPermDetector {
         UndetectedItemsUtil
                 .printUndetectedSensitives(permToUndetectedMethSensMap, "Undetected method sensitives", false);
 
+        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedMethSensMapCHA =
+                UndetectedItemsUtil.buildPermToUndetectedMethodSensMapCHA(scenePermDef, sensEdges, classpathFilter,
+                        dummyMainMethod.method());
+        UndetectedItemsUtil.printUndetectedSensitives(
+                permToUndetectedMethSensMapCHA, "Undetected method sensitives in CHA", false);
+
         Set<Stmt> sensFieldRefs = sensEdges.stream()
                 .flatMap(edge -> cgService.getSensitiveArgInitializerStmts(edge).stream()).collect(Collectors.toSet());
         Map<Set<String>, SetMultimap<SootField, Stmt>> permToUndetectedFieldSensMap =

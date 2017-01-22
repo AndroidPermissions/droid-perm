@@ -78,6 +78,55 @@ public class SceneUtil {
                 }));
     }
 
+    private static void traverseCHACallGraph(SootMethod dummyMain, Predicate<SootMethod> classpathFilter,
+                                             BiConsumer<Stmt, SootMethod> stmtConsumer) {
+        if (classpathFilter == null) {
+            classpathFilter = meth -> true;
+        }
+        Set<SootMethod> reached = new HashSet<>();
+        Queue<SootMethod> queue = new ArrayDeque<>();
+        reached.add(dummyMain);
+        queue.add(dummyMain);
+
+        for (SootMethod crntMeth = queue.poll(); crntMeth != null; crntMeth = queue.poll()) {
+            if (crntMeth.isConcrete() && crntMeth.hasActiveBody() &&
+                    //only analyze the body of methods accepted by classpathFilter
+                    classpathFilter.test(crntMeth)) {
+                Body body = retrieveBody(crntMeth);
+                if (body == null) {
+                    continue;
+                }
+                body.getUnits().forEach(
+                        (Unit unit) -> {
+                            Stmt stmt = (Stmt) unit;
+                            stmtConsumer.accept(stmt, body.getMethod());
+
+                            if (stmt.containsInvokeExpr()) {
+                                InvokeExpr invoke = stmt.getInvokeExpr();
+                                SootMethod invokeMethod;
+                                try {
+                                    invokeMethod = invoke.getMethod();
+                                } catch (Exception e) {
+                                    logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
+                                    return;
+                                }
+
+                                //todo consider some optimization - don't call resolveAbstractDispatch
+                                //multiple times for same method
+                                List<SootMethod> resolvedMethods = Scene.v().getActiveHierarchy()
+                                        .resolveAbstractDispatch(invokeMethod.getDeclaringClass(), invokeMethod);
+                                for (SootMethod resolvedMeth : resolvedMethods) {
+                                    if (!reached.contains(resolvedMeth)) {
+                                        reached.add(resolvedMeth);
+                                        queue.add(resolvedMeth);
+                                    }
+                                }
+                            }
+                        });
+            }
+        }
+    }
+
     private static Body retrieveBody(SootMethod meth) {
         try {
             return meth.retrieveActiveBody();
@@ -103,6 +152,24 @@ public class SceneUtil {
 
         Multimap<SootMethod, Stmt> result = HashMultimap.create();
         traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
+                (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
+        return result;
+    }
+
+    /**
+     * @return A multimap from methods to statements possibly invoking that methods.
+     */
+    public static Multimap<SootMethod, Stmt> resolveMethodUsagesCHA(Collection<SootMethod> sootMethods,
+                                                                    Predicate<SootMethod> classpathFilter,
+                                                                    SootMethod dummyMain) {
+        Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);
+
+        //for performance optimization
+        Set<String> sensSubsignatures =
+                methodSet.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
+
+        Multimap<SootMethod, Stmt> result = HashMultimap.create();
+        traverseCHACallGraph(dummyMain, classpathFilter,
                 (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
         return result;
     }
