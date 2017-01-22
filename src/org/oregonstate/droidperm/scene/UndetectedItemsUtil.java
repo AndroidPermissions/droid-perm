@@ -11,10 +11,7 @@ import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -45,9 +42,10 @@ public class UndetectedItemsUtil {
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
     public static Map<Set<String>, SetMultimap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
-            ScenePermissionDefService scenePermDef, Set<Stmt> detected, Predicate<SootMethod> classpathFilter) {
+            ScenePermissionDefService scenePermDef, Set<Stmt> excludedResults,
+            Predicate<SootMethod> classpathFilter) {
         Multimap<SootField, Stmt> undetectedSens =
-                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), detected, classpathFilter);
+                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), excludedResults, classpathFilter);
 
         return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
                 scenePermDef::getPermissionsFor,
@@ -59,9 +57,9 @@ public class UndetectedItemsUtil {
      * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
      */
     public static Multimap<SootMethod, Stmt> getUndetectedCalls(
-            List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
+            List<SootMethod> sootMethods, Set<Edge> excludedResults, Predicate<SootMethod> classpathFilter) {
         Multimap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods, classpathFilter);
-        filterOutIgnoredAndDetected(undetected, detected, classpathFilter);
+        filterOutIgnoredAndDetected(undetected, excludedResults, classpathFilter);
         return undetected;
     }
 
@@ -89,27 +87,16 @@ public class UndetectedItemsUtil {
         detected.forEach(edge -> resolvedStatements.remove(edge.tgt(), edge.srcStmt()));
     }
 
-    public static void printUndetectedCheckers(ScenePermissionDefService scenePermDef,
-                                               Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
-        long startTime = System.currentTimeMillis();
-        Multimap<SootMethod, Stmt> undetectedCheckers =
-                getUndetectedCalls(scenePermDef.getPermCheckers(), detected, classpathFilter);
-
-        PrintUtil.printMultimapOfStmtValues(undetectedCheckers, "Undetected checkers", "", "\t", "from ", false);
-
-        System.out.println("\nUndetected checkers execution time: "
-                + (System.currentTimeMillis() - startTime) / 1E3 + " seconds");
-    }
-
     /**
      * Map lvl 1: from permission sets to undetected sensitives having this set.
      * <p>
      * Map lvl2: from sensitive to its calling context: method and stmt.
      */
     public static Map<Set<String>, SetMultimap<SootMethod, Stmt>> buildPermToUndetectedMethodSensMap(
-            ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter) {
+            ScenePermissionDefService scenePermDef, Set<Edge> excludedResults,
+            Predicate<SootMethod> classpathFilter) {
         Multimap<SootMethod, Stmt> undetectedSens =
-                getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter);
+                getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), excludedResults, classpathFilter);
         return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
                 scenePermDef::getPermissionsFor,
                 MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
@@ -166,5 +153,33 @@ public class UndetectedItemsUtil {
                 permToReferredFieldSensMap.values().stream().flatMap(mmap -> mmap.keySet().stream())
                         .collect(Collectors.toList())
         );
+    }
+
+    /**
+     * Performs all scene and CHA-reachability analysis of method sensitives, field sensitives and checkers. If
+     * dummyMain is null, CHA analysis will not be performed.
+     */
+    public static SceneAnalysisResult sceneAnalysis(Set<Edge> excludedSensEdges, Set<Stmt> excludedSensFieldRefs,
+                                                    Set<Edge> excludedCheckEdges,
+                                                    ScenePermissionDefService scenePermDef,
+                                                    ClasspathFilter classpathFilter, SootMethod dummyMain) {
+        SceneAnalysisResult sceneResult = new SceneAnalysisResult();
+        sceneResult.permToReferredMethodSensMap =
+                buildPermToUndetectedMethodSensMap(scenePermDef, excludedSensEdges, classpathFilter);
+        sceneResult.permToReferredFieldSensMap =
+                buildPermToUndetectedFieldSensMap(scenePermDef, excludedSensFieldRefs, classpathFilter);
+        sceneResult.checkers =
+                getUndetectedCalls(scenePermDef.getPermCheckers(), excludedCheckEdges, classpathFilter);
+        sceneResult.requesters = UndetectedItemsUtil
+                .getUndetectedCalls(scenePermDef.getPermRequesters(), Collections.emptySet(), classpathFilter);
+
+        sceneResult.permDefs = UndetectedItemsUtil.getPermDefsFor(sceneResult.permToReferredMethodSensMap,
+                sceneResult.permToReferredFieldSensMap, scenePermDef);
+
+        if (dummyMain != null) {
+            sceneResult.permToUndetectedMethodSensMapCHA = buildPermToUndetectedMethodSensMapCHA(
+                    scenePermDef, excludedSensEdges, classpathFilter, dummyMain);
+        }
+        return sceneResult;
     }
 }

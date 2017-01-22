@@ -4,10 +4,7 @@ import com.google.common.collect.*;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
-import org.oregonstate.droidperm.scene.ClasspathFilter;
-import org.oregonstate.droidperm.scene.ScenePermissionDefService;
-import org.oregonstate.droidperm.scene.SceneUtil;
-import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.oregonstate.droidperm.scene.*;
 import org.oregonstate.droidperm.sens.DPProcessManifest;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.oregonstate.droidperm.util.CallGraphUtil;
@@ -19,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
 import soot.MethodOrMethodContext;
 import soot.Scene;
-import soot.SootField;
-import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
@@ -145,36 +140,22 @@ public class MethodPermDetector {
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
         lastStepTime = currentTime;
 
-        UndetectedItemsUtil.printUndetectedCheckers(scenePermDef, getPrintedCheckEdges(), classpathFilter);
-
-        lastStepTime = System.currentTimeMillis(); //already printed as part of undetected checkers analysis above
-        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedMethSensMap =
-                UndetectedItemsUtil.buildPermToUndetectedMethodSensMap(scenePermDef, sensEdges, classpathFilter);
-        UndetectedItemsUtil
-                .printUndetectedSensitives(permToUndetectedMethSensMap, "Undetected method sensitives", false);
-
-        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedMethSensMapCHA =
-                UndetectedItemsUtil.buildPermToUndetectedMethodSensMapCHA(scenePermDef, sensEdges, classpathFilter,
-                        dummyMainMethod.method());
-        UndetectedItemsUtil.printUndetectedSensitives(
-                permToUndetectedMethSensMapCHA, "Undetected method sensitives in CHA", false);
-
-        Set<Stmt> sensFieldRefs = sensEdges.stream()
+        //Scene undetected items analysis
+        Set<Stmt> sensFieldRefs = this.sensEdges.stream()
                 .flatMap(edge -> cgService.getSensitiveArgInitializerStmts(edge).stream()).collect(Collectors.toSet());
-        Map<Set<String>, SetMultimap<SootField, Stmt>> permToUndetectedFieldSensMap =
-                UndetectedItemsUtil.buildPermToUndetectedFieldSensMap(scenePermDef, sensFieldRefs, classpathFilter);
-        UndetectedItemsUtil
-                .printUndetectedSensitives(permToUndetectedFieldSensMap, "Undetected field sensitives", true);
-
-        Multimap<String, Stmt> referredDangerousPerm =
-                SceneUtil.resolveConstantUsages(SensitiveCollectorService.getAllDangerousPerm(), classpathFilter);
-        SensitiveCollectorService.printPermissionReferences(referredDangerousPerm);
+        Set<Edge> detectedCheckEdges =
+                permsToCheckersMap.columnKeySet().stream().map(Pair::getO1).collect(Collectors.toSet());
+        SceneAnalysisResult sceneResult = UndetectedItemsUtil
+                .sceneAnalysis(sensEdges, sensFieldRefs, detectedCheckEdges, scenePermDef, classpathFilter,
+                        dummyMainMethod.method());
+        printSceneResults(sceneResult);
 
         currentTime = System.currentTimeMillis();
-        System.out.println("\nUndetected sensitives execution time: "
+        System.out.println("\nUndetected sensitives/checkers execution time: "
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
         lastStepTime = currentTime;
 
+        //Printing main results - sensitives and checkers in context
         printCheckersInContext(true);
         printSensitivesInContext(true);
 
@@ -188,10 +169,8 @@ public class MethodPermDetector {
             }
         }
         if (xmlOut != null) {
-            List<PermissionDef> undetectedPermDefs = UndetectedItemsUtil
-                    .getPermDefsFor(permToUndetectedMethSensMap, permToUndetectedFieldSensMap, scenePermDef);
             List<PermissionDef> undetectedDangerousPermDefs =
-                    SensitiveCollectorService.retainDangerousPermissionDefs(undetectedPermDefs);
+                    SensitiveCollectorService.retainDangerousPermissionDefs(sceneResult.permDefs);
             jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
             jaxbData.setCompileApi23Plus(scenePermDef.isCompileSdkVersion_23_OrMore());
             jaxbData.setTargetSdkVersion(manifest.targetSdkVersion());
@@ -199,6 +178,22 @@ public class MethodPermDetector {
         }
         System.out.println("\n\nDroidPerm checker/sensitive summaries execution time: "
                 + (System.currentTimeMillis() - lastStepTime) / 1E3 + " seconds");
+    }
+
+    private void printSceneResults(SceneAnalysisResult sceneResult) {
+        UndetectedItemsUtil.printUndetectedSensitives(
+                sceneResult.permToUndetectedMethodSensMapCHA, "Undetected method sensitives, CHA-reachable", false);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
+                "Undetected method sensitives, scene", false);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredFieldSensMap,
+                "Undetected field sensitives, scene", true);
+
+        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Undetected checkers", "", "\t", "from ",
+                false);
+
+        Multimap<String, Stmt> referredDangerousPerm =
+                SceneUtil.resolveConstantUsages(SensitiveCollectorService.getAllDangerousPerm(), classpathFilter);
+        SensitiveCollectorService.printPermissionReferences(referredDangerousPerm);
     }
 
     private SetMultimap<MethodOrMethodContext, String> buildCallbackToRequiredPermsMap() {
@@ -444,13 +439,6 @@ public class MethodPermDetector {
 
     public ContextSensOutflowCPHolder getSensitivePathsHolder() {
         return sensitivePathsHolder;
-    }
-
-    /**
-     * Computed from permsToCheckersMap
-     */
-    private Set<Edge> getPrintedCheckEdges() {
-        return permsToCheckersMap.columnKeySet().stream().map(Pair::getO1).collect(Collectors.toSet());
     }
 
     public CheckerUsageStatus getCheckUsageStatus(MethodOrMethodContext callback, String perm) {

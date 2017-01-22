@@ -1,18 +1,13 @@
 package org.oregonstate.droidperm.sens;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
-import org.oregonstate.droidperm.scene.ClasspathFilter;
-import org.oregonstate.droidperm.scene.ScenePermissionDefService;
-import org.oregonstate.droidperm.scene.SceneUtil;
-import org.oregonstate.droidperm.scene.UndetectedItemsUtil;
+import org.oregonstate.droidperm.scene.*;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
-import soot.SootField;
-import soot.SootMethod;
 import soot.jimple.Stmt;
 
 import java.io.File;
@@ -39,21 +34,19 @@ public class SensitiveCollectorService {
             throws Exception {
         long startTime = System.currentTimeMillis();
         DPProcessManifest manifest = new DPProcessManifest(apkFile);
+        SceneAnalysisResult sceneResult = UndetectedItemsUtil.sceneAnalysis(
+                ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), scenePermDef, classpathFilter, null);
 
-        Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMap = UndetectedItemsUtil
-                .buildPermToUndetectedMethodSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
-        UndetectedItemsUtil
-                .printUndetectedSensitives(permToReferredMethodSensMap, "Collected method sensitives", false);
-
-        Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMap = UndetectedItemsUtil
-                .buildPermToUndetectedFieldSensMap(scenePermDef, Collections.emptySet(), classpathFilter);
-        UndetectedItemsUtil.printUndetectedSensitives(permToReferredFieldSensMap, "Collected field sensitives", true);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
+                "Collected method sensitives", false);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredFieldSensMap,
+                "Collected field sensitives", true);
 
         Set<Set<String>> sensitivePermissionSets = Stream.concat(
-                permToReferredMethodSensMap.keySet().stream()
-                        .filter(permSet -> !permToReferredMethodSensMap.get(permSet).isEmpty()),
-                permToReferredFieldSensMap.keySet().stream()
-                        .filter(permSet -> !permToReferredFieldSensMap.get(permSet).isEmpty())
+                sceneResult.permToReferredMethodSensMap.keySet().stream()
+                        .filter(permSet -> !sceneResult.permToReferredMethodSensMap.get(permSet).isEmpty()),
+                sceneResult.permToReferredFieldSensMap.keySet().stream()
+                        .filter(permSet -> !sceneResult.permToReferredFieldSensMap.get(permSet).isEmpty())
         ).collect(Collectors.toCollection(LinkedHashSet::new));
         PrintUtil.printCollection(sensitivePermissionSets, "Permission sets required by sensitives");
 
@@ -65,13 +58,8 @@ public class SensitiveCollectorService {
                 SceneUtil.resolveConstantUsages(getAllDangerousPerm(), classpathFilter);
         printPermissionReferences(referredDangerousPerm);
 
-        Multimap<SootMethod, Stmt> checkers = UndetectedItemsUtil
-                .getUndetectedCalls(scenePermDef.getPermCheckers(), Collections.emptySet(), classpathFilter);
-        PrintUtil.printMultimapOfStmtValues(checkers, "Perm checkers", "", "\t", "from ", false);
-
-        Multimap<SootMethod, Stmt> requesters = UndetectedItemsUtil
-                .getUndetectedCalls(scenePermDef.getPermRequesters(), Collections.emptySet(), classpathFilter);
-        PrintUtil.printMultimapOfStmtValues(requesters, "Perm requesters", "", "\t", "from ", false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Perm checkers", "", "\t", "from ", false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.requesters, "Perm requesters", "", "\t", "from ", false);
 
         Set<Set<String>> undeclaredPermissionSets = sensitivePermissionSets.stream()
                 .filter(permSet -> Collections.disjoint(permSet, declaredPermissions))
@@ -95,8 +83,7 @@ public class SensitiveCollectorService {
                     new ArrayList<>(declaredDangerousPerm),
                     new ArrayList<>(referredDangerousPerm.keySet()),
                     new ArrayList<>(dangerousPermWithSensitives),
-                    UndetectedItemsUtil
-                            .getPermDefsFor(permToReferredMethodSensMap, permToReferredFieldSensMap, scenePermDef),
+                    sceneResult.permDefs,
                     manifest.targetSdkVersion());
             JaxbUtil.save(data, SensitiveCollectorJaxbData.class, xmlOut);
         }
