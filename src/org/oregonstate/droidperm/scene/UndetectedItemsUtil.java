@@ -1,6 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
@@ -11,7 +11,10 @@ import soot.SootMethod;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.Edge;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -20,103 +23,17 @@ import java.util.stream.Collectors;
  */
 public class UndetectedItemsUtil {
 
-    private static Multimap<SootField, Stmt> getUndetectedFieldRefs(
-            Collection<SootField> sootFields, Set<Stmt> detected, Predicate<SootMethod> classpathFilter) {
-        Multimap<SootField, Stmt> undetected = SceneUtil.resolveFieldUsages(sootFields, classpathFilter);
-        Multimap<SootField, Stmt> copy = HashMultimap.create(undetected);
-
-        //filter out ignored
-        for (SootField sensField : copy.keySet()) {
-            copy.get(sensField).stream().filter(stmt -> !classpathFilter.test(SceneUtil.getMethodOf(stmt)))
-                    .forEach(pair -> undetected.remove(sensField, pair));
-        }
-
-        //filter out detected
-        undetected.values().removeAll(detected);
-        return undetected;
-    }
-
-    /**
-     * Map lvl 1: from permission sets to undetected sensitives having this set.
-     * <p>
-     * Map lvl2: from sensitive to its calling context: method and stmt.
-     */
-    public static Map<Set<String>, SetMultimap<SootField, Stmt>> buildPermToUndetectedFieldSensMap(
-            ScenePermissionDefService scenePermDef, Set<Stmt> excludedResults,
-            Predicate<SootMethod> classpathFilter) {
-        Multimap<SootField, Stmt> undetectedSens =
-                getUndetectedFieldRefs(scenePermDef.getSceneFieldSensitives(), excludedResults, classpathFilter);
-
-        return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
-                scenePermDef::getPermissionsFor,
-                MyCollectors.toMultimapForCollection(field -> field, undetectedSens::get)
-        ));
-    }
-
-    /**
-     * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
-     */
-    public static Multimap<SootMethod, Stmt> getUndetectedCalls(
-            List<SootMethod> sootMethods, Set<Edge> excludedResults, Predicate<SootMethod> classpathFilter) {
-        Multimap<SootMethod, Stmt> undetected = SceneUtil.resolveMethodUsages(sootMethods, classpathFilter);
-        filterOutIgnoredAndDetected(undetected, excludedResults, classpathFilter);
-        return undetected;
-    }
-
-    /**
-     * @param classpathFilter - only analyze entries accepted by this filter. Works for TwilightManager.
-     */
-    public static Multimap<SootMethod, Stmt> getUndetectedCallsInCHA(
-            List<SootMethod> sootMethods, Set<Edge> detected, Predicate<SootMethod> classpathFilter,
-            SootMethod dummyMain) {
-        Multimap<SootMethod, Stmt> undetected =
-                SceneUtil.resolveMethodUsagesCHA(sootMethods, classpathFilter, dummyMain);
-        filterOutIgnoredAndDetected(undetected, detected, classpathFilter);
-        return undetected;
-    }
-
     /**
      * From resolved statements, filter out what's in detected and what's not accepted by classpathFilter.
      */
-    private static void filterOutIgnoredAndDetected(Multimap<SootMethod, Stmt> resolvedStatements, Set<Edge> detected,
-                                                    Predicate<SootMethod> classpathFilter) {
+    private static void filterOutIgnoredAndDetected(Multimap<?, Stmt> resolvedStatements,
+                                                    Predicate<SootMethod> classpathFilter,
+                                                    Collection<Stmt> stmtsToExclude) {
         //filter out ignored
         resolvedStatements.entries().removeIf(entry -> !classpathFilter.test(SceneUtil.getMethodOf(entry.getValue())));
 
         //filter out detected
-        detected.forEach(edge -> resolvedStatements.remove(edge.tgt(), edge.srcStmt()));
-    }
-
-    /**
-     * Map lvl 1: from permission sets to undetected sensitives having this set.
-     * <p>
-     * Map lvl2: from sensitive to its calling context: method and stmt.
-     */
-    public static Map<Set<String>, SetMultimap<SootMethod, Stmt>> buildPermToUndetectedMethodSensMap(
-            ScenePermissionDefService scenePermDef, Set<Edge> excludedResults,
-            Predicate<SootMethod> classpathFilter) {
-        Multimap<SootMethod, Stmt> undetectedSens =
-                getUndetectedCalls(scenePermDef.getSceneMethodSensitives(), excludedResults, classpathFilter);
-        return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
-                scenePermDef::getPermissionsFor,
-                MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
-        ));
-    }
-
-    /**
-     * Map lvl 1: from permission sets to undetected sensitives having this set.
-     * <p>
-     * Map lvl2: from sensitive to its calling context: method and stmt.
-     */
-    public static Map<Set<String>, SetMultimap<SootMethod, Stmt>> buildPermToUndetectedMethodSensMapCHA(
-            ScenePermissionDefService scenePermDef, Set<Edge> detected, Predicate<SootMethod> classpathFilter,
-            SootMethod dummyMain) {
-        Multimap<SootMethod, Stmt> undetectedSens =
-                getUndetectedCallsInCHA(scenePermDef.getSceneMethodSensitives(), detected, classpathFilter, dummyMain);
-        return undetectedSens.keySet().stream().collect(Collectors.groupingBy(
-                scenePermDef::getPermissionsFor,
-                MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
-        ));
+        resolvedStatements.values().removeAll(stmtsToExclude);
     }
 
     /**
@@ -164,21 +81,45 @@ public class UndetectedItemsUtil {
                                                     ScenePermissionDefService scenePermDef,
                                                     ClasspathFilter classpathFilter, SootMethod dummyMain) {
         SceneAnalysisResult sceneResult = new SceneAnalysisResult();
-        sceneResult.permToReferredMethodSensMap =
-                buildPermToUndetectedMethodSensMap(scenePermDef, excludedSensEdges, classpathFilter);
-        sceneResult.permToReferredFieldSensMap =
-                buildPermToUndetectedFieldSensMap(scenePermDef, excludedSensFieldRefs, classpathFilter);
-        sceneResult.checkers =
-                getUndetectedCalls(scenePermDef.getPermCheckers(), excludedCheckEdges, classpathFilter);
-        sceneResult.requesters = UndetectedItemsUtil
-                .getUndetectedCalls(scenePermDef.getPermRequesters(), Collections.emptySet(), classpathFilter);
 
+        List<Stmt> excludedSensStmts = excludedSensEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
+        Multimap<SootMethod, Stmt> undetectedMethodSens =
+                SceneUtil.resolveMethodUsages(scenePermDef.getSceneMethodSensitives(), classpathFilter);
+        filterOutIgnoredAndDetected(undetectedMethodSens, classpathFilter, excludedSensStmts);
+
+        List<Stmt> excludedCheckerStmts = excludedCheckEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
+        sceneResult.checkers = SceneUtil.resolveMethodUsages(scenePermDef.getPermCheckers(), classpathFilter);
+        filterOutIgnoredAndDetected(sceneResult.checkers, classpathFilter, excludedCheckerStmts);
+
+        sceneResult.requesters = SceneUtil.resolveMethodUsages(scenePermDef.getPermRequesters(), classpathFilter);
+        filterOutIgnoredAndDetected(sceneResult.requesters, classpathFilter, ImmutableSet.of());
+
+        Multimap<SootField, Stmt> undetectedFieldSens = SceneUtil.resolveFieldUsages(
+                scenePermDef.getSceneFieldSensitives(), classpathFilter);
+        filterOutIgnoredAndDetected(undetectedFieldSens, classpathFilter, excludedSensFieldRefs);
+
+        sceneResult.permToReferredMethodSensMap =
+                undetectedMethodSens.keySet().stream().collect(Collectors.groupingBy(
+                        scenePermDef::getPermissionsFor,
+                        MyCollectors.toMultimapForCollection(meth -> meth, undetectedMethodSens::get)
+                ));
+        sceneResult.permToReferredFieldSensMap =
+                undetectedFieldSens.keySet().stream().collect(Collectors.groupingBy(
+                        scenePermDef::getPermissionsFor,
+                        MyCollectors.toMultimapForCollection(field -> field, undetectedFieldSens::get)
+                ));
         sceneResult.permDefs = UndetectedItemsUtil.getPermDefsFor(sceneResult.permToReferredMethodSensMap,
                 sceneResult.permToReferredFieldSensMap, scenePermDef);
 
         if (dummyMain != null) {
-            sceneResult.permToUndetectedMethodSensMapCHA = buildPermToUndetectedMethodSensMapCHA(
-                    scenePermDef, excludedSensEdges, classpathFilter, dummyMain);
+            Multimap<SootMethod, Stmt> undetectedSens = SceneUtil.resolveMethodUsagesCHA(
+                    scenePermDef.getSceneMethodSensitives(), classpathFilter, dummyMain);
+            filterOutIgnoredAndDetected(undetectedSens, classpathFilter, excludedSensStmts);
+            sceneResult.permToUndetectedMethodSensMapCHA =
+                    undetectedSens.keySet().stream().collect(Collectors.groupingBy(
+                            scenePermDef::getPermissionsFor,
+                            MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
+                    ));
         }
         return sceneResult;
     }
