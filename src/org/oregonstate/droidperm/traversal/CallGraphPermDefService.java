@@ -64,9 +64,9 @@ public class CallGraphPermDefService {
         List<Value> argValues = getSensitiveArgInitializerValues(sensEdge);
         return argValues.stream().map((Function<Value, List<SootField>>) value -> {
             if (value instanceof FieldRef) {
-                return ImmutableList.of(((FieldRef) value).getField());
+                return listOfOrEmpty(((FieldRef) value).getField());
             } else if (value instanceof StringConstant) {
-                return ImmutableList.of(scenePermDef.getFieldFor(((StringConstant) value).value));
+                return listOfOrEmpty(scenePermDef.getFieldFor(((StringConstant) value).value));
             } else if (value instanceof IntConstant) {
                 return scenePermDef.getFieldsFor(((IntConstant) value).value);
             } else if (value instanceof NullConstant) {
@@ -77,6 +77,10 @@ public class CallGraphPermDefService {
                 return ImmutableList.of();
             }
         }).flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    public static <T> ImmutableList<T> listOfOrEmpty(T elem) {
+        return elem != null ? ImmutableList.of(elem) : ImmutableList.of();
     }
 
     private List<Value> getSensitiveArgInitializerValues(Edge sensEdge) {
