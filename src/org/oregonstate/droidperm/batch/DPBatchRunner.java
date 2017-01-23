@@ -350,9 +350,9 @@ public class DPBatchRunner {
 
     private void droidPermModeFor(Path xmlOut, String appName) throws JAXBException {
         JaxbCallbackList data = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
-        if (!data.getUndetectedDangerousPermDefs().isEmpty()) {
-            logger.info(
-                    appName + " : undetected sensitive defs: " + data.getUndetectedDangerousPermDefs().size());
+        if (!data.getUndetectedCHADangerousPermDefs().isEmpty()) {
+            logger.info(appName
+                    + " : undetected CHA-reachable sensitive defs: " + data.getUndetectedCHADangerousPermDefs().size());
         }
         if (!data.isCompileApi23Plus()) {
             logger.warn(appName + " : compileSdkVersion is < 23");

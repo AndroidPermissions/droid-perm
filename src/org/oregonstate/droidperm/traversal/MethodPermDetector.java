@@ -3,7 +3,6 @@ package org.oregonstate.droidperm.traversal;
 import com.google.common.collect.*;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
-import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.scene.*;
 import org.oregonstate.droidperm.sens.DPProcessManifest;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
@@ -169,9 +168,10 @@ public class MethodPermDetector {
             }
         }
         if (xmlOut != null) {
-            List<PermissionDef> undetectedDangerousPermDefs =
-                    SensitiveCollectorService.retainDangerousPermissionDefs(sceneResult.permDefs);
-            jaxbData.setUndetectedDangerousPermDefs(undetectedDangerousPermDefs);
+            jaxbData.setUndetectedCHADangerousPermDefs(
+                    SensitiveCollectorService.retainDangerousPermissionDefs(sceneResult.permDefsCHA));
+            jaxbData.setUnreachableDangerousPermDefs(
+                    SensitiveCollectorService.retainDangerousPermissionDefs(sceneResult.permDefs));
             jaxbData.setCompileApi23Plus(scenePermDef.isCompileSdkVersion_23_OrMore());
             jaxbData.setTargetSdkVersion(manifest.targetSdkVersion());
             JaxbUtil.save(jaxbData, JaxbCallbackList.class, xmlOut);

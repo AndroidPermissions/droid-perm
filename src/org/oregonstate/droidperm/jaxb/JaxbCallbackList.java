@@ -18,7 +18,11 @@ public class JaxbCallbackList {
 
     @XmlElementWrapper
     @XmlElement(name = "permDef")
-    private List<PermissionDef> undetectedDangerousPermDefs;
+    private List<PermissionDef> undetectedCHADangerousPermDefs;
+
+    @XmlElementWrapper
+    @XmlElement(name = "permDef")
+    private List<PermissionDef> unreachableDangerousPermDefs;
 
     @XmlElement
     private boolean compileApi23Plus = true;
@@ -27,12 +31,6 @@ public class JaxbCallbackList {
     private int targetSdkVersion;
 
     public JaxbCallbackList() {
-    }
-
-    public JaxbCallbackList(List<JaxbCallback> callbacks,
-                            List<PermissionDef> undetectedDangerousPermDefs) {
-        this.callbacks = callbacks;
-        this.undetectedDangerousPermDefs = undetectedDangerousPermDefs;
     }
 
     public List<JaxbCallback> getCallbacks() {
@@ -47,12 +45,21 @@ public class JaxbCallbackList {
         callbacks.add(callback);
     }
 
-    public List<PermissionDef> getUndetectedDangerousPermDefs() {
-        return undetectedDangerousPermDefs;
+    public List<PermissionDef> getUndetectedCHADangerousPermDefs() {
+        return undetectedCHADangerousPermDefs;
     }
 
-    public void setUndetectedDangerousPermDefs(List<PermissionDef> undetectedDangerousPermDefs) {
-        this.undetectedDangerousPermDefs = undetectedDangerousPermDefs;
+    public void setUndetectedCHADangerousPermDefs(
+            List<PermissionDef> undetectedCHADangerousPermDefs) {
+        this.undetectedCHADangerousPermDefs = undetectedCHADangerousPermDefs;
+    }
+
+    public List<PermissionDef> getUnreachableDangerousPermDefs() {
+        return unreachableDangerousPermDefs;
+    }
+
+    public void setUnreachableDangerousPermDefs(List<PermissionDef> unreachableDangerousPermDefs) {
+        this.unreachableDangerousPermDefs = unreachableDangerousPermDefs;
     }
 
     public boolean isCompileApi23Plus() {
