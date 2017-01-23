@@ -81,8 +81,13 @@ public class SceneUtil {
                 }));
     }
 
-    private static void traverseCHACallGraph(SootMethod dummyMain, Predicate<SootMethod> classpathFilter,
-                                             BiConsumer<Stmt, SootMethod> stmtConsumer) {
+    /**
+     * Traverse the CHA call graph starting from dummyMain and apply stmtConsumer to each of them.
+     */
+    @SafeVarargs
+    public static void traverseCHACallGraph(SootMethod dummyMain, Predicate<SootMethod> classpathFilter,
+                                            BiConsumer<Stmt, SootMethod>... stmtConsumers) {
+        Collection<BiConsumer<Stmt, SootMethod>> consumers = ImmutableList.copyOf(stmtConsumers);
         if (classpathFilter == null) {
             classpathFilter = meth -> true;
         }
@@ -102,7 +107,7 @@ public class SceneUtil {
                 body.getUnits().forEach(
                         (Unit unit) -> {
                             Stmt stmt = (Stmt) unit;
-                            stmtConsumer.accept(stmt, body.getMethod());
+                            consumers.forEach(consumer -> consumer.accept(stmt, body.getMethod()));
 
                             if (stmt.containsInvokeExpr()) {
                                 InvokeExpr invoke = stmt.getInvokeExpr();
@@ -159,39 +164,6 @@ public class SceneUtil {
         return (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt);
     }
 
-    /**
-     * @param result Multimap where result will be collected. A multimap from fields to statements possibly referring
-     *               that fields.
-     * @return a Pair consisting of the BiConsumer that has to be passed to traverseClasses to collect all field usages,
-     * and the result where these usages will be collected.
-     */
-    public static BiConsumer<Stmt, SootMethod> createFieldUsagesCollector(
-            Collection<SootField> sensFields, Multimap<SootField, Stmt> result) {
-        Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
-        Map<String, SootField> stringConstantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
-        Map<Integer, SootField> intConstantFieldsMap = buildIntConstantFieldsMap(sensFieldsSet);
-        return (stmt, method)
-                -> collectResolvedFields(sensFieldsSet, stringConstantFieldsMap, intConstantFieldsMap, result, stmt);
-    }
-
-    /**
-     * @return A multimap from methods to statements possibly invoking that methods.
-     */
-    public static Multimap<SootMethod, Stmt> resolveMethodUsagesCHA(Collection<SootMethod> sootMethods,
-                                                                    Predicate<SootMethod> classpathFilter,
-                                                                    SootMethod dummyMain) {
-        Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);
-
-        //for performance optimization
-        Set<String> sensSubsignatures =
-                methodSet.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
-
-        Multimap<SootMethod, Stmt> result = HashMultimap.create();
-        traverseCHACallGraph(dummyMain, classpathFilter,
-                (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
-        return result;
-    }
-
     private static void collectResolvedMethods(Set<SootMethod> sensitives, Set<String> sensSubsignatures,
                                                Multimap<SootMethod, Stmt> result, Stmt stmt) {
         if (stmt.containsInvokeExpr()) {
@@ -214,6 +186,21 @@ public class SceneUtil {
                 }
             }
         }
+    }
+
+    /**
+     * @param result Multimap where result will be collected. A multimap from fields to statements possibly referring
+     *               that fields.
+     * @return a Pair consisting of the BiConsumer that has to be passed to traverseClasses to collect all field usages,
+     * and the result where these usages will be collected.
+     */
+    public static BiConsumer<Stmt, SootMethod> createFieldUsagesCollector(
+            Collection<SootField> sensFields, Multimap<SootField, Stmt> result) {
+        Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
+        Map<String, SootField> stringConstantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
+        Map<Integer, SootField> intConstantFieldsMap = buildIntConstantFieldsMap(sensFieldsSet);
+        return (stmt, method)
+                -> collectResolvedFields(sensFieldsSet, stringConstantFieldsMap, intConstantFieldsMap, result, stmt);
     }
 
     private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> stringConstantFieldsMap,

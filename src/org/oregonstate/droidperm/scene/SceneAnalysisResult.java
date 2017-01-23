@@ -39,18 +39,22 @@ public class SceneAnalysisResult {
     /**
      * @see #permToReferredMethodSensMap
      */
-    public Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToUndetectedMethodSensMapCHA;
+    public Map<Set<String>, SetMultimap<SootMethod, Stmt>> permToReferredMethodSensMapCHA;
 
     /**
      * @see #permToReferredFieldSensMap
      */
-    public Map<Set<String>, SetMultimap<SootField, Stmt>> permToUndetectedFieldSensMapCHA;
+    public Map<Set<String>, SetMultimap<SootField, Stmt>> permToReferredFieldSensMapCHA;
 
     /**
      * @see #checkers
      */
-    public Multimap<SootMethod, Stmt> undetectedCheckersCHA;
+    public Multimap<SootMethod, Stmt> checkersCHA;
+
+    /**
+     * @see #requesters
+     */
+    public Multimap<SootMethod, Stmt> requestersCHA;
 
     public List<PermissionDef> permDefs;
 }
-

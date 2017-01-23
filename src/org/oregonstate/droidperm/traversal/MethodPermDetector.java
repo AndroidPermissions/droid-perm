@@ -181,15 +181,22 @@ public class MethodPermDetector {
     }
 
     private void printSceneResults(SceneAnalysisResult sceneResult) {
-        UndetectedItemsUtil.printUndetectedSensitives(
-                sceneResult.permToUndetectedMethodSensMapCHA, "Undetected method sensitives, CHA-reachable", false);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMapCHA,
+                "Undetected method sensitives, CHA-reachable", false);
+        UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredFieldSensMapCHA,
+                "Undetected field sensitives, CHA-reachable", true);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.checkersCHA, "Undetected checkers, CHA-reachable", "", "\t",
+                "from ", false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.requestersCHA, "Requesters, CHA-reachable", "", "\t", "from ",
+                false);
+
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
                 "Undetected method sensitives, scene", false);
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredFieldSensMap,
                 "Undetected field sensitives, scene", true);
-
-        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Undetected checkers", "", "\t", "from ",
+        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Undetected checkers, scene", "", "\t", "from ",
                 false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.requesters, "Requesters, scene", "", "\t", "from ", false);
 
         Multimap<String, Stmt> referredDangerousPerm =
                 SceneUtil.resolveConstantUsages(SensitiveCollectorService.getAllDangerousPerm(), classpathFilter);

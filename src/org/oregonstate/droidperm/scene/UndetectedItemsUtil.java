@@ -117,13 +117,33 @@ public class UndetectedItemsUtil {
                 sceneResult.permToReferredFieldSensMap, scenePermDef);
 
         if (dummyMain != null) {
-            Multimap<SootMethod, Stmt> undetectedSens = SceneUtil.resolveMethodUsagesCHA(
-                    scenePermDef.getSceneMethodSensitives(), classpathFilter, dummyMain);
-            filterOutIgnoredAndDetected(undetectedSens, classpathFilter, excludedSensStmts);
-            sceneResult.permToUndetectedMethodSensMapCHA =
-                    undetectedSens.keySet().stream().collect(Collectors.groupingBy(
+            Multimap<SootMethod, Stmt> undetectedMethodSensCHA = HashMultimap.create();
+            sceneResult.checkersCHA = HashMultimap.create();
+            sceneResult.requestersCHA = HashMultimap.create();
+            Multimap<SootField, Stmt> undetectedFieldSensCHA = HashMultimap.create();
+
+            SceneUtil.traverseCHACallGraph(dummyMain, classpathFilter,
+                    SceneUtil.createMethodUsagesCollector(scenePermDef.getSceneMethodSensitives(),
+                            undetectedMethodSensCHA),
+                    SceneUtil.createMethodUsagesCollector(scenePermDef.getPermCheckers(), sceneResult.checkersCHA),
+                    SceneUtil.createMethodUsagesCollector(scenePermDef.getPermRequesters(), sceneResult.requestersCHA),
+                    SceneUtil.createFieldUsagesCollector(scenePermDef.getSceneFieldSensitives(),
+                            undetectedFieldSensCHA));
+
+            filterOutIgnoredAndDetected(undetectedMethodSensCHA, classpathFilter, excludedSensStmts);
+            filterOutIgnoredAndDetected(sceneResult.checkersCHA, classpathFilter, excludedCheckerStmts);
+            filterOutIgnoredAndDetected(sceneResult.requestersCHA, classpathFilter, ImmutableSet.of());
+            filterOutIgnoredAndDetected(undetectedFieldSensCHA, classpathFilter, excludedSensFieldRefs);
+
+            sceneResult.permToReferredMethodSensMapCHA =
+                    undetectedMethodSensCHA.keySet().stream().collect(Collectors.groupingBy(
                             scenePermDef::getPermissionsFor,
-                            MyCollectors.toMultimapForCollection(meth -> meth, undetectedSens::get)
+                            MyCollectors.toMultimapForCollection(meth -> meth, undetectedMethodSensCHA::get)
+                    ));
+            sceneResult.permToReferredFieldSensMapCHA =
+                    undetectedFieldSensCHA.keySet().stream().collect(Collectors.groupingBy(
+                            scenePermDef::getPermissionsFor,
+                            MyCollectors.toMultimapForCollection(field -> field, undetectedFieldSensCHA::get)
                     ));
         }
         return sceneResult;
