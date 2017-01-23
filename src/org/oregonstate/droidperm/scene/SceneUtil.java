@@ -96,6 +96,9 @@ public class SceneUtil {
         reached.add(dummyMain);
         queue.add(dummyMain);
 
+        //Preferred over ListMultimap for performance reasons.
+        Map<SootMethod, List<SootMethod>> invokeDispatchesCache = new HashMap<>();
+
         for (SootMethod crntMeth = queue.poll(); crntMeth != null; crntMeth = queue.poll()) {
             if (crntMeth.isConcrete() && crntMeth.hasActiveBody() &&
                     //only analyze the body of methods accepted by classpathFilter
@@ -119,11 +122,11 @@ public class SceneUtil {
                                     return;
                                 }
 
-                                //todo consider some optimization - don't call resolveAbstractDispatch
-                                //multiple times for same method
-                                List<SootMethod> resolvedMethods = Scene.v().getActiveHierarchy()
-                                        .resolveAbstractDispatch(invokeMethod.getDeclaringClass(), invokeMethod);
-                                for (SootMethod resolvedMeth : resolvedMethods) {
+                                if (!invokeDispatchesCache.containsKey(invokeMethod)) {
+                                    invokeDispatchesCache.put(invokeMethod, Scene.v().getActiveHierarchy()
+                                            .resolveAbstractDispatch(invokeMethod.getDeclaringClass(), invokeMethod));
+                                }
+                                for (SootMethod resolvedMeth : invokeDispatchesCache.get(invokeMethod)) {
                                     if (!reached.contains(resolvedMeth)) {
                                         reached.add(resolvedMeth);
                                         queue.add(resolvedMeth);
