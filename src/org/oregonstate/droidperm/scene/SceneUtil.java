@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.scene;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +65,10 @@ public class SceneUtil {
     /**
      * Traverse all statements in the given classes and apply stmtConsumer to each of them.
      */
-    private static void traverseClasses(Collection<SootClass> classes, Predicate<SootMethod> classpathFilter,
-                                        BiConsumer<Stmt, SootMethod> stmtConsumer) {
+    @SafeVarargs
+    public static void traverseClasses(Collection<SootClass> classes, Predicate<SootMethod> classpathFilter,
+                                       BiConsumer<Stmt, SootMethod>... stmtConsumers) {
+        Collection<BiConsumer<Stmt, SootMethod>> consumers = ImmutableList.copyOf(stmtConsumers);
         if (classpathFilter == null) {
             classpathFilter = meth -> true;
         }
@@ -74,7 +77,7 @@ public class SceneUtil {
                 .map(SceneUtil::retrieveBody).filter(Objects::nonNull)
                 .forEach(body -> body.getUnits().forEach(unit -> {
                     Stmt stmt = (Stmt) unit;
-                    stmtConsumer.accept(stmt, body.getMethod());
+                    consumers.forEach(consumer -> consumer.accept(stmt, body.getMethod()));
                 }));
     }
 
@@ -140,20 +143,35 @@ public class SceneUtil {
     }
 
     /**
-     * @return A multimap from methods to statements possibly invoking that methods.
+     * @param result Multimap where result will be collected. A multimap from methods to statements possibly invoking
+     *               that methods.
+     * @return a Pair consisting of the BiConsumer that has to be passed to traverseClasses to collect all method
+     * usages, and the result where these usages will be collected.
      */
-    public static Multimap<SootMethod, Stmt> resolveMethodUsages(Collection<SootMethod> sootMethods,
-                                                                 Predicate<SootMethod> classpathFilter) {
+    public static BiConsumer<Stmt, SootMethod> createMethodUsagesCollector(
+            Collection<SootMethod> sootMethods, Multimap<SootMethod, Stmt> result) {
         Set<SootMethod> methodSet = sootMethods instanceof Set ? (Set) sootMethods : new HashSet<>(sootMethods);
 
         //for performance optimization
         Set<String> sensSubsignatures =
                 methodSet.stream().map(SootMethod::getSubSignature).collect(Collectors.toSet());
 
-        Multimap<SootMethod, Stmt> result = HashMultimap.create();
-        traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
-                (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt));
-        return result;
+        return (stmt, method) -> collectResolvedMethods(methodSet, sensSubsignatures, result, stmt);
+    }
+
+    /**
+     * @param result Multimap where result will be collected. A multimap from fields to statements possibly referring
+     *               that fields.
+     * @return a Pair consisting of the BiConsumer that has to be passed to traverseClasses to collect all field usages,
+     * and the result where these usages will be collected.
+     */
+    public static BiConsumer<Stmt, SootMethod> createFieldUsagesCollector(
+            Collection<SootField> sensFields, Multimap<SootField, Stmt> result) {
+        Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
+        Map<String, SootField> stringConstantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
+        Map<Integer, SootField> intConstantFieldsMap = buildIntConstantFieldsMap(sensFieldsSet);
+        return (stmt, method)
+                -> collectResolvedFields(sensFieldsSet, stringConstantFieldsMap, intConstantFieldsMap, result, stmt);
     }
 
     /**
@@ -196,22 +214,6 @@ public class SceneUtil {
                 }
             }
         }
-    }
-
-    /**
-     * @return A map from fields to actual statements in context possibly referring that fields. Fields representing
-     * integer constants are not analyzed, to avoid too many false positives.
-     */
-    public static Multimap<SootField, Stmt> resolveFieldUsages(Collection<SootField> sensFields,
-                                                               Predicate<SootMethod> classpathFilter) {
-        Set<SootField> sensFieldsSet = sensFields instanceof Set ? (Set) sensFields : new HashSet<>(sensFields);
-        Map<String, SootField> stringConstantFieldsMap = buildStringConstantFieldsMap(sensFieldsSet);
-        Map<Integer, SootField> intConstantFieldsMap = buildIntConstantFieldsMap(sensFieldsSet);
-        Multimap<SootField, Stmt> result = HashMultimap.create();
-        traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
-                (stmt, method) -> collectResolvedFields(sensFieldsSet, stringConstantFieldsMap, intConstantFieldsMap,
-                        result, stmt));
-        return result;
     }
 
     private static void collectResolvedFields(Set<SootField> sensFields, Map<String, SootField> stringConstantFieldsMap,

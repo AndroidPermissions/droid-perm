@@ -1,11 +1,13 @@
 package org.oregonstate.droidperm.scene;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
 import org.oregonstate.droidperm.util.MyCollectors;
 import org.oregonstate.droidperm.util.PrintUtil;
+import soot.Scene;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.Stmt;
@@ -83,19 +85,22 @@ public class UndetectedItemsUtil {
         SceneAnalysisResult sceneResult = new SceneAnalysisResult();
 
         List<Stmt> excludedSensStmts = excludedSensEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
-        Multimap<SootMethod, Stmt> undetectedMethodSens =
-                SceneUtil.resolveMethodUsages(scenePermDef.getSceneMethodSensitives(), classpathFilter);
-        filterOutIgnoredAndDetected(undetectedMethodSens, classpathFilter, excludedSensStmts);
-
         List<Stmt> excludedCheckerStmts = excludedCheckEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
-        sceneResult.checkers = SceneUtil.resolveMethodUsages(scenePermDef.getPermCheckers(), classpathFilter);
+
+        Multimap<SootMethod, Stmt> undetectedMethodSens = HashMultimap.create();
+        sceneResult.checkers = HashMultimap.create();
+        sceneResult.requesters = HashMultimap.create();
+        Multimap<SootField, Stmt> undetectedFieldSens = HashMultimap.create();
+
+        SceneUtil.traverseClasses(Scene.v().getApplicationClasses(), classpathFilter,
+                SceneUtil.createMethodUsagesCollector(scenePermDef.getSceneMethodSensitives(), undetectedMethodSens),
+                SceneUtil.createMethodUsagesCollector(scenePermDef.getPermCheckers(), sceneResult.checkers),
+                SceneUtil.createMethodUsagesCollector(scenePermDef.getPermRequesters(), sceneResult.requesters),
+                SceneUtil.createFieldUsagesCollector(scenePermDef.getSceneFieldSensitives(), undetectedFieldSens));
+
+        filterOutIgnoredAndDetected(undetectedMethodSens, classpathFilter, excludedSensStmts);
         filterOutIgnoredAndDetected(sceneResult.checkers, classpathFilter, excludedCheckerStmts);
-
-        sceneResult.requesters = SceneUtil.resolveMethodUsages(scenePermDef.getPermRequesters(), classpathFilter);
         filterOutIgnoredAndDetected(sceneResult.requesters, classpathFilter, ImmutableSet.of());
-
-        Multimap<SootField, Stmt> undetectedFieldSens = SceneUtil.resolveFieldUsages(
-                scenePermDef.getSceneFieldSensitives(), classpathFilter);
         filterOutIgnoredAndDetected(undetectedFieldSens, classpathFilter, excludedSensFieldRefs);
 
         sceneResult.permToReferredMethodSensMap =
