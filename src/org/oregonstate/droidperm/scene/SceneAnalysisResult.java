@@ -57,4 +57,5 @@ public class SceneAnalysisResult {
     public Multimap<SootMethod, Stmt> requestersCHA;
 
     public List<PermissionDef> permDefs;
+    public List<PermissionDef> permDefsCHA;
 }

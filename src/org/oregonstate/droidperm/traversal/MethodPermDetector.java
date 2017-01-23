@@ -191,12 +191,12 @@ public class MethodPermDetector {
                 false);
 
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
-                "Undetected method sensitives, scene", false);
+                "Unreachable method sensitives", false);
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredFieldSensMap,
-                "Undetected field sensitives, scene", true);
-        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Undetected checkers, scene", "", "\t", "from ",
+                "Unreachable field sensitives", true);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.checkers, "Unreachable checkers", "", "\t", "from ",
                 false);
-        PrintUtil.printMultimapOfStmtValues(sceneResult.requesters, "Requesters, scene", "", "\t", "from ", false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.requesters, "Unreachable requesters", "", "\t", "from ", false);
 
         Multimap<String, Stmt> referredDangerousPerm =
                 SceneUtil.resolveConstantUsages(SensitiveCollectorService.getAllDangerousPerm(), classpathFilter);
