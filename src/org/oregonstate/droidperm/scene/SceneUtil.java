@@ -123,13 +123,23 @@ public class SceneUtil {
                                 }
 
                                 if (!invokeDispatchesCache.containsKey(invokeMethod)) {
-                                    invokeDispatchesCache.put(invokeMethod, Scene.v().getActiveHierarchy()
-                                            .resolveAbstractDispatch(invokeMethod.getDeclaringClass(), invokeMethod));
+                                    try {
+                                        invokeDispatchesCache.put(invokeMethod, Scene.v().getActiveHierarchy()
+                                                .resolveAbstractDispatch(invokeMethod.getDeclaringClass(),
+                                                        invokeMethod));
+                                    } catch (Exception e) {
+                                        //Happens if a concrete class doesn't implement a method from an implemented
+                                        //interface. Which in turn happens when some linked jar versions are mismatched.
+                                        //Another possibility is a class hierarchy containing a phantom class.
+                                        logger.error(e.getMessage(), e);
+                                    }
                                 }
-                                for (SootMethod resolvedMeth : invokeDispatchesCache.get(invokeMethod)) {
-                                    if (!reached.contains(resolvedMeth)) {
-                                        reached.add(resolvedMeth);
-                                        queue.add(resolvedMeth);
+                                if (invokeDispatchesCache.containsKey(invokeMethod)) {
+                                    for (SootMethod resolvedMeth : invokeDispatchesCache.get(invokeMethod)) {
+                                        if (!reached.contains(resolvedMeth)) {
+                                            reached.add(resolvedMeth);
+                                            queue.add(resolvedMeth);
+                                        }
                                     }
                                 }
                             }
