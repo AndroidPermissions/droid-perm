@@ -85,6 +85,7 @@ public class DPBatchRunner {
     private List<String> appsWithSafeMethodSensOnly = new ArrayList<>();
     private List<String> appsWithSafeMethodOrFieldSensOnly = new ArrayList<>();
     private List<String> appsDeclaringNonStoragePermOnly = new ArrayList<>();
+    private List<String> appsForEvaluation = new ArrayList<>();
 
     private enum PermUsage {
         MANIFEST, CODE, SENSITIVE
@@ -168,6 +169,11 @@ public class DPBatchRunner {
             ImmutableSet.of(PermUsage.MANIFEST, PermUsage.SENSITIVE),
             ImmutableSet.of(PermUsage.CODE, PermUsage.SENSITIVE),
             ImmutableSet.of(PermUsage.CODE)
+    );
+
+    private static Set<Set<PermUsage>> spectraForEvaluation = ImmutableSet.of(
+            ImmutableSet.of(PermUsage.MANIFEST, PermUsage.CODE, PermUsage.SENSITIVE),
+            ImmutableSet.of(PermUsage.MANIFEST)
     );
 
     private static Set<PermUsage> normalSpectrum =
@@ -389,6 +395,8 @@ public class DPBatchRunner {
 
         boolean noUnsafeSpectra = unsafePermSpectra.stream()
                 .allMatch(spectrum -> appToPermSpectraTable.get(appName, spectrum) == null);
+        boolean appForEvaluation =
+                Sets.difference(appToPermSpectraTable.row(appName).keySet(), spectraForEvaluation).isEmpty();
         boolean referredPermDefsOnlyMethod = data.getReferredPermDefs().stream()
                 .allMatch(permDef -> permDef.getTargetKind() == PermTargetKind.Method);
         boolean safeMethodSensOnly = !data.getReferredPermDefs().isEmpty()
@@ -408,6 +416,9 @@ public class DPBatchRunner {
         }
         if (declaresNonStoragePermOnly) {
             appsDeclaringNonStoragePermOnly.add(appName);
+        }
+        if (appForEvaluation) {
+            appsForEvaluation.add(appName);
         }
     }
 
@@ -491,6 +502,7 @@ public class DPBatchRunner {
                     "Apps with safe method or field sensitives only");
             PrintUtil.printCollection(appsDeclaringNonStoragePermOnly, "Apps declaring non-storage permissions only");
         }
+        PrintUtil.printCollection(appsForEvaluation, "Apps for evaluation, with spectra " + spectraForEvaluation);
     }
 
     private void printPermissionSpectraStatistics() {
