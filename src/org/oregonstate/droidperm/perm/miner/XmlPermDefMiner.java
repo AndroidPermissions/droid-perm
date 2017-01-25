@@ -6,6 +6,7 @@ import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItem;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbItemList;
 import org.oregonstate.droidperm.perm.miner.jaxb_in.JaxbVal;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
+import org.oregonstate.droidperm.sens.SensitiveCollectorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +31,11 @@ public class XmlPermDefMiner {
 
     private static final Logger logger = LoggerFactory.getLogger(XmlPermDefMiner.class);
 
-    public static void minePermissionDefs(String metadataJar, File outputFile) throws JAXBException, IOException {
+    public static void minePermissionDefs(String metadataJar, File outputFile, boolean dangerousPermOnly)
+            throws JAXBException, IOException {
         List<JaxbItem> jaxbItems = loadMetadataXml(metadataJar);
         jaxbItems = filterItemList(jaxbItems);
-        PermissionDefList permissionDefList = buildPermissionDefList(jaxbItems);
+        PermissionDefList permissionDefList = buildPermissionDefList(jaxbItems, dangerousPermOnly);
 
         JaxbUtil.save(permissionDefList, PermissionDefList.class, outputFile);
     }
@@ -50,7 +52,7 @@ public class XmlPermDefMiner {
         ).collect(Collectors.toList());
     }
 
-    private static PermissionDefList buildPermissionDefList(List<JaxbItem> jaxbItems) {
+    private static PermissionDefList buildPermissionDefList(List<JaxbItem> jaxbItems, boolean dangerousPermOnly) {
         PermissionDefList permissionDefList = new PermissionDefList();
 
         for (JaxbItem jaxbItem : jaxbItems) {
@@ -73,7 +75,7 @@ public class XmlPermDefMiner {
                     ? PermTargetKind.Method : PermTargetKind.Field);
 
             //Finally iterate through the annotations, extract the relevant information and put it in a PermDef object
-            populatePermissions(permissionDef, jaxbItem);
+            populatePermissions(permissionDef, jaxbItem, dangerousPermOnly);
 
             //some permission defs wrongly have an empty set of permissions. They have to be elliminated here.
             if (!permissionDef.getPermissions().isEmpty()) {
@@ -115,7 +117,7 @@ public class XmlPermDefMiner {
      * Does the bulk of the work for buildPermissionDefList. It gets the relevant information from a JaxbAnnotation
      * object and gives it to a PermissionDef object.
      */
-    private static void populatePermissions(PermissionDef permissionDef, JaxbItem jaxbItem) {
+    private static void populatePermissions(PermissionDef permissionDef, JaxbItem jaxbItem, boolean dangerousPermOnly) {
         for (JaxbAnnotation jaxbAnnotation : jaxbItem.getAnnotations()) {
             List<Permission> permForThisAnno = new ArrayList<>();
             //This block handles the extra Read or Write tag that may be attached to a permission
@@ -136,9 +138,12 @@ public class XmlPermDefMiner {
                     String[] tokens = jaxbVal.getVal().split(delims);
 
                     for (String token : tokens) {
-                        if (token.length() > 1) {
-
-                            permForThisAnno.add(new Permission(token.trim(), opKind));
+                        String perm = token.trim();
+                        boolean usePerm =
+                                dangerousPermOnly ? SensitiveCollectorService.getAllDangerousPerm().contains(perm)
+                                                  : !perm.isEmpty();
+                        if (usePerm) {
+                            permForThisAnno.add(new Permission(perm, opKind));
                         }
                     }
 

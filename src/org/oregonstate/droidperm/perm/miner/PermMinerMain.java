@@ -12,6 +12,6 @@ public class PermMinerMain {
     public static void main(final String[] args) throws JAXBException, IOException {
         String metadataJar = args[0];
         File outputFile = new File(args[1]);
-        XmlPermDefMiner.minePermissionDefs(metadataJar, outputFile);
+        XmlPermDefMiner.minePermissionDefs(metadataJar, outputFile, true);
     }
 }
