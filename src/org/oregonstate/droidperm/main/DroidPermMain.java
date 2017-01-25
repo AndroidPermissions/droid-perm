@@ -510,7 +510,7 @@ public class DroidPermMain {
         permissionDefProvider = PermDefProviderFactory.create(permDefFiles, useAnnoPermDef);
         if (collectPermAnnoMode) {
             initSootStandalone(androidJarORSdkDir, apkFile);
-            AnnoPermissionDefUtil.collectPermAnno(xmlOut);
+            AnnoPermissionDefUtil.collectPermAnno(xmlOut, true);
             return;
         }
         if (collectSensitivesMode) {
@@ -543,7 +543,7 @@ public class DroidPermMain {
         Options.v().set_allow_phantom_refs(false);
 
         if (printAnnoPermDef) {
-            AnnoPermissionDefUtil.printAnnoPermDefs();
+            AnnoPermissionDefUtil.printAnnoPermDefs(false);
         }
         ScenePermissionDefService scenePermDef =
                 new ScenePermissionDefService(permissionDefProvider);

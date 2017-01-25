@@ -31,6 +31,17 @@ public class PermissionDef {
         this.permissions = permissions;
     }
 
+    public PermissionDef(String className, String target, PermTargetKind targetKind, PermissionRel permissionRel,
+                         List<Permission> permissions, String comment, Boolean conditional) {
+        this.className = className;
+        this.target = target;
+        this.targetKind = targetKind;
+        this.permissionRel = permissionRel;
+        this.permissions = permissions;
+        this.comment = comment;
+        this.conditional = conditional;
+    }
+
     @XmlAttribute
     public String getClassName() {
         return className;
