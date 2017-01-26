@@ -211,11 +211,18 @@ public class ContextSensOutflowCPHolder {
             //Why context sensitivity works for Thread.start()?
             //  Current algorithm won't distinguish between 2 statements Thread.start() within the same method,
             //  but it doesn't matter for the purpose of DroidPerm.
-            //Context sensitivity for Thread is actually achieved by cleaning up unfeasible edges in GeomPointsTo,
-            //  not through PointsToSet analysis in this class.
-            return StreamUtil.asStream(edgesIterator)
-                    .filter(edge -> edgeMatchesPointsTo(edge, pointsToTargetMethods))
-                    .iterator();
+
+            List<Edge> edges = Lists.newArrayList(edgesIterator);
+            List<Edge> fakeEdges = edges.stream().filter(edge -> edge.kind().isFake()).collect(Collectors.toList());
+
+            //if there are fake edges, filter out all other edges
+            if (!fakeEdges.isEmpty()) {
+                return fakeEdges.iterator();
+            } else {
+                return edges.stream()
+                        .filter(edge -> edgeMatchesPointsTo(edge, pointsToTargetMethods))
+                        .iterator();
+            }
         }
 
         //default case, anything except virtual method calls
@@ -228,9 +235,12 @@ public class ContextSensOutflowCPHolder {
                 //2nd case: fake edges
                 //Fake edges are a hack in Soot for handling async constructs.
                 //If it's a fake edge, include it without comparing to actual targets.
-                //With one exception: ExecutorService.execute(). That one is handled better by crafted classpath.
+                //toperf no longer necessary, because if there are fake edges this method won't be called
                 || (edge.kind().isFake());
-                /*Limitation: cannot disable fake edges kinf EXECUTOR, because it would require crafting
+                /* Fake edges could essentially be replaced with crafted JDK classes, with one exception:
+                ExecutorService.execute(), or edges of kind EXECUTOR.
+
+                Reason: cannot disable fake edges kind EXECUTOR, because it would require crafting
                 a custom executor.execute() for every implementation of ExecutorService. Those fake edges are still
                 needed when executor.execute() is called directly by the app.
 
