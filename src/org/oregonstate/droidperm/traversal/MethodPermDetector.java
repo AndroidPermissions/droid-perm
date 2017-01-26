@@ -302,7 +302,9 @@ public class MethodPermDetector {
                                         "\t\tCallbacks where " + status + ": " + methodsForStatus.size());
                                 if (printCallbacks) {
                                     methodsForStatus.forEach(
-                                            meth -> System.out.println("\t\t\t" + meth));
+                                            meth -> System.out.println("\t\t\t" + meth
+                                                    + (sensitivePathsHolder.isPathAmbiguous(meth, sensEdge)
+                                                       ? "" : ", path is NON-AMBIGUOUS")));
                                 }
                             }
                         }

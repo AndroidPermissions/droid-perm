@@ -80,6 +80,12 @@ public class ContextSensOutflowCPHolder {
      */
     private SetMultimap<Edge, MethodOrMethodContext> presensToCallbacksMap;
 
+    /**
+     * Table from Callback-sensitive pairs to a boolean value, indicating whether the path from callback to sensitive is
+     * ambiguous.
+     */
+    private Table<MethodOrMethodContext, Edge, Boolean> ambigousPathsTable = HashBasedTable.create();
+
     public ContextSensOutflowCPHolder(MethodOrMethodContext dummyMainMethod, Set<Edge> sensEdges,
                                       ClasspathFilter classpathFilter, CallGraphPermDefService cgService) {
         this.dummyMainMethod = dummyMainMethod;
@@ -276,6 +282,7 @@ public class ContextSensOutflowCPHolder {
 
     private void printPath(MethodOrMethodContext callback, Edge destEdge, Map<Edge, Edge> outflow) {
         List<Edge> path = computePathFromOutflow(callback, destEdge, outflow);
+        boolean ambiguous = false;
 
         System.out.println("From " + callback);
         cgService.printSensitiveHeader(destEdge.getTgt(), "  ");
@@ -285,8 +292,18 @@ public class ContextSensOutflowCPHolder {
             for (int i = 0; i < path.size(); i++) {
                 Edge edge = path.get(i);
                 Edge childEdge = i < path.size() - 1 ? path.get(i + 1) : null;
-                System.out.println(edge != null ? pathNodeToString(edge, childEdge) : null);
+                if (edge != null) {
+                    Pair<String, Boolean> edgeData = pathNodeToString(edge, childEdge);
+                    System.out.println(edgeData.getO1());
+                    ambiguous |= edgeData.getO2();
+                } else {
+                    System.out.println((Object) null);
+                }
             }
+            if (!ambiguous) {
+                System.out.println("\tPATH NON-AMBIGUOUS");
+            }
+            ambigousPathsTable.put(callback, destEdge, ambiguous);
             System.out.println();
         } else {
             System.out.println("Not found!");
@@ -297,10 +314,11 @@ public class ContextSensOutflowCPHolder {
     /**
      * @param edge      currently printed method call
      * @param childEdge childEdge of edge
-     * @return string to print representing edge
+     * @return A pair of: 1. string to print representing edge. 2. Whether path is points-to ambiguous.
      */
-    private String pathNodeToString(Edge edge, Edge childEdge) {
+    private Pair<String, Boolean> pathNodeToString(Edge edge, Edge childEdge) {
         StringBuilder out = new StringBuilder();
+        boolean ambiguous = false;
 
         //parent method
         out.append(edge.getTgt());
@@ -326,6 +344,8 @@ public class ContextSensOutflowCPHolder {
             }
             int edgesCount = Iterators.size(callGraph.edgesOutOf(childEdge.srcStmt()));
             out.append(", edges: ").append(edgesCount);
+            ambiguous = pointsTo == null || pointsTo.possibleTypes().isEmpty() ? edgesCount >= 2
+                                                                               : pointsTo.possibleTypes().size() >= 2;
         }
 
         //shortcutted call, if it's a fake edge
@@ -343,7 +363,7 @@ public class ContextSensOutflowCPHolder {
                     "\n                                                                FAKE edge: call shortcutted");
         }
 
-        return out.toString();
+        return new Pair<>(out.toString(), ambiguous);
     }
 
     private List<Edge> computePathFromOutflow(MethodOrMethodContext src, Edge dest,
@@ -424,5 +444,9 @@ public class ContextSensOutflowCPHolder {
         Edge parent = edgeParentPair.getO2();
         Edge target = (parent != null && parent.getSrc() != dummyMainMethod) ? parent : edge;
         return callbackToOutflowTable.column(target).keySet();
+    }
+
+    public boolean isPathAmbiguous(MethodOrMethodContext callback, Edge sensInContext) {
+        return ambigousPathsTable.get(callback, sensInContext);
     }
 }
