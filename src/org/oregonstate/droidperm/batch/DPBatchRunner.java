@@ -45,8 +45,9 @@ public class DPBatchRunner {
     @Parameter(names = "--cg-algo", description = "The call graph algorithm")
     private InfoflowConfiguration.CallgraphAlgorithm cgAlgo = InfoflowConfiguration.CallgraphAlgorithm.GEOM;
 
-    @Parameter(names = "--use-javadoc-perm", description = "Use Javadoc permission definitions")
-    private boolean useJavadocPerm;
+    @Parameter(names = "--perm-def-files", description = "Permission definition files, if custom")
+    private String permDefFiles = "config/checker-param-sens-def.xml;config/perm-def-API-23.xml;"
+            + "config/perm-def-play-services.xml;config/javadoc-perm-def-API-23.xml;config/perm-def-manual.xml";
 
     @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space. "
             + "If more than one, they should be included into quotes (\"\").")
@@ -223,7 +224,7 @@ public class DPBatchRunner {
         logger.info("droidPermHomeDir: " + droidPermHomeDir);
         logger.info("logDir: " + logDir);
         logger.info("cgalgo: " + cgAlgo);
-        logger.info("useJavadocPerm: " + useJavadocPerm);
+        logger.info("permDefFiles: " + permDefFiles);
         logger.info("vmArgs: " + vmArgs + "\n");
 
         Files.createDirectories(logDir);
@@ -289,13 +290,6 @@ public class DPBatchRunner {
                 androidClassPath));
         processBuilderArgs.addAll(Arrays.asList("--cgalgo", cgAlgo.name()));
 
-        String permDefFiles =
-                "config/checker-param-sens-def.xml;"
-                        + "config/perm-def-API-23.xml;"
-                        + "config/perm-def-play-services.xml";
-        if (useJavadocPerm) {
-            permDefFiles += ";config/javadoc-perm-def-API-23.xml;config/perm-def-manual.xml";
-        }
         processBuilderArgs.addAll(Arrays.asList("--perm-def-files", permDefFiles));
         processBuilderArgs.addAll(Arrays.asList("--xml-out", xmlOut.toString()));
 
