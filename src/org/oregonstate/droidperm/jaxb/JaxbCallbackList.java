@@ -30,6 +30,9 @@ public class JaxbCallbackList {
     @XmlElement
     private int targetSdkVersion;
 
+    @XmlElement
+    private int nrReachedSensEdges;
+
     public JaxbCallbackList() {
     }
 
@@ -76,5 +79,13 @@ public class JaxbCallbackList {
 
     public void setTargetSdkVersion(int targetSdkVersion) {
         this.targetSdkVersion = targetSdkVersion;
+    }
+
+    public int getNrReachedSensEdges() {
+        return nrReachedSensEdges;
+    }
+
+    public void setNrReachedSensEdges(int nrReachedSensEdges) {
+        this.nrReachedSensEdges = nrReachedSensEdges;
     }
 }

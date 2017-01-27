@@ -262,6 +262,8 @@ public class DPBatchRunner {
         }
 
         switch (mode) {
+            case DROID_PERM:
+                printDroidPermBatchStatistics();
             case COLLECT_ANNO:
                 saveCollectAnnoModeDigest();
                 break;
@@ -348,11 +350,17 @@ public class DPBatchRunner {
         }
     }
 
+    int totalReachedSensEdges;
+    int totalUndetectedCHASensDefs;
+
     private void droidPermModeFor(Path xmlOut, String appName) throws JAXBException {
         JaxbCallbackList data = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
+        logger.info("\t reached sensitive edges: " + data.getNrReachedSensEdges());
+        totalReachedSensEdges += data.getNrReachedSensEdges();
         if (!data.getUndetectedCHADangerousPermDefs().isEmpty()) {
-            logger.info(appName
-                    + " : undetected CHA-reachable sensitive defs: " + data.getUndetectedCHADangerousPermDefs().size());
+            logger.info(
+                    "\t undetected CHA-reachable sensitive defs: " + data.getUndetectedCHADangerousPermDefs().size());
+            totalUndetectedCHASensDefs += data.getUndetectedCHADangerousPermDefs().size();
         }
         if (!data.isCompileApi23Plus()) {
             logger.warn(appName + " : compileSdkVersion is < 23");
@@ -582,6 +590,13 @@ public class DPBatchRunner {
                 }
             }
         }
+    }
+
+    private void printDroidPermBatchStatistics() {
+        System.out.println("\n\nBatch runner statistics\n"
+                + "========================================================================");
+        System.out.println("Total undetected CHA-reachable sensitive defs_ : " + totalUndetectedCHASensDefs);
+        System.out.println("Total reached sensitive edges_ : " + totalReachedSensEdges);
     }
 
     /**

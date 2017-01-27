@@ -65,6 +65,8 @@ public class JaxbUtil {
             }
             jaxbCallbackList.addCallback(jaxbCallback);
         }
+        jaxbCallbackList.setNrReachedSensEdges(detector.getSensitivePathsHolder().getReachedSensEdges().size());
+
         return jaxbCallbackList;
     }
 

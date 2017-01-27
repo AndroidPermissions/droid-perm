@@ -459,4 +459,8 @@ public class ContextSensOutflowCPHolder {
     public boolean isPathAmbiguous(MethodOrMethodContext callback, Edge sensInContext) {
         return ambigousPathsTable.get(callback, sensInContext);
     }
+
+    public Set<Edge> getReachedSensEdges() {
+        return reachedSensEdges;
+    }
 }
