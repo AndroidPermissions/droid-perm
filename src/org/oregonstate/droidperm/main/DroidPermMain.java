@@ -97,6 +97,8 @@ public class DroidPermMain {
      */
     private static boolean collectSensitivesMode;
 
+    public static boolean augmentCallGraph = true;
+
     static {
         // DroidPerm default config options
         //during code ellimination sometimes a new class is added which deleted the PointsToAnalysis.
@@ -354,6 +356,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--COLLECT-SENS-MODE")) {
                 collectSensitivesMode = true;
                 i++;
+            } else if (args[i].equalsIgnoreCase("--AUGMENT-CALL-GRAPH")) {
+                augmentCallGraph = Boolean.parseBoolean(args[i + 1]);
+                i += 2;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -426,6 +431,8 @@ public class DroidPermMain {
         System.out.println("\t--COLLECT-PERM-ANNO-MODE: Only collect permission annotations. Do not run DroidPerm."
                 + " Option --xml-out if specified will be the file where annotations are stored.");
         System.out.println("\t--COLLECT-SENS-MODE: Collect all sensitives in hierarchy mode and halt.");
+        System.out.println("\t--AUGMENT-CALL-GRAPH true/false: Augment call graph with safe edges for method calls "
+                + "that have no outgoing edges");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");

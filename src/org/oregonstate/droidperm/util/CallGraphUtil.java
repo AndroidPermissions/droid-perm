@@ -2,9 +2,13 @@ package org.oregonstate.droidperm.util;
 
 import com.google.common.collect.ImmutableSet;
 import org.oregonstate.droidperm.scene.SceneUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import soot.Body;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
+import soot.jimple.InvokeExpr;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
@@ -13,6 +17,7 @@ import soot.jimple.toolkits.callgraph.Edge;
 import soot.toolkits.scalar.Pair;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -20,6 +25,69 @@ import java.util.stream.Collectors;
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 2/15/2016.
  */
 public class CallGraphUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(CallGraphUtil.class);
+
+    public static void augmentCGWithSafeEdges(Predicate<SootMethod> classpathFilter) {
+        if (classpathFilter == null) {
+            classpathFilter = meth -> true;
+        }
+
+        CallGraph cg = Scene.v().getCallGraph();
+        Map<SootMethod, List<SootMethod>> invokeDispatchesCache = new HashMap<>();
+        Set<SootMethod> reached = new HashSet<>();
+        Queue<SootMethod> queue = new ArrayDeque<>();
+        cg.iterator().forEachRemaining(edge -> {
+            reached.add(edge.tgt());
+            queue.add(edge.tgt());
+        });
+        for (SootMethod crntMeth = queue.poll(); crntMeth != null; crntMeth = queue.poll()) {
+            if (crntMeth.isConcrete() && crntMeth.hasActiveBody() &&
+                    //only analyze the body of methods accepted by classpathFilter
+                    classpathFilter.test(crntMeth)) {
+                Body body = SceneUtil.retrieveBody(crntMeth);
+                if (body == null) {
+                    continue;
+                }
+                body.getUnits().forEach(unit -> {
+                    Stmt stmt = (Stmt) unit;
+                    //if this is a method invocation and CG has no edges for it, maybe we can augment it
+                    if (stmt.containsInvokeExpr() && !cg.edgesOutOf(stmt).hasNext()) {
+                        InvokeExpr invoke = stmt.getInvokeExpr();
+                        SootMethod invokeMethod;
+                        try {
+                            invokeMethod = invoke.getMethod();
+                        } catch (Exception e) {
+                            logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
+                            return;
+                        }
+                        if (!invokeDispatchesCache.containsKey(invokeMethod)) {
+                            try {
+                                invokeDispatchesCache.put(invokeMethod, Scene.v().getActiveHierarchy()
+                                        .resolveAbstractDispatch(invokeMethod.getDeclaringClass(),
+                                                invokeMethod));
+                            } catch (Exception e) {
+                                //Happens if a concrete class doesn't implement a method from an implemented
+                                //interface. Which in turn happens when some linked jar versions are mismatched.
+                                //Another possibility is a class hierarchy containing a phantom class.
+                                logger.error(e.getMessage(), e);
+                                invokeDispatchesCache.put(invokeMethod, Collections.emptyList());
+                            }
+                        }
+
+                        List<SootMethod> invokedMethods = invokeDispatchesCache.get(invokeMethod);
+                        if (invokedMethods.size() == 1) {
+                            SootMethod targetMeth = invokedMethods.get(0);
+                            cg.addEdge(new Edge(body.getMethod(), stmt, targetMeth));
+                            if (reached.add(targetMeth)) {
+                                queue.add(targetMeth);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
 
     public static LinkedHashSet<Edge> getEdgesInto(Collection<SootMethod> methods) {
         return methods.stream().map(CallGraphUtil::getEdgesInto).flatMap(Collection::stream)

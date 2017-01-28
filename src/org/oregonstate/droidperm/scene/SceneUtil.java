@@ -148,7 +148,7 @@ public class SceneUtil {
         }
     }
 
-    private static Body retrieveBody(SootMethod meth) {
+    public static Body retrieveBody(SootMethod meth) {
         try {
             return meth.retrieveActiveBody();
         } catch (NullPointerException e) {

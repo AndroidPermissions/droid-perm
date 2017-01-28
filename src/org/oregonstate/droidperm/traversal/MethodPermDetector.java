@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.traversal;
 import com.google.common.collect.*;
 import org.oregonstate.droidperm.debug.DebugUtil;
 import org.oregonstate.droidperm.jaxb.*;
+import org.oregonstate.droidperm.main.DroidPermMain;
 import org.oregonstate.droidperm.scene.*;
 import org.oregonstate.droidperm.sens.DPProcessManifest;
 import org.oregonstate.droidperm.sens.SensitiveCollectorService;
@@ -111,6 +112,10 @@ public class MethodPermDetector {
         System.out.println("\n\nDroidPerm stmt to method map build time: "
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
         lastStepTime = currentTime;
+
+        if (DroidPermMain.augmentCallGraph) {
+            CallGraphUtil.augmentCGWithSafeEdges(classpathFilter);
+        }
 
         logger.info("Processing checkers");
         checkerEdges = CallGraphUtil.getEdgesInto(scenePermDef.getPermCheckers());
