@@ -1,12 +1,17 @@
 package org.oregonstate.droidperm.util;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
+import soot.jimple.InvokeExpr;
+import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.infoflow.data.SootMethodAndClass;
+import soot.jimple.toolkits.callgraph.VirtualCalls;
 import soot.util.ArraySet;
+import soot.util.NumberedString;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class HierarchyUtil {
     private static final Logger logger = LoggerFactory.getLogger(HierarchyUtil.class);
+
+    private static Map<SootMethod, List<SootMethod>> invokeDispatchesCache = new HashMap<>();
 
     private enum AnySubTypeTreatment {
         /**
@@ -191,4 +198,42 @@ public class HierarchyUtil {
 
         return Collections.unmodifiableList(new ArrayList<>(set));
     }
+
+    public static List<SootMethod> dispatchInvokeExpr(InvokeExpr invoke, SootMethod context) {
+        //This particular case allows correct dispatch of super.f() expressions.
+        if (invoke instanceof SpecialInvokeExpr) {
+            NumberedString subSig = invoke.getMethodRef().getSubSignature();
+            try {
+                return ImmutableList
+                        .of(VirtualCalls.v().resolveSpecial((SpecialInvokeExpr) invoke, subSig, context, false));
+            } catch (Exception e) {
+                logger.debug("Exception in resolveSpecial() for " + invoke + " : " + e.toString());
+                return Collections.emptyList();
+            }
+        }
+
+        SootMethod invokeMethod;
+        try {
+            invokeMethod = invoke.getMethod();
+        } catch (Exception e) {
+            logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
+            return Collections.emptyList();
+        }
+
+        if (!invokeDispatchesCache.containsKey(invokeMethod)) {
+            try {
+                List<SootMethod> targetMethods = Scene.v().getActiveHierarchy()
+                        .resolveAbstractDispatch(invokeMethod.getDeclaringClass(), invokeMethod);
+                invokeDispatchesCache.put(invokeMethod, targetMethods);
+            } catch (Exception e) {
+                //Happens if a concrete class doesn't implement a method from an implemented
+                //interface. Which in turn happens when some linked jar versions are mismatched.
+                //Another possibility is a class hierarchy containing a phantom class.
+                logger.error(e.getMessage(), e);
+                invokeDispatchesCache.put(invokeMethod, Collections.emptyList());
+            }
+        }
+        return invokeDispatchesCache.get(invokeMethod);
+    }
+
 }

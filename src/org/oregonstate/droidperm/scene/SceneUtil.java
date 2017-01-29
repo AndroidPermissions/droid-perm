@@ -3,6 +3,7 @@ package org.oregonstate.droidperm.scene;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import org.oregonstate.droidperm.util.HierarchyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
@@ -96,13 +97,11 @@ public class SceneUtil {
         reached.add(dummyMain);
         queue.add(dummyMain);
 
-        //Preferred over ListMultimap for performance reasons.
-        Map<SootMethod, List<SootMethod>> invokeDispatchesCache = new HashMap<>();
-
         for (SootMethod crntMeth = queue.poll(); crntMeth != null; crntMeth = queue.poll()) {
             if (crntMeth.isConcrete() && crntMeth.hasActiveBody() &&
                     //only analyze the body of methods accepted by classpathFilter
                     classpathFilter.test(crntMeth)) {
+                SootMethod crntMethCopy = crntMeth;
                 Body body = retrieveBody(crntMeth);
                 if (body == null) {
                     continue;
@@ -113,33 +112,12 @@ public class SceneUtil {
                             consumers.forEach(consumer -> consumer.accept(stmt, body.getMethod()));
 
                             if (stmt.containsInvokeExpr()) {
-                                InvokeExpr invoke = stmt.getInvokeExpr();
-                                SootMethod invokeMethod;
-                                try {
-                                    invokeMethod = invoke.getMethod();
-                                } catch (Exception e) {
-                                    logger.debug("Exception in getMethod() for " + invoke + " : " + e.toString());
-                                    return;
-                                }
-
-                                if (!invokeDispatchesCache.containsKey(invokeMethod)) {
-                                    try {
-                                        invokeDispatchesCache.put(invokeMethod, Scene.v().getActiveHierarchy()
-                                                .resolveAbstractDispatch(invokeMethod.getDeclaringClass(),
-                                                        invokeMethod));
-                                    } catch (Exception e) {
-                                        //Happens if a concrete class doesn't implement a method from an implemented
-                                        //interface. Which in turn happens when some linked jar versions are mismatched.
-                                        //Another possibility is a class hierarchy containing a phantom class.
-                                        logger.error(e.getMessage(), e);
-                                    }
-                                }
-                                if (invokeDispatchesCache.containsKey(invokeMethod)) {
-                                    for (SootMethod resolvedMeth : invokeDispatchesCache.get(invokeMethod)) {
-                                        if (!reached.contains(resolvedMeth)) {
-                                            reached.add(resolvedMeth);
-                                            queue.add(resolvedMeth);
-                                        }
+                                List<SootMethod> targetMethods = HierarchyUtil.dispatchInvokeExpr(stmt.getInvokeExpr(),
+                                        crntMethCopy);
+                                for (SootMethod resolvedMeth : targetMethods) {
+                                    if (!reached.contains(resolvedMeth)) {
+                                        reached.add(resolvedMeth);
+                                        queue.add(resolvedMeth);
                                     }
                                 }
                             }
