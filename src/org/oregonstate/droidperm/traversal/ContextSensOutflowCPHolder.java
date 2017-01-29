@@ -216,7 +216,8 @@ public class ContextSensOutflowCPHolder {
             List<Edge> fakeEdges = edges.stream().filter(edge -> edge.kind().isFake()).collect(Collectors.toList());
 
             //if there are fake edges, filter out all other edges
-            if (!fakeEdges.isEmpty()) {
+            //Exception: for AsyncTask crafted CP edges are better than fake edges.
+            if (!fakeEdges.isEmpty() && fakeEdges.stream().noneMatch(fake -> fake.kind().isAsyncTask())) {
                 return fakeEdges.iterator();
             } else {
                 return edges.stream()
