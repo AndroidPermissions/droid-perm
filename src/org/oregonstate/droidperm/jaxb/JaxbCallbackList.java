@@ -33,6 +33,12 @@ public class JaxbCallbackList {
     @XmlElement
     private int nrReachedSensEdges;
 
+    @XmlElement
+    private int nrCHAReachableSensEdges;
+
+    @XmlElement
+    private int nrUnreachableSensEdges;
+
     public JaxbCallbackList() {
     }
 
@@ -87,5 +93,21 @@ public class JaxbCallbackList {
 
     public void setNrReachedSensEdges(int nrReachedSensEdges) {
         this.nrReachedSensEdges = nrReachedSensEdges;
+    }
+
+    public int getNrCHAReachableSensEdges() {
+        return nrCHAReachableSensEdges;
+    }
+
+    public void setNrCHAReachableSensEdges(int nrCHAReachableSensEdges) {
+        this.nrCHAReachableSensEdges = nrCHAReachableSensEdges;
+    }
+
+    public int getNrUnreachableSensEdges() {
+        return nrUnreachableSensEdges;
+    }
+
+    public void setNrUnreachableSensEdges(int nrUnreachableSensEdges) {
+        this.nrUnreachableSensEdges = nrUnreachableSensEdges;
     }
 }

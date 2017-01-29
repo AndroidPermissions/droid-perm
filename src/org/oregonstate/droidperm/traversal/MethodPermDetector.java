@@ -70,6 +70,7 @@ public class MethodPermDetector {
     private SetMultimap<MethodOrMethodContext, String> callbackToRequiredPermsMap;
     private Set<String> sometimesNotCheckedPerms;
 
+    private SceneAnalysisResult sceneResult;
     private JaxbCallbackList jaxbData;
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -130,6 +131,16 @@ public class MethodPermDetector {
 
         //Section 3: Data structures that combine checkers and sensitives
         sometimesNotCheckedPerms = buildSometimesNotCheckedPerms();
+
+        //Section 4: Scene undetected items analysis
+        Set<Stmt> sensFieldRefs = this.sensEdges.stream()
+                .flatMap(edge -> cgService.getSensitiveArgInitializerStmts(edge).stream()).collect(Collectors.toSet());
+        Set<Edge> detectedCheckEdges =
+                permsToCheckersMap.columnKeySet().stream().map(Pair::getO1).collect(Collectors.toSet());
+        sceneResult = UndetectedItemsUtil
+                .sceneAnalysis(sensEdges, sensFieldRefs, detectedCheckEdges, scenePermDef, classpathFilter,
+                        dummyMainMethod.method());
+
         jaxbData = JaxbUtil.buildJaxbData(this);
     }
 
@@ -144,20 +155,7 @@ public class MethodPermDetector {
                 + (currentTime - lastStepTime) / 1E3 + " seconds");
         lastStepTime = currentTime;
 
-        //Scene undetected items analysis
-        Set<Stmt> sensFieldRefs = this.sensEdges.stream()
-                .flatMap(edge -> cgService.getSensitiveArgInitializerStmts(edge).stream()).collect(Collectors.toSet());
-        Set<Edge> detectedCheckEdges =
-                permsToCheckersMap.columnKeySet().stream().map(Pair::getO1).collect(Collectors.toSet());
-        SceneAnalysisResult sceneResult = UndetectedItemsUtil
-                .sceneAnalysis(sensEdges, sensFieldRefs, detectedCheckEdges, scenePermDef, classpathFilter,
-                        dummyMainMethod.method());
         printSceneResults(sceneResult);
-
-        currentTime = System.currentTimeMillis();
-        System.out.println("\nUndetected sensitives/checkers execution time: "
-                + (currentTime - lastStepTime) / 1E3 + " seconds");
-        lastStepTime = currentTime;
 
         //Printing main results - sensitives and checkers in context
         printCheckersInContext(true);
@@ -470,6 +468,10 @@ public class MethodPermDetector {
 
     public SetMultimap<MethodOrMethodContext, String> getCallbackToCheckedPermsMap() {
         return callbackToCheckedPermsMap;
+    }
+
+    public SceneAnalysisResult getSceneResult() {
+        return sceneResult;
     }
 
     public enum PermCheckStatus {

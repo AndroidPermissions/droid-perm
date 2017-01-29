@@ -1,6 +1,7 @@
 package org.oregonstate.droidperm.jaxb;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import org.oregonstate.droidperm.traversal.MethodPermDetector;
 import org.oregonstate.droidperm.util.MyCollectors;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Denis Bogdanas <bogdanad@oregonstate.edu> Created on 4/26/2016.
@@ -66,6 +68,15 @@ public class JaxbUtil {
             jaxbCallbackList.addCallback(jaxbCallback);
         }
         jaxbCallbackList.setNrReachedSensEdges(detector.getSensitivePathsHolder().getReachedSensEdges().size());
+
+        jaxbCallbackList.setNrCHAReachableSensEdges(IntStream.concat(
+                detector.getSceneResult().permToReferredFieldSensMapCHA.values().stream().mapToInt(Multimap::size),
+                detector.getSceneResult().permToReferredMethodSensMapCHA.values().stream().mapToInt(Multimap::size)
+        ).sum());
+        jaxbCallbackList.setNrUnreachableSensEdges(IntStream.concat(
+                detector.getSceneResult().permToReferredFieldSensMap.values().stream().mapToInt(Multimap::size),
+                detector.getSceneResult().permToReferredMethodSensMap.values().stream().mapToInt(Multimap::size)
+        ).sum());
 
         return jaxbCallbackList;
     }

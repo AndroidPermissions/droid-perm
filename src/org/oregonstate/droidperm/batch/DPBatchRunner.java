@@ -351,16 +351,22 @@ public class DPBatchRunner {
     }
 
     int totalReachedSensEdges;
-    int totalUndetectedCHASensDefs;
+    int totalCHAReachableSensEdges;
+    int totalUnreachableSensEdges;
 
     private void droidPermModeFor(Path xmlOut, String appName) throws JAXBException {
         JaxbCallbackList data = JaxbUtil.load(JaxbCallbackList.class, xmlOut.toFile());
         logger.info("\t reached sensitive edges: " + data.getNrReachedSensEdges());
         totalReachedSensEdges += data.getNrReachedSensEdges();
-        if (!data.getUndetectedCHADangerousPermDefs().isEmpty()) {
+        if (data.getNrCHAReachableSensEdges() > 0) {
             logger.info(
-                    "\t undetected CHA-reachable sensitive defs: " + data.getUndetectedCHADangerousPermDefs().size());
-            totalUndetectedCHASensDefs += data.getUndetectedCHADangerousPermDefs().size();
+                    "\t undetected CHA-reachable sensitive edges: " + data.getNrCHAReachableSensEdges());
+            totalCHAReachableSensEdges += data.getNrCHAReachableSensEdges();
+        }
+        if (data.getNrUnreachableSensEdges() > 0) {
+            logger.info(
+                    "\t unreachable sensitive edges: " + data.getNrUnreachableSensEdges());
+            totalUnreachableSensEdges += data.getNrUnreachableSensEdges();
         }
         if (!data.isCompileApi23Plus()) {
             logger.warn(appName + " : compileSdkVersion is < 23");
@@ -595,8 +601,9 @@ public class DPBatchRunner {
     private void printDroidPermBatchStatistics() {
         System.out.println("\n\nBatch runner statistics\n"
                 + "========================================================================");
-        System.out.println("Total undetected CHA-reachable sensitive defs_ : " + totalUndetectedCHASensDefs);
         System.out.println("Total reached sensitive edges_ : " + totalReachedSensEdges);
+        System.out.println("Total undetected CHA-reachable sensitive edges_ : " + totalCHAReachableSensEdges);
+        System.out.println("Total unreachable sensitive edges_ : " + totalUnreachableSensEdges);
     }
 
     /**
