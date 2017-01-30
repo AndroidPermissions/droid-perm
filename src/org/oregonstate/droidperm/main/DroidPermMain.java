@@ -504,7 +504,7 @@ public class DroidPermMain {
         }
     }
 
-    private static List<File> buildPermDefFiles(String fileListArg) {
+    public static List<File> buildPermDefFiles(String fileListArg) {
         return Stream.of(fileListArg.split(";")).map(name -> new File(name.trim())).collect(Collectors.toList());
     }
 
