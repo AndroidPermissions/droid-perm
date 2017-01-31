@@ -60,6 +60,11 @@
     <parametricSensDef className="android.database.Cursor"
                        target="void setNotificationUri(android.content.ContentResolver, android.net.Uri)"/>
 
+    <parametricSensDef className="android.content.ContentProviderOperation" target="android.content.ContentProviderOperation$Builder newAssertQuery(android.net.Uri)"/>
+    <parametricSensDef className="android.content.ContentProviderOperation" target="android.content.ContentProviderOperation$Builder newInsert(android.net.Uri)"/>
+    <parametricSensDef className="android.content.ContentProviderOperation" target="android.content.ContentProviderOperation$Builder newUpdate(android.net.Uri)"/>
+    <parametricSensDef className="android.content.ContentProviderOperation" target="android.content.ContentProviderOperation$Builder newDelete(android.net.Uri)"/>
+
     <!--int sensitive parameter-->
     <parametricSensDef className="android.telephony.TelephonyManager"
                        target="void listen(android.telephony.PhoneStateListener, int)"/>
