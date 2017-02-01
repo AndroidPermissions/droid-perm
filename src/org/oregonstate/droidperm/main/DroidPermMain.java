@@ -540,10 +540,6 @@ public class DroidPermMain {
             runAnalysis(apkFile.getAbsolutePath(), androidJarORSdkDir);
         }
 
-        if (callGraphDumpFile != null) {
-            DebugUtil.dumpPointsToAndCallGraph(callGraphDumpFile);
-        }
-
         //Run DroidPerm
 
         //Prevents PointsToAnalysis from being released. Also required for HierarchyUtil.
@@ -558,6 +554,11 @@ public class DroidPermMain {
                 = new ClasspathFilterService(scenePermDef).load(classpathExclusionListFile);
         new MethodPermDetector(txtOut, xmlOut, scenePermDef, classpathFilter, apkFile).analyzeAndPrint();
         System.out.println("Total run time: " + (System.nanoTime() - initTime) / 1E9 + " seconds");
+
+        if (callGraphDumpFile != null) {
+            DebugUtil.dumpPointsToAndCallGraph(callGraphDumpFile);
+            System.out.println("Call graph dumped.");
+        }
     }
 
     /**
