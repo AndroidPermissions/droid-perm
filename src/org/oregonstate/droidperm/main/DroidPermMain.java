@@ -557,7 +557,6 @@ public class DroidPermMain {
 
         if (callGraphDumpFile != null) {
             DebugUtil.dumpPointsToAndCallGraph(callGraphDumpFile);
-            System.out.println("Call graph dumped.");
         }
     }
 
