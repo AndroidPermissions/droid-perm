@@ -97,6 +97,7 @@ public class DroidPermMain {
      */
     private static boolean collectSensitivesMode;
 
+    public static boolean fieldSensitivesEnabled = true;
     public static boolean augmentCallGraph = true;
 
     static {
@@ -359,6 +360,9 @@ public class DroidPermMain {
             } else if (args[i].equalsIgnoreCase("--AUGMENT-CALL-GRAPH")) {
                 augmentCallGraph = Boolean.parseBoolean(args[i + 1]);
                 i += 2;
+            } else if (args[i].equalsIgnoreCase("--field-Sensitives-Enabled")) {
+                fieldSensitivesEnabled = Boolean.parseBoolean(args[i + 1]);
+                i += 2;
             } else {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
@@ -433,6 +437,7 @@ public class DroidPermMain {
         System.out.println("\t--COLLECT-SENS-MODE: Collect all sensitives in hierarchy mode and halt.");
         System.out.println("\t--AUGMENT-CALL-GRAPH true/false: Augment call graph with safe edges for method calls "
                 + "that have no outgoing edges");
+        System.out.println("\t--field-Sensitives-Enabled true/false: Whether field sensitives analysis is enabled");
         System.out.println();
         System.out.println("Supported callgraph algorithms: AUTO, CHA, RTA, VTA, SPARK, GEOM");
         System.out.println("Supported layout mode algorithms: NONE, PWD, ALL");

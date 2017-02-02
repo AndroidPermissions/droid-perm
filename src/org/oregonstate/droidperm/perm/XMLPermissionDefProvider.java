@@ -1,16 +1,14 @@
 package org.oregonstate.droidperm.perm;
 
 import org.oregonstate.droidperm.jaxb.JaxbUtil;
+import org.oregonstate.droidperm.main.DroidPermMain;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.*;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -111,7 +109,7 @@ class XMLPermissionDefProvider implements IPermissionDefProvider {
 
     @Override
     public Set<FieldSensitiveDef> getFieldSensitiveDefs() {
-        return fieldSensitiveDefs;
+        return DroidPermMain.fieldSensitivesEnabled ? fieldSensitiveDefs : Collections.emptySet();
     }
 
     @Override
