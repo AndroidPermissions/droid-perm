@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PermissionDefinitions>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="boolean addGpsStatusListener(android.location.GpsStatus$Listener)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="boolean addNmeaListener(android.location.GpsStatus$NmeaListener)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void addProximityAlert(double, double, float, long, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="java.lang.String getBestProvider(android.location.Criteria, boolean)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="android.location.Location getLastKnownLocation(java.lang.String)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="android.location.LocationProvider getProvider(java.lang.String)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="java.util.List getProviders(android.location.Criteria, boolean)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="java.util.List getProviders(boolean)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void removeUpdates(android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void removeUpdates(android.location.LocationListener)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestLocationUpdates(java.lang.String, long, float, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestLocationUpdates(java.lang.String, long, float, android.location.LocationListener, android.os.Looper)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestLocationUpdates(long, float, android.location.Criteria, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestLocationUpdates(long, float, android.location.Criteria, android.location.LocationListener, android.os.Looper)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestSingleUpdate(android.location.Criteria, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestSingleUpdate(android.location.Criteria, android.location.LocationListener, android.os.Looper)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestSingleUpdate(java.lang.String, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="void requestSingleUpdate(java.lang.String, android.location.LocationListener, android.os.Looper)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.location.LocationManager" permissionRel="AnyOf" target="boolean sendExtraCommand(java.lang.String, java.lang.String, android.os.Bundle)" targetKind="Method">
+        <permission name="android.permission.ACCESS_COARSE_LOCATION"/>
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void close(java.lang.String)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="android.net.sip.SipSession createSipSession(android.net.sip.SipProfile, android.net.sip.SipSession$Listener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="android.net.sip.SipSession getSessionFor(android.content.Intent)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="boolean isOpened(java.lang.String)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="boolean isRegistered(java.lang.String)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="android.net.sip.SipAudioCall makeAudioCall(android.net.sip.SipProfile, android.net.sip.SipProfile, android.net.sip.SipAudioCall$Listener, int)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="android.net.sip.SipAudioCall makeAudioCall(java.lang.String, java.lang.String, android.net.sip.SipAudioCall$Listener, int)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void open(android.net.sip.SipProfile)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void open(android.net.sip.SipProfile, android.app.PendingIntent, android.net.sip.SipRegistrationListener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void register(android.net.sip.SipProfile, int, android.net.sip.SipRegistrationListener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void setRegistrationListener(java.lang.String, android.net.sip.SipRegistrationListener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="android.net.sip.SipAudioCall takeAudioCall(android.content.Intent, android.net.sip.SipAudioCall$Listener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.net.sip.SipManager" permissionRel="AnyOf" target="void unregister(android.net.sip.SipProfile, android.net.sip.SipRegistrationListener)" targetKind="Method">
+        <permission name="android.permission.USE_SIP"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.SmsManager" permissionRel="AnyOf" target="void downloadMultimediaMessage(android.content.Context, java.lang.String, android.net.Uri, android.os.Bundle, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.RECEIVE_MMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.SmsManager" permissionRel="AnyOf" target="void sendDataMessage(java.lang.String, java.lang.String, short, byte[], android.app.PendingIntent, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.SmsManager" permissionRel="AnyOf" target="void sendMultimediaMessage(android.content.Context, android.net.Uri, java.lang.String, android.os.Bundle, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.SmsManager" permissionRel="AnyOf" target="void sendMultipartTextMessage(java.lang.String, java.lang.String, java.util.ArrayList, java.util.ArrayList, java.util.ArrayList)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.SmsManager" permissionRel="AnyOf" target="void sendTextMessage(java.lang.String, java.lang.String, java.lang.String, android.app.PendingIntent, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.TelephonyManager" permissionRel="AnyOf" target="java.util.List getAllCellInfo()" targetKind="Method">
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.TelephonyManager" permissionRel="AnyOf" target="android.telephony.CellLocation getCellLocation()" targetKind="Method">
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.TelephonyManager" permissionRel="AnyOf" target="java.util.List getNeighboringCellInfo()" targetKind="Method">
+        <permission name="android.permission.ACCESS_FINE_LOCATION"/>
+    </permissionDef>
+    <!--<permissionDef className="android.telephony.TelephonyManager" permissionRel="AnyOf" target="void listen(android.telephony.PhoneStateListener, int)" targetKind="Method">-->
+        <!--<permission name="android.permission.ACCESS_COARSE_LOCATION"/>-->
+        <!--<permission name="android.permission.READ_PHONE_STATE"/>-->
+    <!--</permissionDef>-->
+    <permissionDef className="android.telephony.gsm.SmsManager" permissionRel="AnyOf" target="void sendDataMessage(java.lang.String, java.lang.String, short, byte[], android.app.PendingIntent, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.gsm.SmsManager" permissionRel="AnyOf" target="void sendMultipartTextMessage(java.lang.String, java.lang.String, java.util.ArrayList, java.util.ArrayList, java.util.ArrayList)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <permissionDef className="android.telephony.gsm.SmsManager" permissionRel="AnyOf" target="void sendTextMessage(java.lang.String, java.lang.String, java.lang.String, android.app.PendingIntent, android.app.PendingIntent)" targetKind="Method">
+        <permission name="android.permission.SEND_SMS"/>
+    </permissionDef>
+    <checkerDefs/>
+    <requesterDefs/>
+    <parametricSensDefs/>
+</PermissionDefinitions>
