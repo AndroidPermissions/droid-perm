@@ -27,6 +27,8 @@ public class CheckerAnalysis {
     private ClasspathFilter classpathFilter;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private LinkedHashSet<Edge> checkerEdges;//for debug purposes
+    private String captionSingular;
+    private String captionPlural;
 
     //toperf holders for checkers and sensitives could be combined into one. One traversal could produce both.
     //this is actually required for flow-sensitive analysis.
@@ -49,10 +51,13 @@ public class CheckerAnalysis {
 
     public CheckerAnalysis(MethodOrMethodContext dummyMainMethod, LinkedHashSet<Edge> checkerEdges,
                            ClasspathFilter classpathFilter, CallGraphPermDefService cgService,
-                           SetMultimap<MethodOrMethodContext, String> callbackToRequiredPermsMap) {
+                           SetMultimap<MethodOrMethodContext, String> callbackToRequiredPermsMap,
+                           String captionSingular, String captionPlural) {
         this.classpathFilter = classpathFilter;
         this.callbackToRequiredPermsMap = callbackToRequiredPermsMap;
         this.checkerEdges = checkerEdges;
+        this.captionSingular = captionSingular;
+        this.captionPlural = captionPlural;
         checkerPathsHolder = new ContextSensOutflowCPHolder(dummyMainMethod, checkerEdges, classpathFilter, cgService);
         callbackToCheckedPermsMap = buildCallbackToCheckedPermsMap(checkerPathsHolder);
         permsToCheckersMap = buildPermsToCheckersMap(checkerEdges);
@@ -65,8 +70,8 @@ public class CheckerAnalysis {
      * Map permsToCheckersMap may contain null keys. Also parent edge in pair maybe null.
      */
     public void printCheckersInContext(boolean printCallbacks) {
-        String noCallbacksHeader = "Checkers in context in the call graph:";
-        String callbacksHeader = "Checkers in context in the call graph, with reaching callbacks:";
+        String noCallbacksHeader = captionPlural + " in context in the call graph:";
+        String callbacksHeader = captionPlural + " in context in the call graph, with reaching callbacks:";
         String header = printCallbacks ? callbacksHeader : noCallbacksHeader;
         System.out.println(
                 "\n\n" + header + " \n========================================================================");
@@ -85,7 +90,8 @@ public class CheckerAnalysis {
                 //noinspection ConstantConditions
                 if (checkerMeth.method().getDeclaringClass() != checkerEdge.src().getDeclaringClass()) {
                     if (checkerMeth != oldSens) {
-                        System.out.println("\nChecker " + checkerMeth);
+
+                        System.out.println("\n" + captionSingular + " " + checkerMeth);
                         oldSens = checkerMeth;
                     }
                     System.out.println("\tfrom lvl1 " + PrintUtil.toMethodLogString(checkerEdge.srcStmt()));
@@ -244,14 +250,15 @@ public class CheckerAnalysis {
     private Set<String> getPossiblePermissionsFromChecker(Edge checkerCall, Edge parent) {
         InvokeExpr invoke = checkerCall.srcStmt().getInvokeExpr();
 
-        //key intuition: in both perm. checker versions the last argument is the permission value
-        Value lastArg = invoke.getArg(invoke.getArgCount() - 1);
-        if (lastArg instanceof StringConstant) {
-            return Collections.singleton(((StringConstant) lastArg).value);
-        } else if (lastArg instanceof Local) {
+        Value permArg = getPermArg(invoke);
+        if (permArg instanceof StringConstant) {
+            return Collections.singleton(((StringConstant) permArg).value);
+        } else if (permArg instanceof Local) {
             PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+
+            //supports arrays of strings as well
             PointsToSet pointsTo = PointsToUtil
-                    .getPointsToWithFallback((Local) lastArg, parent != null ? parent.srcStmt() : null, pta);
+                    .getPointsToWithFallback((Local) permArg, parent != null ? parent.srcStmt() : null, pta);
             if (pointsTo != null) {
                 Set<String> permSet = pointsTo.possibleStringConstants();
                 return permSet != null ? permSet : Collections.emptySet();
@@ -260,6 +267,21 @@ public class CheckerAnalysis {
             }
         }
         throw new RuntimeException("Permission checker not supported for: " + invoke);
+    }
+
+    /**
+     * key intuition: for checkers permission arg is of type String, for requesters - String[]
+     */
+    private Value getPermArg(InvokeExpr invoke) {
+        List<Type> types = invoke.getMethodRef().parameterTypes();
+        for (int i = 0; i < types.size(); i++) {
+            Type type = types.get(i);
+            if (type.toString().equals("java.lang.String") || (type instanceof ArrayType
+                    && ((ArrayType) type).baseType.toString().equals("java.lang.String"))) {
+                return invoke.getArg(i);
+            }
+        }
+        throw new RuntimeException("No permission arg foudn for: " + invoke);
     }
 
     /**

@@ -47,6 +47,7 @@ public class MethodPermDetector {
     public static final MethodOrMethodContext dummyMainMethod = getDummyMain();
 
     private CheckerAnalysis checkerAnalysis;
+    private CheckerAnalysis requestAnalysis;
 
     private LinkedHashSet<Edge> sensEdges;
     private ContextSensOutflowCPHolder sensitivePathsHolder;
@@ -107,14 +108,20 @@ public class MethodPermDetector {
         logger.info("Processing checkers");
         LinkedHashSet<Edge> checkerEdges = CallGraphUtil.getEdgesInto(scenePermDef.getPermCheckers());
         checkerAnalysis = new CheckerAnalysis(dummyMainMethod, checkerEdges, classpathFilter, cgService,
-                callbackToRequiredPermsMap);
+                callbackToRequiredPermsMap, "Checker", "Checkers");
+
+        logger.info("Processing requests");
+        LinkedHashSet<Edge> requestEdges = CallGraphUtil.getEdgesInto(scenePermDef.getPermRequesters());
+        requestAnalysis = new CheckerAnalysis(dummyMainMethod, requestEdges, classpathFilter, cgService,
+                callbackToRequiredPermsMap, "Request", "Requests");
 
         //Section 4: Scene undetected items analysis
         Set<Stmt> sensFieldRefs = this.sensEdges.stream()
                 .flatMap(edge -> cgService.getSensitiveArgInitializerStmts(edge).stream()).collect(Collectors.toSet());
         Set<Edge> detectedCheckEdges = checkerAnalysis.getDetectedCheckerEdges();
-        sceneResult = UndetectedItemsUtil.sceneAnalysis(sensEdges, sensFieldRefs, detectedCheckEdges, scenePermDef,
-                classpathFilter, dummyMainMethod.method());
+        Set<Edge> detectedRequestEdges = requestAnalysis.getDetectedCheckerEdges();
+        sceneResult = UndetectedItemsUtil.sceneAnalysis(sensEdges, sensFieldRefs, detectedCheckEdges,
+                detectedRequestEdges, scenePermDef, classpathFilter, dummyMainMethod.method());
 
         jaxbData = JaxbUtil.buildJaxbData(this, checkerAnalysis);
     }
@@ -133,9 +140,11 @@ public class MethodPermDetector {
         printSceneResults(sceneResult);
 
         //Printing main results - sensitives and checkers in context
+        requestAnalysis.printCheckersInContext(true);
         checkerAnalysis.printCheckersInContext(true);
         printSensitivesInContext(true);
 
+        requestAnalysis.printCheckersInContext(false);
         checkerAnalysis.printCheckersInContext(false);
         printSensitivesInContext(false);
 
@@ -165,8 +174,8 @@ public class MethodPermDetector {
                 "Undetected field sensitives, CHA-reachable", true);
         PrintUtil.printMultimapOfStmtValues(sceneResult.checkersCHA, "Undetected checkers, CHA-reachable", "", "\t",
                 "from ", false);
-        PrintUtil.printMultimapOfStmtValues(sceneResult.requestersCHA, "Requesters, CHA-reachable", "", "\t", "from ",
-                false);
+        PrintUtil.printMultimapOfStmtValues(sceneResult.requestersCHA, "Undetected requests, CHA-reachable", "", "\t",
+                "from ", false);
 
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
                 "Unreachable method sensitives", false);

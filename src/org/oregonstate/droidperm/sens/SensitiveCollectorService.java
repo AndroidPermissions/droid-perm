@@ -35,7 +35,8 @@ public class SensitiveCollectorService {
         long startTime = System.currentTimeMillis();
         DPProcessManifest manifest = new DPProcessManifest(apkFile);
         SceneAnalysisResult sceneResult = UndetectedItemsUtil.sceneAnalysis(
-                ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), scenePermDef, classpathFilter, null);
+                ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(),
+                scenePermDef, classpathFilter, null);
 
         UndetectedItemsUtil.printUndetectedSensitives(sceneResult.permToReferredMethodSensMap,
                 "Collected method sensitives", false);

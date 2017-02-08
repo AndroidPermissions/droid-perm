@@ -1,7 +1,6 @@
 package org.oregonstate.droidperm.scene;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import org.oregonstate.droidperm.perm.miner.jaxb_out.PermissionDef;
@@ -80,12 +79,14 @@ public class UndetectedItemsUtil {
      */
     public static SceneAnalysisResult sceneAnalysis(Set<Edge> excludedSensEdges, Set<Stmt> excludedSensFieldRefs,
                                                     Set<Edge> excludedCheckEdges,
+                                                    Set<Edge> excludedRequestEdges,
                                                     ScenePermissionDefService scenePermDef,
                                                     ClasspathFilter classpathFilter, SootMethod dummyMain) {
         SceneAnalysisResult sceneResult = new SceneAnalysisResult();
 
         List<Stmt> excludedSensStmts = excludedSensEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
         List<Stmt> excludedCheckerStmts = excludedCheckEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
+        List<Stmt> excludedRequestStmts = excludedRequestEdges.stream().map(Edge::srcStmt).collect(Collectors.toList());
 
         Multimap<SootMethod, Stmt> undetectedMethodSens = HashMultimap.create();
         sceneResult.checkers = HashMultimap.create();
@@ -100,7 +101,7 @@ public class UndetectedItemsUtil {
 
         filterOutIgnoredAndDetected(undetectedMethodSens, classpathFilter, excludedSensStmts);
         filterOutIgnoredAndDetected(sceneResult.checkers, classpathFilter, excludedCheckerStmts);
-        filterOutIgnoredAndDetected(sceneResult.requesters, classpathFilter, ImmutableSet.of());
+        filterOutIgnoredAndDetected(sceneResult.requesters, classpathFilter, excludedRequestStmts);
         filterOutIgnoredAndDetected(undetectedFieldSens, classpathFilter, excludedSensFieldRefs);
 
         if (dummyMain != null) {
@@ -119,7 +120,7 @@ public class UndetectedItemsUtil {
 
             filterOutIgnoredAndDetected(undetectedMethodSensCHA, classpathFilter, excludedSensStmts);
             filterOutIgnoredAndDetected(sceneResult.checkersCHA, classpathFilter, excludedCheckerStmts);
-            filterOutIgnoredAndDetected(sceneResult.requestersCHA, classpathFilter, ImmutableSet.of());
+            filterOutIgnoredAndDetected(sceneResult.requestersCHA, classpathFilter, excludedRequestStmts);
             filterOutIgnoredAndDetected(undetectedFieldSensCHA, classpathFilter, excludedSensFieldRefs);
 
             //Remove from regular scene results CHA-reachable results.

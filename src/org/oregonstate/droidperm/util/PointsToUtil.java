@@ -2,10 +2,7 @@ package org.oregonstate.droidperm.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soot.Local;
-import soot.PointsToAnalysis;
-import soot.PointsToSet;
-import soot.Unit;
+import soot.*;
 import soot.jimple.*;
 
 /**
@@ -56,6 +53,8 @@ public class PointsToUtil {
      * If the result returned by when using context is empty, try again without using the context.
      * <p>
      * For now used only for checkers. Might make sense to be used in all cases.
+     * <p>
+     * If target is of type array, returns points-to set of array elements.
      */
     public static PointsToSet getPointsToWithFallback(Local target, Stmt context, PointsToAnalysis pta) {
         try {
@@ -70,6 +69,12 @@ public class PointsToUtil {
             if (pointsToSet == null || pointsToSet.isEmpty()) {
                 pointsToSet = pta.reachingObjects(target);
             }
+
+            //case array
+            if (pointsToSet != null && target.getType() instanceof ArrayType) {
+                pointsToSet = pta.reachingObjectsOfArrayElement(pointsToSet);
+            }
+
             return pointsToSet;
         } catch (Exception e) { //happens for some JDK classes, probably due to geom-pta bugs.
             logger.debug(e.toString());
