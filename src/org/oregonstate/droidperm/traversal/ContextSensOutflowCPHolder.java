@@ -355,8 +355,8 @@ public class ContextSensOutflowCPHolder {
             }
             int edgesCount = Iterators.size(callGraph.edgesOutOf(childEdge.srcStmt()));
             out.append(", edges: ").append(edgesCount);
-            ambiguous = pointsTo == null || pointsTo.possibleTypes().isEmpty() ? edgesCount >= 2
-                                                                               : pointsTo.possibleTypes().size() >= 2;
+            ambiguous = edgesCount >= 2 &&
+                    (pointsTo == null || pointsTo.possibleTypes().isEmpty() || pointsTo.possibleTypes().size() >= 2);
         }
 
         //shortcutted call, if it's a fake edge
