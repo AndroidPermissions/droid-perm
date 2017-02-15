@@ -53,6 +53,10 @@ public class DPBatchRunner {
             description = "If true field sensitives will be included in the analysis.", arity = 1)
     private boolean fieldSensitivesEnabled = true;
 
+    @Parameter(names = "--extra-opts", description = "Extra options for DroidPerm, separated by space. "
+            + "If more than one, they should be included into quotes (\"\"). Spaces inside an option not allowed.")
+    private String extraOpts;
+
     @Parameter(names = "--vm-args", description = "Additional VM arguments, separated by space. "
             + "If more than one, they should be included into quotes (\"\").")
     private String vmArgs;
@@ -230,6 +234,7 @@ public class DPBatchRunner {
         logger.info("cgalgo: " + cgAlgo);
         logger.info("permDefFiles: " + permDefFiles);
         logger.info("fieldSensitivesEnabled: " + fieldSensitivesEnabled);
+        logger.info("extraOpts: " + extraOpts + "\n");
         logger.info("vmArgs: " + vmArgs + "\n");
 
         Files.createDirectories(logDir);
@@ -301,6 +306,9 @@ public class DPBatchRunner {
         processBuilderArgs
                 .addAll(Arrays.asList("--field-sensitives-enabled", Boolean.toString(fieldSensitivesEnabled)));
         processBuilderArgs.addAll(Arrays.asList("--xml-out", xmlOut.toString()));
+        if (extraOpts != null) {
+            processBuilderArgs.addAll(Arrays.asList(extraOpts.split("\\s+")));
+        }
 
         switch (mode) {
             case DROID_PERM:
