@@ -54,6 +54,7 @@ public class DroidPermMain {
 
     //So far unused. Put hereclasses that have to be loaded explicitly.
     private static final List<String> additionalClassesToLoad = ImmutableList.<String>builder()
+            .add("android.test.mock.MockContentResolver")
             .build();
 
     public static final File classpathExclusionListFile = new File("config/ClasspathExclusionList.txt");
