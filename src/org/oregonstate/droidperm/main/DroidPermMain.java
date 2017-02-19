@@ -52,7 +52,7 @@ import java.util.stream.Stream;
  */
 public class DroidPermMain {
 
-    //So far unused. Put hereclasses that have to be loaded explicitly.
+    //Required for conservative crafted classpath.
     private static final List<String> additionalClassesToLoad = ImmutableList.<String>builder()
             .add("android.test.mock.MockContentResolver")
             .build();
