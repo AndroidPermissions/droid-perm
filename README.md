@@ -50,7 +50,7 @@ Installing DroidPerm
 Prerequisites
 -------------
 
--   JDK 7, JDK 8.
+-   Java 8.
 
 -   Android SDK 23.
 
