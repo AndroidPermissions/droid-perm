@@ -59,13 +59,11 @@ Prerequisites
 Setup instructions
 ==================
 
-1.  Create directory DroidPerm
+-   Create directory DroidPerm
 
-2.  Inside DroidPerm clone the following:
+-   Inside DroidPerm clone the following:
 
 <https://github.com/AndroidPermissions/droid-perm>
-
-<https://github.com/AndroidPermissions/android-23-api-crafted>
 
 <https://github.com/denis-bogdanas/soot>
 
@@ -77,118 +75,97 @@ Setup instructions
     make it empty at this point, e.g. don’t create any module.
 
 -   Import soot project using this guide:
-    <https://github.com/Sable/soot/wiki/Building-Soot-with-IntelliJ-IDEA> Use
-    Java 8 as module SDK.
+    <https://github.com/Sable/soot/wiki/Building-Soot-with-IntelliJ-IDEA> With
+    the following exceptions:
 
--    
+    -   Step 8: Use Java 8.
 
-1.  Import modules from existing sources for soot, soot-infoflow,
-    soot-infoflow-android.
+    -   Step 9: Remove dependencies for projects jasmin and heros. Add
+        dependencies for directory “droid-perm\\lib\\lib_soot\\” Check the box
+        “export” for this directory.
 
--   For soot project follow this guide:
-    https://github.com/Sable/soot/wiki/Building-Soot-with-IntelliJ-IDEA
+    -   Go to module settings -\> sources. Select language level 7.
 
-1.  Put the following files into soot/libs_intellij if they are not there
-    already:
+-   Import modules from existing sources for soot-infoflow,
+    soot-infoflow-android. For both use import from “eclipse model”, Java 8 SDK,
+    language level 7, similar to above. After import remove red dependencies to
+    heros/jasmin.
 
-    -   ant-1.9.6.jar
+-   In soot-infoflow, if it creates a dependence to “ECLIPSE”, remove it.
 
-    -   heros-trunk.jar
+-   In module settings -\> soot -\> dependencies -\> AXMLPrinter2.jar: Check the
+    box “export”.
 
-    -   jasmin-2.2.1.jar
+-   Import module droid-perm. For this open modulesettings -\> import -\>
+    directory droid-perm -\> select droid-perm.iml.
 
-    -   slf4j-api-1.7.5.jar
+-   Import the project DroidPerm. If you did the previous steps properly it
+    should not require extra configurations.
 
-    -   slf4j-api-1.7.5-sources.jar
+-   At this point you should be able to build the project.
 
-    -   slf4j-simple-1.7.5.jar
-
-2.  Open module settings -\> soot -\> dependencies. Add all the files above as
-    JARs, if not there yet.
-
-3.  Check the following files under column “Export”:
-
-    -   AXMLPrinter2.jar
-
-    -   jasmin-2.2.1.jar
-
-    -   slf4j-api-1.7.5.jar
-
-    -   slf4j-api-1.7.5-sources.jar
-
-    -   slf4j-simple-1.7.5.jar
-
-4.  Mark soot-infoflow dependent on soot, soot-infoflow-android dependent on
-    soot and soot-infoflow.
-
-5.  Import the project DroidPerm. Theoretically should link to existing modules
-    and should not need any extra settings.
-
-6.  If there are any module dependencies causing errors, such as ECLIPSE
-    library, remove them.
-
-7.  Build the whole project. At this point should work.
-
-8.  Optional. Open heros-trunk.jar and remove anything related to slf4j. This
-    will eliminate slf4j - related warnings when running.
-
-### Optional steps
-
--   Set project output directories to match directories inside ant build files.
-
--   Also setup ant.settings files in all soot and FlowDroid-related projects.
-
-These steps should not be necessary, as you can build and run DroidPerm from
-Intellij without using ant scripts.
+ 
 
 Running DroidPerm
 =================
 
-### Test app
+### Executing DroidPerm with default settings
 
-<https://github.com/AndroidPermissions/perm-test>
+Create a run configuration with following settings:
 
--   current test application
+-   Main class: org.oregonstate.droidperm.main.DroidPermMain
 
-To build apk file:
-
--   go to project home dir
-
--   execute “gradle assemble”
-
-### Displaying help
-
-Create a new run configuration with the following settings:
-
--   Main class: org.oregonstate.droidperm.DroidPermMain
-
--   VM options: -Xmx8g
-
--   working directory: droid-perm
+-   working directory: DroidPerm\\droid-perm
 
 -   classpath of module: droid-perm
 
-This execution will display all DroidPerm command line options
-
-### Executing DroidPerm with default settings
-
-Add the following program arguments:
+-   program arguments:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <path to the apk file to analyze>
-<path to android-sdk\platforms dir>
+droid-perm/config/android-23-util+async.zip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### Executing DroidPerm with current analysis settings
+ 
 
--   Copy android.jar from android-sdk/platforms/android-23 to some other
-    location.
+### Displaying help
 
--   Replace java.\* and javax.\* packages with the respective content from JDK
+Same as above with no arguments.
 
--   Use the following program arguments:
+### Test apps
 
-    \--pathalgo CONTEXTSENSITIVE --notaintwrapper
+<https://github.com/AndroidPermissions/perm-test>
+
+-   this repository contains the collection of test apps developed alongside
+    DroidPerm.
+
+ 
+
+Interpreting the results
+------------------------
+
+Log file is divided into several sections. Each section starts with a header
+followed by =======================
+
+Sections, starting from the end:
+
+-   Sensitives in context in the call graph - lists the sensitives
+
+-   Checkers in context in the call graph - checkers found in the app
+
+-   Requests in context in the call graph - permission requests
+
+-   next 3 sections: same as above but for each entry the list of callbacks from
+    which it is reached.
+
+-   Next few sections are used for undetected permissions analysis.
+
+-   “Output for droid-perm-plugin, required permissions for statements directly
+    inside callbacks” - this section shows where permission checks should be
+    inserted.
+
+-   Paths from each callback to each sensitive - enumerates all paths from
+    callbacks to sensitives, with points-to data for each virtual method call.
 
  
 
