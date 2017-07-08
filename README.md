@@ -169,8 +169,8 @@ Sections, starting from the end:
 
  
 
-Updating DroidPerm inside DroidPermPlugin
-=========================================
+Updating DroidPerm inside DroidPermPlugin (outdated)
+====================================================
 
 ### Prerequisites
 
