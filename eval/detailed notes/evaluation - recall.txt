@@ -1,0 +1,1113 @@
+Template
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives:
+
+
+App 1. com.easwareapps.transparentwidget
+   		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:       1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+App 2. com.easytarget.micopi
+   		android.permission.READ_CONTACTS
+   		android.permission.WRITE_CONTACTS
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       9
+Method CHA-reachables:
+Field CHA-reachables:   3
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+	from <org.eztarget.micopi.ImageService: void onHandleIntent(android.content.Intent)> L: -1
+		$r6 = <android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+
+CHA-reachables
+----------------------------------------------------------
+1. <android.provider.ContactsContract$RawContacts: android.net.Uri CONTENT_URI>
+	from <org.eztarget.micopi.helper.DatabaseHelper: boolean assignImageToContact(android.content.Context,android.graphics.Bitmap,org.eztarget.micopi.Contact)> L: 229
+		$r3 = <android.provider.ContactsContract$RawContacts: android.net.Uri CONTENT_URI>
+
+Sensitive code is:
+final Uri contentUri = ContactsContract.RawContacts.CONTENT_URI;
+...
+rawContactUri = contentUri.buildUpon().appendPath(rawPath).build();
+
+Possible solution:
+    -   v1: buildUpon().appendPath(rawPath).build() should all be considered some sort of transit sensitives
+        -   Even so it won't solve the issues - 
+    -   v2: consider buildUpon() a parametric sensitive.
+
+Explanation 2:
+-   This is an usage that doesn't represent an independent sensitive. The resulting URI is used just to compute some
+    column IDs for the database. This in turn is used with another URIs to call query().
+-   Only if the URI eventually is used inside a query() then it's a sensitive.
+
+----------
+2. <android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>
+	from <org.eztarget.micopi.ui.ContactActivity: void pickContact()> L: -1
+		$r2 = <android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>
+
+Source code line:
+-   final Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+
+Explanation:
+-   THIS IS indead a SENSITIVE.
+-   When Intent(Intent.ACTION_PICK, ...) is called, 2nd argument will be the sensitive.
+
+----------
+3. <android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+    from <org.eztarget.micopi.ImageService: void onHandleIntent(android.content.Intent)> L: -1
+		$r6 = <android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+
+Source code:
+-   getContentResolver().notifyChange(ContactsContract.Data.CONTENT_URI, null);
+
+Verdict:
+-   Not a sensitive. Just notify queries that some data was changed.
+
+
+Edits since first evaluation
+----------------------------------------------------------
+01/30 Initial statistics: 8 detected sensitives, 4 CHA-reachables.
+01/31. One former CHA-reachable turned into a detected sensitive, after yesterday's fixes.
+
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 9
+-   Valid CHA-reachable field sensitives: 1
+    -   1 is a sensitive that cannot be easily fixed. Requires more subtle parametric sensitives.
+        -   Intent(Intent.ACTION_PICK, ...)
+
+
+App 3. com.example.tobiastrumm.freifunkautoconnect
+		android.permission.ACCESS_FINE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:       1
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:     3
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+<android.location.LocationManager: void requestLocationUpdates(java.lang.String,long,float,android.location.LocationListener)>
+	from <com.mapzen.android.lost.internal.FusionEngine: void enableNetwork()> L: 107
+	from <com.mapzen.android.lost.internal.FusionEngine: void enableGps()> L: 96
+	from <com.mapzen.android.lost.internal.FusionEngine: void enablePassive()> L: 118
+
+Analysis:
+-   Really not used.
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+-   Detected field sensitives: 1
+
+
+App 4. com.github.yeriomin.dumbphoneassistant
+		android.permission.READ_CONTACTS
+		android.permission.WRITE_CONTACTS
+		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       6
+Method CHA-reachables:
+Field CHA-reachables:   0
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Edits
+----------------------------------------------------------
+02/19 Updated parametric sensitives. New statistics: detected sens 6, CHA-reachable 0.
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 6
+
+
+App 5. com.iamtrk.androidexplorer
+		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives: 6
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 6
+
+
+App 6. com.jarsilio.android.waveup
+		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:
+Field CHA-reachables:   1
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.telephony.TelephonyManager: java.lang.String ACTION_PHONE_STATE_CHANGED>
+	from <com.jarsilio.android.waveup.receivers.CallStateReceiver: void onReceive(android.content.Context,android.content.Intent)> L: 37
+		$z0 = virtualinvoke $r3.<java.lang.String: boolean equals(java.lang.Object)>("android.intent.action.PHONE_STATE")
+
+Analysis:
+-   The usage is not a sensitive. it's a check of a received event type.
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+
+
+App 7. com.jmstudios.redmoon
+		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:          2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+App 8. com.menny.android.anysoftkeyboard
+		android.permission.READ_CONTACTS
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:
+BLOCKED SENSITIVES: 1
+Method CHA-reachables:
+Field CHA-reachables:  1
+Method unreachable:
+Field unreachable:
+
+
+Blocked sensitive
+----------------------------------------------------------
+Parametric sensitive <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+	context <com.anysoftkeyboard.dictionaries.a.b: com.anysoftkeyboard.b.a.e e()> L: 100
+	param [<android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>]
+
+CHA-reachables
+----------------------------------------------------------
+<android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>
+	from <com.anysoftkeyboard.dictionaries.a.b: void a(android.database.ContentObserver,android.content.ContentResolver)> L: 69
+		$r3 = <android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>
+
+Source code analysis
+----------------------------------------------------------
+-   apk file is obfuscated
+-   cannot build the source project due to some cpp errors + obfuscation. Skipping.
+    -   Possibly this obfuscation messed up something and a path cannot be properly inspected.
+
+Summary
+----------------------------------------------------------
+-   SKIPPING due to obfuscation + gradle build issues
+
+
+App 9. com.nutomic.ensichat
+		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+-   SKIPPING. Crashes with OOME
+
+
+App 10. com.poinsart.votar
+       		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       1
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 1
+
+
+App 11. com.saladdressing.veterondo
+		android.permission.ACCESS_FINE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+App 12. com.simplemobiletools.camera
+		android.permission.CAMERA
+		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1+1 = 2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:   2
+Method unreachable:
+Field unreachable:
+Requests: ok, manual inspection
+
+
+CHA-reachables
+----------------------------------------------------------
+Code location 1:
+-   class MainActivity
+        private void handleIntent() {
+            ...
+            if (intent.getExtras() != null && intent.getAction().equals(MediaStore.ACTION_IMAGE_CAPTURE)
+Code location 2: similar
+
+Evaluation:
+-   app is designed for inter-app communication.
+-   Intent action constants are not used to create intents, thus not a sensitive resource access.
+-   NOT a sensitive
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+App 13. com.simplemobiletools.flashlight
+		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 14. com.thibaudperso.sonycamera
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       1
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 1
+
+
+App 15. com.todobom.opennotescanner
+		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      5
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:   1
+Method unreachable:     3 (all with Camera)
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.provider.MediaStore: java.lang.String ACTION_IMAGE_CAPTURE>
+	from <com.todobom.opennotescanner.OpenNoteScannerActivity: void saveDocument(com.todobom.opennotescanner.helpers.ScannedDocument)> L: 891
+		$z1 = virtualinvoke $r10.<java.lang.String: boolean equals(java.lang.Object)>("android.media.action.IMAGE_CAPTURE")
+
+Evaluation:
+-   call to Activity.getIntent(), ICC
+-   NOT a sensitive
+
+
+Unreachables
+----------------------------------------------------------
+<android.hardware.Camera: android.hardware.Camera open(int)>
+	from <org.opencv.android.JavaCameraView: boolean initializeCamera(int,int)> L: 126
+	from <org.opencv.android.JavaCameraView: boolean initializeCamera(int,int)> L: 87
+<android.hardware.Camera: android.hardware.Camera open()>
+	from <org.opencv.android.JavaCameraView: boolean initializeCamera(int,int)> L: 76
+
+Evaluation:
+-   Library code, not used
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 5
+
+
+App 16. com.tortel.syslog
+		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+App 17. com.vsmartcard.acardemulator
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:  1
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.hardware.Camera: android.hardware.Camera open(int)>
+	from <com.google.zxing.client.android.camera.open.OpenCameraInterface: android.hardware.Camera open(int)> L: 83
+
+Evaluation:
+-   VALID SENSITIVE
+-   not detected due to CG limitations: empty points-to somewhere in the middle of the path
+    -   zxing API used in several apps.
+
+Line that leads to empty points-to:
+CaptureActivity.onCreate():
+-   (CompoundBarcodeView)findViewById(R.id.zxing_barcode_scanner);
+
+Conclusion:
+-   Interesting case, worth fixing call graph debugging and taking a closer look.
+
+After CG analysis fix:
+Falinig line is:
+-   cameraThread.incrementAndEnqueue(opener);
+    -   here opener is empty points-to, due to many edges before being empty,
+        which in turn is due to some findViewById() farther above.
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+-   Valid CHA-reachable method sensitives: 1
+
+
+App 18. com.vsmartcard.remotesmartcardreader.app
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:  1
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.hardware.Camera: android.hardware.Camera open(int)>
+	from <com.b.a.b.a.a.a.a: android.hardware.Camera b(int)> L: -1
+
+Code inspection:
+-   same library as in previous app: zxing
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+-   Valid CHA-reachable method sensitives: 1
+
+
+App 19. de.bitsharesmunich.smartcoinswallet
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+App 20. de.schildbach.wallet
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 21. de.schildbach.wallet_test
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+
+Summary
+----------------------------------------------------------
+-   SKIPPING this app
+-   Likely a different version of previous app. Has to be excluded.
+
+
+App 22. eu.kanade.tachiyomi
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:  1
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: NO
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+	from <org.acra.util.ReportUtils: java.lang.String getDeviceId(android.content.Context)> L: 90
+
+Code analysis
+-   This is the case when a permission is used only to print diagnostics data when an exception is thrown.
+-   Used deep inside a library, not clear if path is feasible or not. we'll consider it feasible.
+-   Open question? Why was permission checked?
+    -   A: permission is checked but not requested.
+-   Further investigation: path might be feasible but is so deep and full of abstract calls that it cannot be
+    evaluated manually.
+-   presumably VALID SENSITIVE.
+    -   the fact that permission is never checked is not a concern in this case.
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+-   Valid (presumably) CHA-reachable method sensitives: 1.
+    -   in a library
+-   NO REQUESTS
+
+
+App 23. im.vector.alpha
+        		android.permission.CAMERA
+        		android.permission.READ_CONTACTS
+        		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      3, camera
+Field sensitives:       3, contacts
+Method CHA-reachables:  2
+Field CHA-reachables:
+Method unreachable:     3. One of them RECORD_AUDIO
+Field unreachable:
+Requests: ok, manual inspection
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.hardware.Camera: android.hardware.Camera open(int)>
+1.	from <org.webrtc.VideoCapturerAndroid: void startCaptureOnCameraThread(int,int,int,org.webrtc.VideoCapturerAndroid$CapturerObserver,android.content.Context)> L: 528
+-   Appears to be not used. Uncertain. Other functions are likely used from here.
+
+2.	from <org.webrtc.videoengine.VideoCaptureAndroid: void startCaptureOnCameraThread(int,int,int,int,java.util.concurrent.Exchanger)> L: 130
+-   Newer version of source code linked. No usages.
+
+Complications:
+-   Library with no sources attached.
+-   Both appear to be not used.
+
+Unreachables
+----------------------------------------------------------
+<android.hardware.Camera: android.hardware.Camera open(int)>
+	from <org.webrtc.videoengine.VideoCaptureDeviceInfoAndroid: java.lang.String getDeviceInfo()> L: 56
+	from <org.webrtc.VideoCapturerAndroid: java.util.ArrayList getSupportedFormats(int)> L: 446
+
+Status: not used
+
+[android.permission.RECORD_AUDIO]
+------------------------------------------------------------------------
+<android.media.AudioRecord: void <init>(int,int,int,int,int)>
+	from <org.webrtc.voiceengine.WebRtcAudioRecord: int InitRecording(int,int)> L: 176
+
+Status:
+-   couldn't detect any usages. Permission is possibly used elsewhere through native code.
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 3
+-   Detected field sensitives: 3
+-   Valid (presumably) CHA-reachable method sensitives: 2
+    -   2 CHA-reachables, not clear if they are really used
+    -   Whole source code is not accessible, so cannot make a correct evaluation.
+    -   Shoud give this app benefit of the doubt and count it in, to make methodology more trustworthy.
+
+
+App 24. is.pinterjann.jaws
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       1
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 1
+
+
+App 25. net.bierbaumer.otp_authenticator
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:  1
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+-   VALID SENSITIVE, zxing API encountered before
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+-   Valid CHA-reachable method sensitives: 1
+
+
+App 26. net.sf.times
+        		android.permission.ACCESS_FINE_LOCATION
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      8
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: NO
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Requests
+----------------------------------------------------------
+-   No requests, only checks
+-   All sensitives try-catch checked and guarded by checks. Produce huge amount of paths, yet all are non-ambiguous!
+-   App looks properly otherwise. Location is likely not critical.
+
+Possible explanation:
+-   Improperly migrated to Android 6. Required huge work to request permissions in all appropriate places,
+    so the author just inserted permission checks, to avoid exceptions, and didn't migrate the app otehrwise.
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 8
+-   NO REQUESTS
+
+App 27. org.androidpn.client
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 28. org.liberty.android.fantastischmemo
+        		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 29. org.osmocom.tacdatabaseclient
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 30. org.pixmob.freemobile.netstat
+        		android.permission.ACCESS_COARSE_LOCATION
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+Field sensitives:
+Method CHA-reachables:  1
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+<android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+	from <org.acra.util.ReportUtils: java.lang.String getDeviceId(android.content.Context)> L: 91
+
+Evaluation:
+-   case already reached above. Used for diagnostics when exception is thrown.
+-   Presumably VALID SENSITIVE.
+-   The only sensitive for READ_PHONE_STATE. Could this be a security leak?
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives:  2
+-   Valid (presumably) CHA-reachable method sensitives: 1
+
+
+App 31. org.traccar.client
+        		android.permission.ACCESS_FINE_LOCATION
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      4
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok, manual inspection
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 4
+
+
+App 32. protect.budgetwatch
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:
+Field sensitives:       1
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected field sensitives: 1
+
+
+App 33. protect.card_locker
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      0
+Field sensitives:       0
+Method CHA-reachables:  1, zxing, VALID (see above)
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected sensitives: 0
+-   Valid CHA-reachable method sensitives: 1
+
+
+App 34. ru.valle.btc
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 1
+
+
+App 35. trikita.obsqr
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+Field sensitives:
+Method CHA-reachables:
+Field CHA-reachables:
+Method unreachable:
+Field unreachable:
+Requests: ok
+
+
+CHA-reachables
+----------------------------------------------------------
+
+Unreachables
+----------------------------------------------------------
+
+Summary
+----------------------------------------------------------
+-   Detected method sensitives: 2
+
+
+Statistics
+==========================================================
+==========================================================
+Total apps in the list: 35
+Disqualified apps:      3.
+    -   1 because it cannot be built
+    -   1 due to OOME
+    -   1 because it's a duplicate of an already existing app.
+
+Total unsupported sensitives: 1, from manifest.
+    -   Everything else is counted, including hard to analyze APIs like ReportUtils.
+Total detected sensitives: 1+9+2+7+6+0+2+1+2+2+1+1+5+2+0+0+2+1+0+6+1+0+8+1+1+1+2+4+1+0+1+2 = 72
+
+Total undetected valid sensitives: 9
+    -   e.g. recall = 71/(71+9) = 89%
+
+Total detected method sensitives: 1+1+1+6+2+2+2+1+5+2+2+1+3+8+1+1+1+2+4+1+2 = 49
+Total detected field sensitives: 9+1+6+1+1+3+1+1 = 23
+Sum, total method and field = 49+23 = 72.
+    -   Should be 71. Something is not right. Have to use an excel here.
+
+Total undetected valid method sensitives:   1+1+1+2+1+1+1 = 8
+Total undetected valid field sensitives:    1
+
+Recall for method sensitives:   49/(49+8) = 86%
+Recall for field sensitives:    23/(23+1) = 96%
+
+
+Recall improvement idea - consider only permissions with requests
+==========================================================
+-   Reason: this would presumably eliminate 2 instances of ReportUtils.getDeviceId() that are not detected.
+-   Possibly other CHA-reachable sensitives in libraries would be eliminated to
+
+After evaluating the 2 cases:
+-   Only one app would be elliminated.
+-   The other one requests READ_PHONE_STATE permissions incorrectly. It doesn't actually use them.
+-   Other valid CHA-reachable instances seem really used, by the functionality of the app. Didn't check logs
+    specifically.
+-   So it's unlikely this filter will elliminate more than one false positive.
+
+Conclusion:
+-   Not worth the trouble updating the tols for this.
+
+New recall, after eliminating apps with no requests
+----------------------------------------------------------
+New general true positives: 72 - 8 = 64
+New general false positives: 9 - 1 = 8
+New general recall: 64/(64+8) = 89%, precisely the same as before
+New precision: expected to get worse, because I'm eliminating a ton of properly detected paths
+CONCLUSION: NOT WORTH TO APPLY THIS FILTER
+
+
+Interesting apps, could be useful for motivation:
+==========================================================
+-   net.sf.times.
+    -   only checks no requests, huge amount of paths.
+    -   patched not to crash on Android 6, but not migrated.
+    -   they could have simply asked for permissions in main activity, that would be better.
+
+
+Final summary for the paper - cause for valid and invalid CHA-reachables
+==========================================================
+-   Valid method CHA reachables: 8
+    Causes:
+    -   incomplete call graph due to incomplete classpath, same library
+    -   couldn't determine if it's used or not, benefit of the doubt
+
+-   Invalid method CHA reachable: 0
+
+-   Valid field CHA reachable: 1
+    Cause:
+    -   A new pattern of parametric sensitive that we don't support, adding support is pure engineering.
+
+-   Invalid field CHA reachable: 6
+    Cause:
+    -   references to sensitive fields used without parametric sensitives, for other functionality than accessing protected
+    resources.
+
+
+Total method unreachables: 9
+Total field unreachables: 0

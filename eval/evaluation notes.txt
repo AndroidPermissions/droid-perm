@@ -1,0 +1,582 @@
+1. com.easwareapps.transparentwidget
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+  call contexts:
+    1. <com.easwareapps.transparentwidget.FlashSettings: void turnOnFlash()> L: 32
+
+
+2. com.easytarget.micopi
+==========================================================
+
+  Valid field sensitives: 9
+  ------------------------------------
+
+  [android.permission.READ_CONTACTS, android.permission.WRITE_CONTACTS]
+  Parametric sensitive <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+    Call contexts:
+      1. <org.eztarget.micopi.ImageService: org.eztarget.micopi.Contact[] getContacts(boolean)> L: 147
+      param [<android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>]
+
+      2. <org.eztarget.micopi.helper.DatabaseHelper: org.eztarget.micopi.Contact buildContact(android.content.ContentResolver,long)> L: 54
+      param [<android.provider.ContactsContract$Contacts: android.net.Uri CONTENT_URI>]
+
+      3. <org.eztarget.micopi.helper.DatabaseHelper: java.lang.String getPhoneNumber(android.content.ContentResolver,long)> L: 106
+      param [<android.provider.ContactsContract$CommonDataKinds$Phone: android.net.Uri CONTENT_URI>]
+
+      4. <org.eztarget.micopi.helper.DatabaseHelper: java.lang.String getEmailAddress(android.content.ContentResolver,long)> L: 137
+      param [<android.provider.ContactsContract$CommonDataKinds$Email: android.net.Uri CONTENT_URI>]
+
+      5. <org.eztarget.micopi.helper.DatabaseHelper: java.lang.String getBirthday(android.content.ContentResolver,long)> L: 177
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+      6. <org.eztarget.micopi.helper.DatabaseHelper: boolean assignImageToContact(android.content.Context,android.graphics.Bitmap,org.eztarget.micopi.Contact)> L: 244
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+      7. <org.eztarget.micopi.helper.DatabaseHelper: boolean assignImageToContact(android.content.Context,android.graphics.Bitmap,org.eztarget.micopi.Contact)> L: 213
+      param [<android.provider.ContactsContract$RawContacts: android.net.Uri CONTENT_URI>]
+
+
+  Parametric sensitive <android.content.ContentResolver: android.net.Uri insert(android.net.Uri,android.content.ContentValues)>
+    Call contexts:
+      8. <org.eztarget.micopi.helper.DatabaseHelper: boolean assignImageToContact(android.content.Context,android.graphics.Bitmap,org.eztarget.micopi.Contact)> L: 299
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+  Parametric sensitive <android.content.ContentResolver: int update(android.net.Uri,android.content.ContentValues,java.lang.String,java.lang.String[])>
+    Call contexts:
+      9. <org.eztarget.micopi.helper.DatabaseHelper: boolean assignImageToContact(android.content.Context,android.graphics.Bitmap,org.eztarget.micopi.Contact)> L: 292
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+
+  Undetected valid field sensitives: 1
+  ------------------------------------
+  [android.permission.READ_CONTACTS, android.permission.WRITE_CONTACTS]
+  <android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+    from <org.eztarget.micopi.ImageService: void onHandleIntent(android.content.Intent)> L: -1
+      $r6 = <android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>
+
+  Source code line:
+      final Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+
+Explanation:
+    - When Intent(Intent.ACTION_PICK, ...) is called, 2nd argument will be the sensitive.
+    - this constructor of Intent doesn't match our current parametric sensitive template,
+        but the tool can be extended to include it.
+
+
+3. com.example.tobiastrumm.freifunkautoconnect
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.ACCESS_FINE_LOCATION, android.permission.ACCESS_COARSE_LOCATION]
+  Sensitive <android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)>
+    Call contexts:
+      1. <com.mapzen.android.lost.internal.FusionEngine: android.location.Location getLastLocation()> L: 50
+
+
+  Valid field sensitives: 1
+  ---------------------------------------
+  [android.permission.ACCESS_FINE_LOCATION, android.permission.ACCESS_COARSE_LOCATION]
+  Parametric sensitive <android.content.IntentFilter: void <init>(java.lang.String)>
+    Call contexts:
+      1. <com.example.tobiastrumm.freifunkautoconnect.NotificationService: int onStartCommand(android.content.Intent,int,int)> L: 285
+      param [<android.net.wifi.WifiManager: java.lang.String SCAN_RESULTS_AVAILABLE_ACTION>]
+
+
+4. com.github.yeriomin.dumbphoneassistant
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getSimSerialNumber()>
+    Call contexts:
+      1. <com.github.yeriomin.dumbphoneassistant.SimUtil: int getMaxContactNameLength()> L: 60
+
+
+  Valid field sensitives: 6
+  ---------------------------------------
+  [android.permission.READ_CONTACTS, android.permission.WRITE_CONTACTS]
+  Parametric sensitive <android.content.ContentProviderOperation: android.content.ContentProviderOperation$Builder newInsert(android.net.Uri)>
+    Call contexts:
+      1. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: void create(com.github.yeriomin.dumbphoneassistant.Contact)> L: 101
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+      2. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: void create(com.github.yeriomin.dumbphoneassistant.Contact)> L: 88
+      param [<android.provider.ContactsContract$RawContacts: android.net.Uri CONTENT_URI>]
+
+      3. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: void create(com.github.yeriomin.dumbphoneassistant.Contact)> L: 94
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+
+  Parametric sensitive <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+    Call contexts:
+      4. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: java.util.ArrayList get()> L: 48
+      param [<android.provider.ContactsContract$CommonDataKinds$Phone: android.net.Uri CONTENT_URI>]
+
+      5. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: android.net.Uri retrieveContactUri(com.github.yeriomin.dumbphoneassistant.Contact)> L: 139
+      param [<android.provider.ContactsContract$CommonDataKinds$Phone: android.net.Uri CONTENT_URI>]
+
+      6. <com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: android.net.Uri retrieveContactUri(com.github.yeriomin.dumbphoneassistant.Contact)> L: 153
+      param [<android.provider.ContactsContract$CommonDataKinds$Phone: android.net.Uri CONTENT_URI>]
+
+
+5. com.iamtrk.androidexplorer
+==========================================================
+
+  Valid method sensitives: 6
+  ---------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    Call contexts:
+      1. <com.iamtrk.a.i: java.util.List a()> L: -1
+      2. <com.iamtrk.a.i: java.util.List a()> L: -1
+
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getSimSerialNumber()>
+    Call contexts:
+      3. <com.iamtrk.a.i: java.util.List a()> L: -1
+      4. <com.iamtrk.a.i: java.util.List a()> L: -1
+
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getSubscriberId()>
+    Call contexts:
+      5. <com.iamtrk.a.i: java.util.List a()> L: -1
+      6. <com.iamtrk.a.i: java.util.List a()> L: -1
+
+
+6. com.jarsilio.android.waveup
+==========================================================
+-   No detected sensitives
+
+  Explanation: CHA-reachability tools detect one sensitive, but it is invalid.
+  ------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  <android.telephony.TelephonyManager: java.lang.String ACTION_PHONE_STATE_CHANGED>
+    from <com.jarsilio.android.waveup.receivers.CallStateReceiver: void onReceive(android.content.Context,android.content.Intent)> L: 37
+      $z0 = virtualinvoke $r3.<java.lang.String: boolean equals(java.lang.Object)>("android.intent.action.PHONE_STATE")
+
+  Analysis:
+  -   The usage is not a sensitive. it's a check of a received event type.
+
+
+7. com.jmstudios.redmoon
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.location.LocationManager: void requestLocationUpdates(java.lang.String,long,float,android.location.LocationListener)>
+    Call contexts:
+      1. <com.jmstudios.redmoon.preference.LocationPreference: void searchLocation(boolean)> L: 127
+      2. <com.jmstudios.redmoon.receiver.AutomaticFilterChangeReceiver: void onReceive(android.content.Context,android.content.Intent)> L: 90
+
+
+8. com.menny.android.anysoftkeyboard
+==========================================================
+-   SKIPPING due to obfuscation + gradle build issues
+
+
+9. com.nutomic.ensichat
+==========================================================
+-   SKIPPING. Analysis crashes with OutOfMemoryError.
+
+
+10. com.poinsart.votar
+==========================================================
+
+  Valid field sensitives: 1
+  ------------------------------------
+  [android.permission.CAMERA]
+  Parametric sensitive <android.content.Intent: void <init>(java.lang.String)>
+    Call contexts:
+      1. <com.poinsart.votar.VotarMain: void startCamera()> L: 241
+      param [<android.provider.MediaStore: java.lang.String ACTION_IMAGE_CAPTURE>]
+
+
+11. com.saladdressing.veterondo
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)>
+    Call contexts:
+      1. <com.saladdressing.veterondo.activities.MainActivity: java.util.ArrayList getLocation()> L: 366
+      2. <com.saladdressing.veterondo.services.Daydream: java.util.ArrayList getLocation()> L: 303
+
+
+12. com.simplemobiletools.camera
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <com.simplemobiletools.camera.d: boolean a(int)> L: -1
+
+  [android.permission.RECORD_AUDIO]
+  Sensitive <android.media.MediaRecorder: void setAudioSource(int)>
+    Call contexts:
+      2. <com.simplemobiletools.camera.d: boolean g()> L: -1
+
+
+13. com.simplemobiletools.flashlight
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+    Call contexts:
+      1. <com.simplemobiletools.flashlight.f: void o()> L: 100
+
+
+14. com.thibaudperso.sonycamera
+==========================================================
+
+  Invalid field sensitive:  1
+  ---------------------------------------
+  Parametric sensitive <android.content.IntentFilter: void <init>(java.lang.String)>
+    Call contexts:
+      1. <com.thibaudperso.sonycamera.io.WifiHandler: void checkForConnection()> L: 60
+      param [<android.net.wifi.WifiManager: java.lang.String SCAN_RESULTS_AVAILABLE_ACTION>]
+
+Cause of invalid detection:
+    -   2-CHA would filter it out, limitations of 1-CHA
+
+
+15. com.todobom.opennotescanner
+==========================================================
+
+  Valid method sensitives: 5
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <com.todobom.opennotescanner.OpenNoteScannerActivity: void surfaceCreated(android.view.SurfaceHolder)> L: 656
+      2. <org.opencv.android.CameraRenderer: void openCamera(int)> L: 54
+      3. <org.opencv.android.CameraRenderer: void openCamera(int)> L: 93
+
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+    Call contexts:
+      4. <org.opencv.android.CameraRenderer: void openCamera(int)> L: 43
+
+  Sensitive <android.hardware.camera2.CameraManager: void openCamera(java.lang.String,android.hardware.camera2.CameraDevice$StateCallback,android.os.Handler)>
+    Call contexts:
+      5. <org.opencv.android.Camera2Renderer: void openCamera(int)> L: 129
+
+
+16. com.tortel.syslog
+==========================================================
+
+  Invalid method sensitives: 2
+  ---------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    Call contexts:
+      1. <com.tortel.syslog.utils.ScrubberUtils: void scrubFile(android.content.Context,java.io.File,java.io.File)> L: 81
+      2. <com.tortel.syslog.utils.ScrubberUtils: void scrubFile(android.content.Context,java.io.File,java.io.File)> L: 82
+
+Cause:
+    -   insufficient context sensitivity
+
+
+17. com.vsmartcard.acardemulator
+==========================================================
+-   No detected sensitives
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.CAMERA]
+  <android.hardware.Camera: android.hardware.Camera open(int)>
+    from <com.google.zxing.client.android.camera.open.OpenCameraInterface: android.hardware.Camera open(int)> L: 83
+
+  Explanation:
+  -   not detected due to Call Graph limitations: empty points-to somewhere in the middle of the path
+      -   zxing API used in several apps.
+
+  Line that leads to empty points-to:
+    CaptureActivity.onCreate():
+    -   (CompoundBarcodeView)findViewById(R.id.zxing_barcode_scanner);
+
+
+18. com.vsmartcard.remotesmartcardreader.app
+==========================================================
+-   No detected sensitives
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.CAMERA]
+  <android.hardware.Camera: android.hardware.Camera open(int)>
+    from <com.b.a.b.a.a.a.a: android.hardware.Camera b(int)> L: -1
+
+  Explanation:
+  -   same library as in previous app: zxing
+
+
+19. de.bitsharesmunich.smartcoinswallet
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <me.dm7.barcodescanner.core.CameraUtils: android.hardware.Camera getCameraInstance(int)> L: 20
+
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+    Call contexts:
+      2. <me.dm7.barcodescanner.core.CameraUtils: android.hardware.Camera getCameraInstance(int)> L: 18
+
+
+20. de.schildbach.wallet
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <de.schildbach.wallet.camera.CameraManager: android.hardware.Camera open(android.view.TextureView,int,boolean)> L: 82
+
+
+21. de.schildbach.wallet_test
+==========================================================
+-   SKIPPING, different version of previous
+
+
+22. eu.kanade.tachiyomi
+==========================================================
+-   No detected sensitives
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    from <org.acra.util.ReportUtils: java.lang.String getDeviceId(android.content.Context)> L: 90
+
+  Code analysis:
+    -   This is the case when a permission is used only to print diagnostics data when an exception is thrown.
+    -   Used deep inside a library, not clear if path is feasible or not. Too complex to decide through manual inspection.
+        We'll give it benefit of the doubt and consider valid.
+    -   Permission is checked but never requested.
+
+
+23. im.vector.alpha
+==========================================================
+
+  Valid method sensitives: 3
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <im.vector.activity.VectorMediasPickerActivity: void onSwitchCamera()> L: 1251
+      2. <im.vector.activity.VectorMediasPickerActivity: void onSurfaceTextureAvailable(android.graphics.SurfaceTexture,int,int)> L: 1425
+      3. <im.vector.activity.VectorMediasPickerActivity: void onSurfaceTextureAvailable(android.graphics.SurfaceTexture,int,int)> L: 1435
+
+  Valid field sensitives: 3
+  ---------------------------------------
+  [android.permission.READ_CONTACTS, android.permission.WRITE_CONTACTS]
+  Parametric sensitive <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+    Call contexts:
+      1. <im.vector.contacts.ContactsManager: void refreshLocalContactsSnapshot(android.content.Context)> L: 211
+      param [<android.provider.ContactsContract$Data: android.net.Uri CONTENT_URI>]
+      2. <im.vector.contacts.ContactsManager: void refreshLocalContactsSnapshot(android.content.Context)> L: 296
+      param [<android.provider.ContactsContract$CommonDataKinds$Email: android.net.Uri CONTENT_URI>]
+      3. <im.vector.contacts.ContactsManager: void refreshLocalContactsSnapshot(android.content.Context)> L: 257
+      param [<android.provider.ContactsContract$CommonDataKinds$Phone: android.net.Uri CONTENT_URI>]
+
+
+  Undetected valid method sensitives: 2
+  ------------------------------------
+  [android.permission.CAMERA]
+  <android.hardware.Camera: android.hardware.Camera open(int)>
+    from <org.webrtc.VideoCapturerAndroid: void startCaptureOnCameraThread(int,int,int,org.webrtc.VideoCapturerAndroid$CapturerObserver,android.content.Context)> L: 528
+    from <org.webrtc.videoengine.VideoCaptureAndroid: void startCaptureOnCameraThread(int,int,int,int,java.util.concurrent.Exchanger)> L: 130
+
+  Code analysis:
+    -   2 CHA-reachables, not clear if they are really used
+    -   Code appears to be from a library. Whole source code is not accessible, so cannot make a correct evaluation.
+    -   Shoud give this app benefit of the doubt.
+
+
+24. is.pinterjann.jaws
+==========================================================
+
+  Valid field sensitives: 1
+  ---------------------------------------
+  [android.permission.ACCESS_FINE_LOCATION, android.permission.ACCESS_COARSE_LOCATION]
+  Parametric sensitive <android.content.IntentFilter: void <init>(java.lang.String)>
+    Call contexts:
+      1. <is.pinterjann.jaws.activities.JAWSActivity: void onCreate(android.os.Bundle)> L: 86
+      param [<android.net.wifi.WifiManager: java.lang.String SCAN_RESULTS_AVAILABLE_ACTION>]
+
+
+25. net.bierbaumer.otp_authenticator
+==========================================================
+-   No detected sensitives
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.CAMERA]
+  <android.hardware.Camera: android.hardware.Camera open(int)>
+    from <com.google.zxing.client.android.camera.open.OpenCameraInterface: android.hardware.Camera open(int)> L: 83
+
+  Explanation:
+  -   zxing API encountered before
+
+
+App 26. net.sf.times
+==========================================================
+
+  Valid method sensitives: 8
+  ---------------------------------------
+  [android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.location.LocationManager: void requestLocationUpdates(java.lang.String,long,float,android.location.LocationListener)>
+    Call contexts:
+      1. <net.sf.times.location.ZmanimLocations: void requestUpdatesEclair()> L: 743
+      2. <net.sf.times.location.ZmanimLocations: void requestUpdates()> L: 771
+
+  Sensitive <android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)>
+    Call contexts:
+      3. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationGPSEclair()> L: 315
+      4. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationGPS()> L: 337
+      5. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationNetworkEclair()> L: 354
+      6. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationNetwork()> L: 376
+      7. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationPassiveFroyo()> L: 395
+      8. <net.sf.times.location.ZmanimLocations: android.location.Location getLocationPassive()> L: 417
+
+
+App 27. org.androidpn.client
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    Call contexts:
+    	1. <org.androidpn.client.SerivceManager.NotificationService: void onCreate()> L: 93
+
+
+App 28. org.liberty.android.fantastischmemo
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.RECORD_AUDIO]
+  Sensitive <android.media.MediaRecorder: void setAudioSource(int)>
+    Call contexts:
+      1. <org.liberty.android.fantastischmemo.ui.AudioRecorderFragment: void startRecording()> L: 169
+
+
+App 29. org.osmocom.tacdatabaseclient
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  Sensitive <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    Call contexts:
+      1. <org.osmocom.tacdatabaseclient.MainActivity: void getDeviceInformation()> L: 156
+
+
+App 30. org.pixmob.freemobile.netstat
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.telephony.TelephonyManager: android.telephony.CellLocation getCellLocation()>
+    Call contexts:
+      1. <org.pixmob.freemobile.netstat.MonitorService: int h()> L: 5842
+
+  [android.permission.ACCESS_COARSE_LOCATION]
+  Sensitive <android.telephony.TelephonyManager: java.util.List getAllCellInfo()>
+    Call contexts:
+      2. <org.pixmob.freemobile.netstat.MonitorService: int h()> L: 5809
+
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.READ_PHONE_STATE]
+  <android.telephony.TelephonyManager: java.lang.String getDeviceId()>
+    from <org.acra.util.ReportUtils: java.lang.String getDeviceId(android.content.Context)> L: 91
+
+  Code analysis:
+  -   case already reached above. Used for diagnostics when exception is thrown.
+  -   Presumably VALID SENSITIVE.
+  -   The only sensitive for READ_PHONE_STATE. Could this be a security leak?
+
+
+App 31. org.traccar.client
+==========================================================
+
+  Valid method sensitives: 4
+  ---------------------------------------
+  [android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.location.LocationManager: void requestLocationUpdates(java.lang.String,long,float,android.location.LocationListener)>
+    Call contexts:
+      1. <org.traccar.client.MixedPositionProvider: void startUpdates()> L: 40
+      2. <org.traccar.client.MixedPositionProvider: void startBackupProvider()> L: 73
+      3. <org.traccar.client.SimplePositionProvider: void startUpdates()> L: 34
+
+  [android.permission.ACCESS_FINE_LOCATION]
+  Sensitive <android.location.LocationManager: boolean addGpsStatusListener(android.location.GpsStatus$Listener)>
+    Call contexts:
+      4. <org.traccar.client.MixedPositionProvider: void startUpdates()> L: 39
+
+
+App 32. protect.budgetwatch
+==========================================================
+
+  Valid field sensitives: 1
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Parametric sensitive <android.content.Intent: void <init>(java.lang.String)>
+    Call contexts:
+      1. <protect.budgetwatch.TransactionViewActivity: void captureReceipt()> L: 403
+      param [<android.provider.MediaStore: java.lang.String ACTION_IMAGE_CAPTURE>]
+
+
+App 33. protect.card_locker
+==========================================================
+-   No detected sensitives
+
+  Undetected valid method sensitives: 1
+  ------------------------------------
+  [android.permission.CAMERA]
+  <android.hardware.Camera: android.hardware.Camera open(int)>
+    from <com.google.zxing.client.android.camera.open.OpenCameraInterface: android.hardware.Camera open(int)> L: 83
+
+Explanation: same zxing API.
+
+
+App 34. ru.valle.btc
+==========================================================
+
+  Valid method sensitives: 1
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+    Call contexts:
+      1. <ru.valle.btc.ScanActivity: void createCameraSource()> L: 69
+
+
+App 35. trikita.obsqr
+==========================================================
+
+  Valid method sensitives: 2
+  ---------------------------------------
+  [android.permission.CAMERA]
+  Sensitive <android.hardware.Camera: android.hardware.Camera open(int)>
+    Call contexts:
+      1. <trikita.obsqr.CameraPreview: android.hardware.Camera openCamera()> L: 266
+
+  Sensitive <android.hardware.Camera: android.hardware.Camera open()>
+    Call contexts:
+      2. <trikita.obsqr.CameraPreview: android.hardware.Camera openCamera()> L: 251
+

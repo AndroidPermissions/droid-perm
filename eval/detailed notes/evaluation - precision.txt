@@ -1,0 +1,722 @@
+1. com.easwareapps.transparentwidget
+   		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:       1
+-   paths: 1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 1, NON-AMB
+
+
+2. com.easytarget.micopi
+   		android.permission.READ_CONTACTS
+   		android.permission.WRITE_CONTACTS
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives: 9
+-   paths: 1,2,2,2,2,2,2,2,2
+-   all 17 are NON-AMB
+-   SPARK paths: 1,2,2,2,2,1,1,1,1
+    -   explanation: probably due to reduced CP
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, field: 9, NON-AMB
+
+
+3. com.example.tobiastrumm.freifunkautoconnect
+   		android.permission.ACCESS_FINE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives: 1
+-   paths: 1, NON-AMB
+Field sensitives:  1
+-   paths: 1, NON-AMB
+-   SPARK paths: 1,1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:       1, NON-AMB
+-   Valid sensitives, field:        1, NON-AMB
+
+
+4. com.github.yeriomin.dumbphoneassistant
+   		android.permission.READ_CONTACTS
+   		android.permission.WRITE_CONTACTS
+   		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives: 1
+-   paths: 1, NON_AMB
+Field sensitives:  6
+-   paths: 4,4,4,2,1,1
+-   amb status: all ambiguous
+-   SPARK paths: 1; 4,4,4,2,1,1
+
+Manual inspection of paths
+----------------------------------------------------------
+
+Part 1: first 3 field sensitives:
+------------
+-   <android.content.ContentProviderOperation: android.content.ContentProviderOperation$Builder newInsert(android.net.Uri)>
+    -   all are in the same method, so share the same path
+
+Ambiguity point, only one:
+<com.github.yeriomin.dumbphoneassistant.ManageContactsActivity: void copyToPhone(com.github.yeriomin.dumbphoneassistant.Contact)> : 251
+                                                                p-to: [PhoneUtilEclair, PhoneUtilDonut], edges: 2
+<com.github.yeriomin.dumbphoneassistant.PhoneUtilEclair: void create(com.github.yeriomin.dumbphoneassistant.Contact)> : 94
+
+Educated guess:
+-   Paths are valid, both values of points-to are possible (they actuall ydepend on OS version and are decided elsewhere)
+-   This is the type of paths that I wanted to decide as non-ambiguous but wasn't sure how to do it.
+
+Precise evaluation:
+-   Paths are valid, both options for p-to are possible, they are decided once depending on Android OS version.
+
+Part 2: next 3 field sensitives:
+------------
+-   <android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+
+ISSUES with DROID-PERM mappings:
+-   There are actually 7 calls to query(), all of them look like sensitives. Yet DP detected only 3.
+Cause:
+    -   For other 4 either the URI was mistakenly not included in the mappings
+    -   Or, v2: custom-built URI.
+
+Explanation:
+    -   The URIs are in another, deprecated class: Contacts. I didn't know about it and didn't include it
+        in my semi-manual mappigns in JPMData. Nothign to do now, leaving the things as they are.
+
+Feasibility evaluation:
+-   all paths are feasible, same ambiguous point as above.
+
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+-   Valid sensitives, field:    6
+
+
+5. com.iamtrk.androidexplorer
+   		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives: 6
+-   paths: 2,2,2,2,2,2 = 12
+    -   3 sensitives x 2 contexts x 2 paths for all. All 6 contexts are in the same method.
+-   amb status: ambiguous for all
+-   SPARK paths: 2,2,2,2,2,2
+
+Ambiguity point
+------------------------------------------------
+In all 12 paths roughtly the same:
+
+<com.iamtrk.androidExplorer.Fragment_RVAdapter: void onBindViewHolder(com.iamtrk.androidExplorer.Fragment_RVAdapter$ContentViewHolder,int)> : 26
+                                                                p-to: [], edges: 14
+<com.iamtrk.androidExplorer.Content$IdsItem: java.util.List getDetailedItems()> : 599
+                                                                p-to: [TelephonyManager], edges: 1
+<android.telephony.TelephonyManager: java.lang.String getSimSerialNumber()>
+
+Manual inspection analysis:
+------------------------------------------------
+-   Paths are feasible.
+Reason:
+-   The 2 contexts that call the ambiguity point all use the same target variable, so they have same points-to.
+
+Why points-to is empty:
+-   no propagation through Map.put()/Map.get()
+-   another interesting case for ambiguity analysis
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   6
+
+
+6. com.jarsilio.android.waveup
+   		android.permission.READ_PHONE_STATE
+==========================================================
+-   No detected sensitives
+
+
+7. com.jmstudios.redmoon
+		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+-   Valid sensitives, method:          2
+    -   paths: 3+1, NON-AMB
+-   SPARK paths: 3,1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:       2, NON-AMB
+
+
+8. com.menny.android.anysoftkeyboard
+		android.permission.READ_CONTACTS
+==========================================================
+-   SKIPPING due to obfuscation + gradle build issues
+
+
+9. com.nutomic.ensichat
+		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+-   SKIPPING. Crashes with OOME
+
+
+10. com.poinsart.votar
+       		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives:       1
+-   paths: 1, NON-AMB
+-   amb status
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, field:    1, NON-AMB
+
+
+11. com.saladdressing.veterondo
+		android.permission.ACCESS_FINE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:      1,1, NON-AMB
+-   SPARK paths: 1,1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 2, NON-AMB
+
+
+12. com.simplemobiletools.camera
+		android.permission.CAMERA
+		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:          1 (CAM), 4 (AUDIO), all NON-AMB
+-   SPARK paths: 1,4
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 2, NON-AMB
+
+
+App 13. com.simplemobiletools.flashlight
+		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              5, NON-AMB
+-   amb status
+-   SPARK paths: 5
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+
+
+App 14. com.thibaudperso.sonycamera
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives:       1
+-   paths:          7
+    -   3 are NON-AMB, 4 ambiguous
+-   SPARK paths: 7
+
+Ambiguity points, for 4 ambiguous paths
+----------------------------------------------------------
+1. From <com.thibaudperso.sonycamera.timelapse.fragments.ConnectionFragment: void onStart()>:
+- valid path
+
+3. From <com.thibaudperso.sonycamera.timelapse.fragments.CameraSettingsFragment: void onStart()>:
+-   INVALID PATH, ratget type is CameraSettingsFragment, 2-CHA would solve it
+    <com.thibaudperso.sonycamera.timelapse.StepFragment: void onStart()> : 55
+                                                                    p-to: [], edges: 2
+    <com.thibaudperso.sonycamera.timelapse.fragments.ConnectionFragment: void onEnterFragment()> : 147
+
+2. From <com.thibaudperso.sonycamera.timelapse.ui.TimelapseStepsActivity: void onCreate(android.os.Bundle)>:
+-   valid path, all 5 points-to values possible
+
+4. From <com.thibaudperso.sonycamera.timelapse.ui.TimelapseStepsActivity$2: void onPageSelected(int)>:
+-   valid path, all 5 points-to values possible
+    <com.thibaudperso.sonycamera.timelapse.ui.TimelapseStepsActivity: void pageSelected(int)> : 209
+
+                                                                    p-to: [CameraSettingsFragment, CaptureFragment, ConnectionFragment, FinishFragment, TimelapseSettingsFragment], edges: 5
+    <com.thibaudperso.sonycamera.timelapse.fragments.ConnectionFragment: void onEnterFragment()> : 147
+
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, field:    0
+-   Invalid sensitives, field:  1
+    -   Cause:  2-CHA would fix it, insufficient context information
+    -   7 paths total: 3 valid NON-AMB, 3 valid ambiguous, 1 INVALID
+
+
+App 15. com.todobom.opennotescanner
+		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      5
+-   paths:              1,2,2,2,2
+-   amb status          NON-AMB, amb, amb, amb, amb
+-   SPARK paths: 1,2,2,2,2
+
+Ambiguity points
+----------------------------------------------------------
+2 callbacks for all 4 sensitives with ambiguity:
+    <org.opencv.android.CameraGLSurfaceView: void <init>(android.content.Context,android.util.AttributeSet)>
+    <org.opencv.android.CameraGLSurfaceView: void onPause()>
+
+Ambiguity point, same for all 8 paths:
+
+<org.opencv.android.CameraGLRendererBase: void updateState()> : 370
+                                                                p-to: [Camera2Renderer, CameraRenderer], edges: 2
+<org.opencv.android.CameraGLRendererBase: void doStart()> : 381
+
+Init ambiguity point:
+
+First 4:
+    <org.opencv.android.CameraGLSurfaceView: void setCameraIndex(int)> : 75
+                                                                    p-to: [Camera2Renderer, CameraRenderer], edges: 1
+    <org.opencv.android.CameraGLRendererBase: void setCameraIndex(int)> : 417
+
+Last 4:
+    <org.opencv.android.CameraGLSurfaceView: void onPause()> : 108
+                                                                    p-to: [Camera2Renderer, CameraRenderer], edges: 1
+    <org.opencv.android.CameraGLRendererBase: void onPause()> : 436
+
+-   No other ambiguities.
+
+
+Ambiguous var assignment point (same for all paths):
+----------------------------------------------------------
+    if(VERSION.SDK_INT >= 21) {
+        this.mRenderer = new Camera2Renderer(this);
+    } else {
+        this.mRenderer = new CameraRenderer(this);
+    }
+
+Conclusion from above:
+    -   ALL points-to values are valid, all paths valid.
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:       5 (1 NON-AMB, 4 amb)
+
+
+App 16. com.tortel.syslog
+		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:              8,8
+-   amb status          4 NON-AMB, 4 amb for each sensitive
+-   SPARK paths: 14,14  todo
+
+Ambiguous points-to locations
+----------------------------------------------------------
+-   Both sensitive contexts are in same method, so we essentially have 1 sensitive:
+    context <com.tortel.syslog.utils.ScrubberUtils: void scrubFile(android.content.Context,java.io.File,java.io.File)>
+
+Location 1, commont to all 8 AMB paths:
+    <eu.chainfire.libsuperuser.StreamGobbler: void run()> : 92
+                                                                    p-to: [], edges: 2
+    <eu.chainfire.libsuperuser.Shell$Interactive$5: void onLine(java.lang.String)> : 1524
+
+Ambiguous location 2, in only 2 paths (1 path duplicated for each sensitive)
+    <com.afollestad.materialdialogs.MaterialDialog: void onClick(android.view.View)> : 333
+                                                                    p-to: [], edges: 3
+    <com.tortel.syslog.dialog.ClearBufferDialog$1: void onPositive(com.afollestad.materialdialogs.MaterialDialog)> : 75
+
+
+Value in points-to is instantiated in:
+
+class Shell:
+    STDOUT = new StreamGobbler(...), line 1498
+
+Earliest common line on all 8 paths:
+    <eu.chainfire.libsuperuser.Shell: java.util.List run(java.lang.String,java.lang.String[],java.lang.String[],boolean)> : 145
+
+Paths resolution:
+-   all paths are INVALID!
+-   constructor of StreamGobbler used in all 8 paths is not the right version to reach the sensitive.
+    -   sensitive must be reached through other paths
+
+One of the feasible callbacks:
+1. RunningDialog.onCreate()
+    -   properly detected, but a different path than one I detected. Actually the detected path is below another
+        feasible one, but they both lead to same sensitive.
+2.    LiveLogFragment.<static init>
+    -   this one is not detected by our tools... Nevermind.
+
+Summary on ambiguous sens analysis:
+-   all ambiguous sensitives are INVALID.
+
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 0
+-   Invalid sensitives, method: 2
+    - for each sensitive: 4 valid NON-AMB, 4 invalid paths.
+    -   Cause: insufficient context sensitivity + passing through fake edges for which sensitivity is not supported.
+
+
+App 17. com.vsmartcard.acardemulator
+        		android.permission.CAMERA
+==========================================================
+-   No detected sensitives
+
+
+App 18. com.vsmartcard.remotesmartcardreader.app
+        		android.permission.CAMERA
+==========================================================
+-   No detected sensitives
+
+
+App 19. de.bitsharesmunich.smartcoinswallet
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:              1,1, NON-AMB
+-   amb status
+-   SPARK paths: 1,1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 2, NON-AMB
+
+
+App 20. de.schildbach.wallet
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              2, NON-AMB
+-   SPARK paths: 2
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method: 1, NON-AMB
+
+
+App 21. de.schildbach.wallet_test
+        		android.permission.CAMERA
+==========================================================
+-   SKIPPING, different version of previous
+
+
+App 22. eu.kanade.tachiyomi
+        		android.permission.READ_PHONE_STATE
+==========================================================
+-   No detected sensitives
+
+
+App 23. im.vector.alpha
+        		android.permission.CAMERA
+        		android.permission.READ_CONTACTS
+        		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      3, camera
+-   paths:              1,1,1, NON-AMB
+Field sensitives:       3, contacts
+-   paths:              8,8,8
+-   amb status          7/7/7 are NON-AMB, 1/1/1 is ambiguous!
+-   SPARK paths: 180,180,180, 1,1,1 todo
+
+Ambiguous points-to inspection
+----------------------------------------------------------
+Callback with ambiguous path:
+    <im.vector.activity.VectorRoomInviteMembersActivity: void onResume()>
+
+Ambiguous points-to location on all 3 amb paths:
+    <im.vector.activity.VectorRoomInviteMembersActivity: void onResume()> : 308
+    <im.vector.activity.VectorBaseSearchActivity: void onResume()> : 137
+                                                                    p-to: [], edges: 4
+    <im.vector.activity.VectorRoomInviteMembersActivity: void onPatternUpdate(boolean)> : 281
+
+A nice bug discovered, not all paths discovered here, yet it's so subtle not worth messing with. Tehre are many more
+    sensitive paths in this app.
+
+Analysis results (file above is enough):
+-   For some miraculous reasons, this polymorphism is resolved correctly, despite points-to beign empty.
+
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   3, NON-amb
+-   Valid sensitives, field:    3, ambiguous
+
+
+App 24. is.pinterjann.jaws
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives:       1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, field:    1, NON-AMB
+
+
+App 25. net.bierbaumer.otp_authenticator
+        		android.permission.CAMERA
+==========================================================
+-   No detected sensitives
+
+
+App 26. net.sf.times
+        		android.permission.ACCESS_FINE_LOCATION
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      8
+-   paths:              1,1,24,24,24,24,24,24.
+    -   Total: 146
+-   amb status, amount of NON-AMB paths: 1,1,22,22,22,22,22,22. Total: 134
+-   SPARK paths:        1,1,25,25,25,25,25,25. todo
+
+Other: NO requests.
+
+Points-to ambiguities inspection
+----------------------------------------------------------
+Ambiguous callbacks, 5 for all sensitives:
+
+1. <net.sf.times.ZmanimActivity: void onCreate(android.os.Bundle)>
+2. <net.sf.times.location.ZmanimLocations: void onLocationChanged(android.location.Location)> : 237
+Part cotnaining common section:
+    <net.sf.times.ZmanimActivity: void onCreate(android.os.Bundle)> : 238
+                                                                    p-to: [ZmanimLocations], edges: 1
+    <net.sf.times.location.ZmanimLocations: void setLocation(android.location.Location)> : 718
+                                                                    p-to: [ZmanimLocations], edges: 1
+    <net.sf.times.location.ZmanimLocations: void onLocationChanged(android.location.Location)> : 237
+    <net.sf.times.location.ZmanimLocations: void onLocationChanged(android.location.Location,boolean,boolean)> : 264
+                                                                    p-to: [ZmanimActivity, ZmanimWidget, ZmanimListWidget, CompassActivity, ClockWidget], edges: 3
+    <net.sf.times.ZmanimWidget: void onLocationChanged(android.location.Location)> : 211
+                                                                    p-to: [ZmanimWidget, ZmanimListWidget, ClockWidget], edges: 2
+    <net.sf.times.ZmanimWidget: void notifyAppWidgetViewDataChanged(android.content.Context)> : 387
+
+2 points-to ambiguities:
+-----------
+1. <net.sf.times.location.ZmanimLocations: void onLocationChanged(android.location.Location,boolean,boolean)> : 264
+-   All values are feasible, after careful analysis.
+2. <net.sf.times.ZmanimWidget: void onLocationChanged(android.location.Location)>
+-   Selected value is feasible.
+
+Conclusion:
+-   All detected paths are valid.
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   8 (2 of them NON-AMB)
+
+
+App 27. org.androidpn.client
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+
+
+App 28. org.liberty.android.fantastischmemo
+        		android.permission.RECORD_AUDIO
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+
+
+App 29. org.osmocom.tacdatabaseclient
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+
+
+App 30. org.pixmob.freemobile.netstat
+        		android.permission.ACCESS_COARSE_LOCATION
+        		android.permission.READ_PHONE_STATE
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:              4,4, NON-AMB
+-   SPARK paths: 4,4
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   2, NON-AMB
+
+
+App 31. org.traccar.client
+        		android.permission.ACCESS_FINE_LOCATION
+        		android.permission.ACCESS_COARSE_LOCATION
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      4
+-   paths:              1, 2 NON-AMB, 1, 1
+-   SPARK paths: 1,2,1,1
+
+Ambiguous points-to analysis
+----------------------------------------------------------
+All ambiguous paths are reached from:
+    <org.traccar.client.TrackingService: void onCreate()>
+
+
+2 different ambiguity points in each path:
+
+1. <org.traccar.client.TrackingController: void start()> : 87
+                                                                   p-to: [MixedPositionProvider, SimplePositionProvider], edges: 2
+   <org.traccar.client.MixedPositionProvider: void startUpdates()>
+
+2. <org.traccar.client.TrackingController: void start()> : 87
+                                                                   p-to: [MixedPositionProvider, SimplePositionProvider], edges: 2
+   <org.traccar.client.SimplePositionProvider: void startUpdates()>
+
+Manual inspection results:
+-   Both points-to values are possible. value decided by app static config.
+-   All paths are VALID.
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   4 (1 of them NON-AMB)
+
+
+App 32. protect.budgetwatch
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives:       1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, field:       1, NON-AMB
+
+
+App 33. protect.card_locker
+        		android.permission.CAMERA
+==========================================================
+-   No detected sensitives
+
+
+App 34. ru.valle.btc
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      1
+-   paths:              1, NON-AMB
+-   SPARK paths: 1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   1, NON-AMB
+
+
+App 35. trikita.obsqr
+        		android.permission.CAMERA
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Method sensitives:      2
+-   paths:              1,1, NON-AMB
+-   SPARK paths: 1,1
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives, method:   2, NON-AMB
+
+
+
+Summary
+==========================================================
+Total apps in the list: 35
+Skipped apps: 3
+Apps with no detected sensitives: 6
+Apps with at least one detected sensitive: 26
+Apps with invalid sensitives: 2
+
+Summary for SPARK
+==========================================================
+Appswith extra paths: 3
+Sensitives with extra paths: 2+3+6 = 11
+Number of extra paths per sensitive: from 1 to 170.

@@ -1,0 +1,34 @@
+Methodology
+==========================================================
+-   For each detected edge, one of the following options:
+    -   if it's non-ambiguous, state NON-AMB, without code follow-up
+If paths are ambiguous:
+-   Total number of paths for each edge
+-   Count number of correct paths until the first false path is reached. Or if paths look reasonably false.
+-   For first false positive path, explanation, why it was not detected.
+
+Ambiguous paths evaluation methodology:
+-   Identify points of ambiguity.
+-   For each variable that may have ambiguous points-to, run a CHA dataflow analysis to identify locations where
+    variable was assigned, from Android Studio, by using feature "Analyze dataflow to here".
+    Check whether the value chosen in our path is indeed feasible.
+
+Treats to validity:
+-   We verify validity from points-to perspective only. A path determined by us to be feasible might still be
+    infeasible due to complex path conditions required to access it.
+    We didn't encoutner such complex paths so far.
+
+Template
+==========================================================
+
+Batch runner statistics
+----------------------------------------------------------
+Field sensitives:
+-   paths:
+
+Summary
+----------------------------------------------------------
+-   Valid sensitives
+-   Invalid sensitives
+    -   Cause for invalidity (optional)
+

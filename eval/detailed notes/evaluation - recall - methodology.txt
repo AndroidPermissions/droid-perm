@@ -1,0 +1,137 @@
+Methodology
+==========================================================
+-   Count detected, CHA-reachable, undetected sensitive edges.
+-   Inspect CHA-reachable sensitives. See if they really can be reached.
+    - separately for method and field permissions
+-   Briefly inspect unreachable sensitives. Maybe they can be detected somehow too.
+
+
+
+List of apps with [Manifest, Code, Sensitive] only (Tier 1): 35
+==========================================================
+com.easwareapps.transparentwidget
+		android.permission.CAMERA
+
+com.easytarget.micopi
+		android.permission.READ_CONTACTS
+		android.permission.WRITE_CONTACTS
+
+com.example.tobiastrumm.freifunkautoconnect
+		android.permission.ACCESS_FINE_LOCATION
+
+com.github.yeriomin.dumbphoneassistant
+		android.permission.READ_CONTACTS
+		android.permission.WRITE_CONTACTS
+		android.permission.READ_PHONE_STATE
+
+com.iamtrk.androidexplorer
+		android.permission.READ_PHONE_STATE
+
+com.jarsilio.android.waveup
+		android.permission.READ_PHONE_STATE
+
+com.jmstudios.redmoon
+		android.permission.ACCESS_COARSE_LOCATION
+
+com.menny.android.anysoftkeyboard
+		android.permission.READ_CONTACTS
+
+com.nutomic.ensichat
+		android.permission.ACCESS_COARSE_LOCATION
+
+com.poinsart.votar
+		android.permission.CAMERA
+
+com.saladdressing.veterondo
+		android.permission.ACCESS_FINE_LOCATION
+
+com.simplemobiletools.camera
+		android.permission.CAMERA
+		android.permission.RECORD_AUDIO
+
+com.simplemobiletools.flashlight
+		android.permission.CAMERA
+
+com.thibaudperso.sonycamera
+		android.permission.ACCESS_COARSE_LOCATION
+
+com.todobom.opennotescanner
+		android.permission.CAMERA
+
+com.tortel.syslog
+		android.permission.READ_PHONE_STATE
+
+com.vsmartcard.acardemulator
+		android.permission.CAMERA
+
+com.vsmartcard.remotesmartcardreader.app
+		android.permission.CAMERA
+
+de.bitsharesmunich.smartcoinswallet
+		android.permission.CAMERA
+
+de.schildbach.wallet
+		android.permission.CAMERA
+
+de.schildbach.wallet_test
+		android.permission.CAMERA
+
+eu.kanade.tachiyomi
+		android.permission.READ_PHONE_STATE
+
+im.vector.alpha
+		android.permission.CAMERA
+		android.permission.READ_CONTACTS
+		android.permission.RECORD_AUDIO
+
+is.pinterjann.jaws
+		android.permission.ACCESS_COARSE_LOCATION
+
+net.bierbaumer.otp_authenticator
+		android.permission.CAMERA
+
+net.sf.times
+		android.permission.ACCESS_FINE_LOCATION
+		android.permission.ACCESS_COARSE_LOCATION
+
+org.androidpn.client
+		android.permission.READ_PHONE_STATE
+
+org.liberty.android.fantastischmemo
+		android.permission.RECORD_AUDIO
+
+org.osmocom.tacdatabaseclient
+		android.permission.READ_PHONE_STATE
+
+org.pixmob.freemobile.netstat
+		android.permission.ACCESS_COARSE_LOCATION
+		android.permission.READ_PHONE_STATE
+
+org.traccar.client
+		android.permission.ACCESS_FINE_LOCATION
+		android.permission.ACCESS_COARSE_LOCATION
+
+protect.budgetwatch
+		android.permission.CAMERA
+
+protect.card_locker
+		android.permission.CAMERA
+
+ru.valle.btc
+		android.permission.CAMERA
+
+trikita.obsqr
+		android.permission.CAMERA
+
+-----------------------------
+Permission statistics:
+-----------------------------
+-   android.permission.CAMERA: 16
+-   android.permission.ACCESS_FINE_LOCATION: 4
+-   android.permission.ACCESS_COARSE_LOCATION: 7
+-   android.permission.READ_PHONE_STATE: 8
+-   android.permission.READ_CONTACTS: 4
+-   android.permission.WRITE_CONTACTS: 2
+-   android.permission.RECORD_AUDIO: 3
+
+

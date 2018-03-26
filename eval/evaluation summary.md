@@ -1,5 +1,6 @@
-Below are the list of apps used in DroidPerm evaluation. The apps were extracted
-from f-droid.org on 12/16/2016.
+Below are the list of apps used in DroidPerm evaluation.
+
+ 
 
 |    | f-droid.org id                                                                                                           | Valid Method | Invalid Method | Undetected Method | Valid Field | Invalid Field | Undetected Field |
 |----|--------------------------------------------------------------------------------------------------------------------------|--------------|----------------|-------------------|-------------|---------------|------------------|
@@ -63,3 +64,25 @@ Field sensitives recall: 22 / (22+1) \* 100% = 96%
 **Total precision: 69 / (69+3) \* 100% = 96%**
 
 **Total recall: 69 / (69+9) \* 100% = 88%**
+
+ 
+
+ 
+
+Setup
+-----
+
+The apps were extracted from f-droid.org on 12/16/2016. Links to source
+repositories are on f-droid page of each app. The 3 apps that were excluded from
+evaluation due to build issues or issues running DroidPerm have value “-” in the
+3rd column.
+
+ 
+
+Additional data
+---------------
+
+Please see [evaluation notes.txt](evaluation%20notes.txt) for the list of code
+locations in this table and explanation for each invalid/undetected sensitive.
+There are also more detailed evaluation notes [here](detailed%20notes) and the
+raw log files produced by DroidPerm [here](DroidPerm%20raw%20logs.zip).
