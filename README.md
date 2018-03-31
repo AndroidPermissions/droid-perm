@@ -13,9 +13,9 @@ DPSpec
 
 All files are in droid-perm/config:
 
--   [perm-def-api-23.xml](config/perm-def-api-23.xml) - permissions from annotaton xml files supplied with
-    AndroidSDK, up to API 23. If you install Android SDK, these annotations are
-    in android-sdk\\platform-tools\\api\\annotations.zip
+-   [perm-def-api-23.xml](config/perm-def-API-23.xml) - permissions from annotaton xml files supplied with
+    AndroidSDK, up to API 23. This is the version discussed in the paper. If you install Android SDK, these annotations are located
+    in android-sdk/platform-tools/api/annotations.zip
 
 -   perm-def-api-25.xml - same specification for API 25.
 
@@ -245,4 +245,4 @@ Updating DroidPerm inside DroidPermPlugin (outdated)
 
 DroidPerm evaluation
 ======
-This page contains our evaluation corpus and results: [evaluation summary.md](eval/evaluation summary.md)
+This page contains our evaluation corpus and results: [evaluation summary.md](eval/evaluation%20summary.md)
